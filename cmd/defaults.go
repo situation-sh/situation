@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/urfave/cli/v2"
 	"github.com/situation-sh/situation/utils"
+	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
 )
 

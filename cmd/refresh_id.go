@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
-	"github.com/urfave/cli/v2"
 	"github.com/situation-sh/situation/config"
+	"github.com/urfave/cli/v2"
 )
 
 var refreshIDCmd = cli.Command{

@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
 	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/utils"
+	"github.com/urfave/cli/v2"
 )
 
 // DefaultFlags is the list of flags that may be used to tunes the
