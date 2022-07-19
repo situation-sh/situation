@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - master
+      - main
 
 jobs:
   tests: # source: https://github.com/securego/gosec#integrating-with-code-scanning
