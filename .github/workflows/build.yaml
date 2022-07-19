@@ -30,15 +30,19 @@ jobs:
           # we let the report trigger content trigger a failure using the GitHub Security features.
           args: "-no-fail -fmt sarif -out results.sarif ./..."
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v2
         with:
           # Path to SARIF file relative to the root of the repository
           sarif_file: results.sarif
       # run codecov coverage
       - name: Code coverage
         run: make test
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+      # upload code coverage
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.txt # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
 
   build:
     runs-on: ubuntu-latest
@@ -65,3 +69,4 @@ jobs:
           path: |
             bin/situation-*
             schema.json
+          retention-days: 7
