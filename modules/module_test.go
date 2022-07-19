@@ -45,7 +45,12 @@ func TestModules(t *testing.T) {
 		// config.InitConfig()
 		fmt.Printf("--- MODULE: %s\n", name)
 		if err := GenericTestModule(m, nil); err != nil {
-			t.Errorf("error with module %s: %v", name, err)
+			switch err.(type) {
+			case *MustBeRunAsRootError:
+				t.Logf("warning with module %s: %v", name, err)
+			default:
+				t.Errorf("error with module %s: %v", name, err)
+			}
 		}
 	}
 }

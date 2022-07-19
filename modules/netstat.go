@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"fmt"
 	"os/user"
 	"runtime"
 
@@ -56,7 +55,7 @@ func (m *NetstatModule) Run() error {
 	}
 
 	if runtime.GOOS == "linux" && u.Uid != "0" {
-		return fmt.Errorf("it should be run as root (UID: %s)", u.Uid)
+		return &MustBeRunAsRootError{UID: u.Uid}
 	}
 
 	machine := store.GetHost()
