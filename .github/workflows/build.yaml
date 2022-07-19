@@ -23,9 +23,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "1.18.3"
-      # install make
-      - name: Install make
-        run: sudo apt-get install -y make
       # run gosec scanner
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
@@ -53,9 +50,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: "1.18.3"
-      # install make
-      - name: Install make
-        run: sudo apt-get install -y make
       # Run build of the application
       - name: Run build
         run: make all COMMIT=$GITHUB_SHA

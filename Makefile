@@ -28,7 +28,7 @@ VERSION    := 0.9.0
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
-GO        := $(shell command -v go)
+GO        := $(shell which go)
 GOARCH    ?= $(shell go env|grep GOARCH|awk -F '=' '{print $$2}'|sed -e 's/"//g')
 GOOS      ?= $(shell go env|grep GOOS  |awk -F '=' '{print $$2}'|sed -e 's/"//g')
 
@@ -55,7 +55,7 @@ BIN     := situation
 BIN_DIR := bin
 
 # other tools
-GOSEC := $(shell command -v gosec)
+GOSEC := $(shell which gosec)
 
 .PHONY: build-linux build-windows
 
