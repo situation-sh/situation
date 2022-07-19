@@ -1,0 +1,61 @@
+# This is a basic workflow to help you get started with Actions
+
+name: build
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  tests: # source: https://github.com/securego/gosec#integrating-with-code-scanning
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      # run gosec scanner
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          # we let the report trigger content trigger a failure using the GitHub Security features.
+          args: "-no-fail -fmt sarif -out results.sarif ./..."
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: results.sarif
+      # run codecov coverage
+      - name: Code coverage
+        run: make test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.18.3"
+      # Run build of the application
+      - name: Run build
+        run: make all COMMIT=$GITHUB_SHA
+      # generate schema
+      - name: Generate schema
+        run: |
+          cp bin/situation-*-linux ./situation;
+          ./situation schema > schema.json
+      # upload binaries and schema
+      - uses: actions/upload-artifact@v3
+        with:
+          name: situation
+          path: |
+            bin/situation-*
+            schema.json
