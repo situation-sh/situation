@@ -1,0 +1,70 @@
+site_name: Situation
+repo_url: https://github.com/situation-sh/situation
+docs_dir: docs
+
+theme:
+  name: material
+  icon:
+    logo: octicons/codespaces-24
+  favicon: img/codespaces.svg
+  palette:
+    scheme: nord
+  font:
+    text: Inter
+
+nav:
+  - Home: index.md
+  - Installation:
+      - "Pre-built binaries": "installation/pre_built_binaries.md"
+      - "From sources": "installation/from_sources.md"
+  - "quick_start.md"
+  - Modules:
+      - modules/index.md
+      - modules/arp.md
+      - modules/docker.md
+      - modules/host_basic.md
+      - modules/host_cpu.md
+      - modules/host_network.md
+      - modules/netstat.md
+      - modules/ping.md
+      - modules/tcp_scan.md
+  - "backends.md"
+  - Developer:
+      - "developer/index.md"
+      - "developer/architecture.md"
+      - "developer/modules.md"
+      - "developer/store.md"
+      - "developer/contributing.md"
+  - "roadmap.md"
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.keys
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search:
+      lang: [en]
+  - markdownextradata
+  - section-index
+
+extra_css:
+  - css/extra.css
+
+extra:
+  variables:
+    version: 0.9.0
+    go_module: github.com/situation-sh/situation
+    godoc_base_url: https://pkg.go.dev

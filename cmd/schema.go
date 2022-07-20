@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/invopop/jsonschema"
-	"github.com/urfave/cli/v2"
 	"github.com/situation-sh/situation/models"
+	"github.com/urfave/cli/v2"
 )
 
 var schemaCmd = cli.Command{

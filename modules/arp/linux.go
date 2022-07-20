@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/vishvananda/netlink"
 	"github.com/situation-sh/situation/utils"
+	"github.com/vishvananda/netlink"
 )
 
 // neighMAC returns a copy of the MAC address
