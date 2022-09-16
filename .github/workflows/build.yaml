@@ -25,7 +25,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: "1.18.3"
+          go-version: "1.19.1"
       # run gosec scanner
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
@@ -43,7 +43,7 @@ jobs:
       # upload code coverage
       - uses: codecov/codecov-action@v3
         with:
-          files: ./coverage.txt # optional
+          files: ./.goprofile.txt # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
 
@@ -56,7 +56,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: "1.18.3"
+          go-version: "1.19.1"
       # Run build of the application
       - name: Run build
         run: make all COMMIT=$GITHUB_SHA

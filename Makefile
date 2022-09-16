@@ -104,9 +104,7 @@ analysis: .goweight.json
 .goweight.json:
 	@goweight --json . | jq > $@
 
-clear:
-	rm -f $(BIN_DIR)/$(BIN)-$(VERSION)-*
-	rm -f .*.json
+
 
 docs-module-status:
 	@outfile=docs/modules/index.md; 																														\
@@ -125,5 +123,13 @@ docs-module-status:
 	done;      																																	\
 	echo '</div>' >> $$outfile;		 
 
-test:
-	$(GO) test -v -coverprofile=coverage.txt -covermode=atomic ./...
+test: .coverprofile.txt
+
+.goprofile.txt:
+	$(GO) test -v -coverprofile=$@ -covermode=atomic ./...
+
+
+clear:
+	rm -f $(BIN_DIR)/$(BIN)-$(VERSION)-*
+	rm -f .go*.json
+	rm -f .go*.txt
