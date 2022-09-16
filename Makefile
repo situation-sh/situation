@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.9.0
+VERSION    := 0.11.0
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -54,36 +54,59 @@ BUILD := CGO_ENABLED=0 $(GO) build $(GO_LDFLAGS)
 BIN     := situation
 BIN_DIR := bin
 
-# other tools
-GOSEC := $(shell which gosec)
 
-.PHONY: build-linux build-windows
+# utils
+dash-split = $(word $2,$(subst -, ,$1))
 
-default: build-$(GOOS)-$(GOARCH)
 
-print-version:
+.DEFAULT_GOAL := bin/$(BIN)-$(VERSION)-$(GOARCH)-$(GOOS)
+
+.DEFAULT:
+	@echo -e '\033[31mUnknown command "$@"\033[0m'
+	@echo 'Usage: make [command] [variable=]...'
+	@echo ''
+	@echo 'Commands:'
+	@echo '             all    build for linux and windows (amd64)'
+	@echo '           clear    remove the build artifacts'
+	@echo '        security    run gosec and govulncheck'
+	@echo '        analysis    run goweight'
+	@echo '         version    print the current version'
+	@echo ''
+	@echo 'Variables:'
+	@echo '            GOOS    target OS'
+	@echo '          GOARCH    target architecture'
+
+version:
 	@echo "$(VERSION)"
 
-module:
-	rm -f go.mod go.sum
+go.sum: go.mod 
+
+go.mod:
 	$(GO) mod init $(MODULE)
 	$(GO) mod tidy
 
-all: build-linux-amd64 build-windows-amd64
+all: bin/$(BIN)-$(VERSION)-amd64-linux bin/$(BIN)-$(VERSION)-amd64-windows.exe
 
-build-linux-%:
-	@mkdir -p $(BIN_DIR)
-	GOOS=linux GOARCH=$* $(BUILD) -o $(BIN_DIR)/$(BIN)-$(VERSION)-$*-linux main.go 
+$(BIN_DIR)/$(BIN)-$(VERSION)-%: $(shell find . -path "*.go")
+	@mkdir -p $(@D)
+	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD) -o $@ main.go
 
-build-windows-%:
-	@mkdir -p $(BIN_DIR)
-	GOOS=windows GOARCH=$* $(BUILD) -o $(BIN_DIR)/$(BIN)-$(VERSION)-$*-windows.exe main.go 
+security: .gosec.json .govulncheck.json
 
-security:
-	$(GOSEC) -fmt json ./...
+.gosec.json:
+	@gosec -fmt json ./... | jq > $@
 
-weight:
-	goweight .
+.govulncheck.json:
+	@govulncheck --json ./... | jq > $@
+
+analysis: .goweight.json
+
+.goweight.json:
+	@goweight --json . | jq > $@
+
+clear:
+	rm -f $(BIN_DIR)/$(BIN)-$(VERSION)-*
+	rm -f .*.json
 
 docs-module-status:
 	@outfile=docs/modules/index.md; 																														\
