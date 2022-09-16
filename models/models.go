@@ -6,14 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// CPU gathers few information about processor
-type CPU struct {
-	ModelName string `json:"model_name,omitempty"`
-	Vendor    string `json:"vendor,omitempty"`
-	Cores     int    `json:"cores,omitempty"`
-	// Usage     float64 `json:"usage"`
-}
-
 // Performance gathers information about the run of
 // the agent
 type Performance struct {

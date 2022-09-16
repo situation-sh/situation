@@ -93,7 +93,7 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 		store.InsertMachine(m)
 	}
 	if err := pinger.Run(); err != nil {
-		logrus.Debugf("Error; %v", err)
+		logrus.Debugf("Error: %v", err)
 		cerr <- fmt.Errorf("error while pinging %v: %v", ip, err)
 		return
 	}
@@ -132,11 +132,13 @@ func pingSubnetwork(network *net.IPNet) error {
 	wg.Wait()
 
 	// closing the channel ensures that the above goroutine
-	// will stop. Indeed, if no error raised, err will be assigned
+	// will stop. Indeed, if no error raised, err will be equal
 	// to nil
 	close(cerr)
-
 	<-done
+
+	// now the goroutine is over
+	// err is well sync
 	return err
 }
 
