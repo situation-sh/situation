@@ -24,6 +24,7 @@ nav:
       - modules/docker.md
       - modules/host_basic.md
       - modules/host_cpu.md
+      - modules/host_disk.md
       - modules/host_network.md
       - modules/netstat.md
       - modules/ping.md

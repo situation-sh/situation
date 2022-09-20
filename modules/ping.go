@@ -3,6 +3,7 @@ package modules
 import (
 	"fmt"
 	"net"
+	"os/user"
 	"runtime"
 	"strings"
 	"sync"
@@ -15,10 +16,24 @@ import (
 	"github.com/situation-sh/situation/utils"
 )
 
-// According to the authors of go-ping
-// the pinger must be privileged on windows
-// even if we do not run the agent as admin/root
-const useICMP = (runtime.GOOS == "windows")
+var useICMP bool = func() bool {
+	// According to the authors of go-ping
+	// the pinger must be privileged on windows
+	// even if we do not run the agent as admin/root
+	if runtime.GOOS == "windows" {
+		return true
+	}
+	u, err := user.Current()
+	if err != nil {
+		return false
+	}
+	// On alpine VM with root account, we notice that
+	// the ping privilege must be set to true
+	if runtime.GOOS == "linux" && u.Uid == "0" {
+		return true
+	}
+	return false
+}()
 
 const errorPrefix = "[ERROR_PREFIX]"
 
@@ -44,7 +59,7 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 	}
 	pinger.Count = 1
 	pinger.SetPrivileged(useICMP)
-	pinger.Timeout = 100 * time.Millisecond
+	pinger.Timeout = 300 * time.Millisecond
 
 	// callback when a target responds
 	pinger.OnRecv = func(p *ping.Packet) {
@@ -78,6 +93,7 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 		store.InsertMachine(m)
 	}
 	if err := pinger.Run(); err != nil {
+		logrus.Debugf("Error: %v", err)
 		cerr <- fmt.Errorf("error while pinging %v: %v", ip, err)
 		return
 	}
@@ -86,8 +102,19 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 
 func pingSubnetwork(network *net.IPNet) error {
 	var wg sync.WaitGroup
-
 	cerr := make(chan error)
+	done := make(chan bool)
+	var err error
+	var once sync.Once
+
+	// consume the channel, sets the first error only
+	go func() {
+		for e := range cerr {
+			once.Do(func() { err = e })
+		}
+		done <- true
+	}()
+
 	for ip := range utils.Iterate(network) {
 		// ignore 0 and 255 in case of IPv4
 		if utils.IsReserved(ip) {
@@ -101,21 +128,18 @@ func pingSubnetwork(network *net.IPNet) error {
 		go singlePing(ip, ms, &wg, cerr)
 	}
 
+	logrus.Debug("Waiting ping to finish")
 	wg.Wait()
 
-	concatErrors := ""
-	for {
-		select {
-		case err := <-cerr:
-			concatErrors += errorPrefix + err.Error()
-		default:
-			if len(concatErrors) == 0 {
-				return nil
-			}
-			// concat the errors
-			return fmt.Errorf(concatErrors)
-		}
-	}
+	// closing the channel ensures that the above goroutine
+	// will stop. Indeed, if no error raised, err will be equal
+	// to nil
+	close(cerr)
+	<-done
+
+	// now the goroutine is over
+	// err is well sync
+	return err
 }
 
 // Ping sends unprivileged ICMP echo messages to all
@@ -147,7 +171,7 @@ func (m *PingModule) Run() error {
 
 			logger.Infof("Pinging %s (%s)", network.String(), nic.Name)
 			if err := pingSubnetwork(network); err != nil {
-				logger.Error("An error occurred :(")
+				logger.Error(err)
 				errorMsg += fmt.Sprintf("Error(s) occurred while pinging %s:", network.String())
 				errorMsg += strings.ReplaceAll(err.Error(), errorPrefix, "\n\t - ")
 			}
