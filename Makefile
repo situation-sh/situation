@@ -123,7 +123,7 @@ docs-module-status:
 	done;      																																	\
 	echo '</div>' >> $$outfile;		 
 
-test: .coverprofile.txt
+test: .goprofile.txt
 
 .goprofile.txt:
 	$(GO) test -v -coverprofile=$@ -covermode=atomic ./...
