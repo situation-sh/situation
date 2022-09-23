@@ -57,7 +57,7 @@ func (m *HostGPUModule) Run() error {
 				l = l.WithField("product", g.Product)
 			}
 		}
-		machine.GPUs = append(machine.GPUs, &g)
+		machine.GPUS = append(machine.GPUS, &g)
 		l.Info("Found GPU on host")
 	}
 	return nil
