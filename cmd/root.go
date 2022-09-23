@@ -40,7 +40,7 @@ var app = &cli.App{
 }
 
 func init() {
-	// as 'cmd' calls 'modules' and 'backends, the latters
+	// as 'cmd' calls 'modules' and 'backends' the latters
 	// are initialized first so DefaultFlags are well filled
 	flags = append(flags, rootFlags()...)
 	flags = append(flags, modules.DefaultFlags...)

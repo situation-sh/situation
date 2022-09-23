@@ -23,3 +23,10 @@ type Partition struct {
 	Type     string `json:"type,omitempty"`
 	ReadOnly bool   `json:"read_only,omitempty"`
 }
+
+type GPU struct {
+	Index   int    `json:"index"`
+	Vendor  string `json:"vendor,omitempty"`
+	Product string `json:"product,omitempty"`
+	Driver  string `json:"driver,omitempty"`
+}

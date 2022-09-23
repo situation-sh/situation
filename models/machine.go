@@ -22,6 +22,7 @@ type Machine struct {
 	NICS                []*NetworkInterface `json:"nics"`
 	Applications        []*Application      `json:"applications"`
 	Disks               []*Disk             `json:"disks"`
+	GPUS                []*GPU              `json:"gpus"`
 	Agent               *uuid.UUID          `json:"hosted_agent,omitempty"`
 	Uptime              time.Duration       `json:"uptime,omitempty"`
 }
@@ -32,6 +33,7 @@ func NewMachine() *Machine {
 		Applications: make([]*Application, 0),
 		NICS:         make([]*NetworkInterface, 0),
 		Disks:        make([]*Disk, 0),
+		GPUS:         make([]*GPU, 0),
 	}
 }
 
