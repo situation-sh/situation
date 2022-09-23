@@ -123,13 +123,16 @@ docs-module-status:
 	done;      																																	\
 	echo '</div>' >> $$outfile;		 
 
-test: .goprofile.txt
+test: .gocoverprofile.html
 
-.goprofile.txt:
-	$(GO) test -v -coverprofile=$@ -covermode=atomic ./...
+.gocoverprofile.txt:
+	$(GO) test -coverprofile=$@ -covermode=atomic ./...
 
+.gocoverprofile.html: .gocoverprofile.txt
+	$(GO) tool cover -html=$^ -o $@
 
 clear:
 	rm -f $(BIN_DIR)/$(BIN)-$(VERSION)-*
 	rm -f .go*.json
 	rm -f .go*.txt
+	rm -f .go*.html
