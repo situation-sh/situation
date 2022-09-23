@@ -8,6 +8,7 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs.yaml"
+      - "mkdocs.yml"
 
 jobs:
   deploy:
