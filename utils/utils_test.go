@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"math"
 	"net"
+	"os"
 	"sort"
 	"testing"
 )
@@ -136,5 +137,28 @@ func TestExtractNetworks(t *testing.T) {
 				t.Errorf("The IPv4 address ends with a 0")
 			}
 		}
+	}
+}
+
+func randomString(size int) string {
+	bytes := RandBytes(size)
+	for i, b := range bytes {
+		// all the bytes are between 48 (0) and 126 (~)
+		bytes[i] = 48 + (b % (127 - 48))
+	}
+	return string(bytes)
+}
+func TestFileExists(t *testing.T) {
+	file := "/" + randomString(64)
+	if FileExists(file) {
+		t.Errorf("The file %s must not exist", file)
+	}
+
+	f, err := os.Executable()
+	if err != nil {
+		t.Error(err)
+	}
+	if !FileExists(f) {
+		t.Errorf("The file %s must exist", f)
 	}
 }

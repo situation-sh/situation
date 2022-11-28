@@ -97,7 +97,7 @@ func GetMachinesByOpenTCPPort(port uint16) ([]*models.Machine, []*models.Applica
 	outEndpoints := make([]*models.ApplicationEndpoint, 0)
 
 	for _, machine := range store {
-		for _, app := range machine.Applications {
+		for _, app := range machine.Applications() {
 			for _, endpoint := range app.Endpoints {
 				if endpoint.Protocol == "tcp" && endpoint.Port == port {
 					outMachines = append(outMachines, machine)

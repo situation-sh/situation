@@ -36,7 +36,7 @@ func RunSwarm(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 			machine.DistributionVersion = version          // container image version
 			machine.HostID = service.ID                    // container ID
 			machine.Uptime = time.Since(service.CreatedAt) //
-			machine.ParentMachine = p.machine              // underlying machine
+			machine.ParentMachine = p.machine.InternalID   // underlying machine
 
 			// logging
 			logger.WithField("host_id", machine.HostID).
@@ -45,7 +45,7 @@ func RunSwarm(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 				WithField("platform", machine.Platform).
 				WithField("distribution", machine.Distribution).
 				WithField("distribution_version", machine.DistributionVersion).
-				WithField("parent", machine.ParentMachine.HostID).
+				WithField("parent", machine.ParentMachine).
 				Info("Create new swarm service")
 
 			store.InsertMachine(machine)

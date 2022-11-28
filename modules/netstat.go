@@ -6,6 +6,7 @@ import (
 
 	"github.com/cakturk/go-netstat/netstat"
 	"github.com/situation-sh/situation/store"
+	"github.com/situation-sh/situation/utils"
 )
 
 func init() {
@@ -73,10 +74,22 @@ func (m *NetstatModule) Run() error {
 					if entry.Process.Name == "docker-proxy" {
 						continue
 					}
-					soft, created := machine.GetOrCreateApplicationByName(entry.Process.Name)
+
+					name := entry.Process.Name
+					args, err := utils.GetCmd(entry.Process.Pid)
+					if err == nil && len(args) > 0 {
+						name = args[0]
+						args = args[1:]
+					}
+					soft, created := machine.GetOrCreateApplicationByName(name)
 					if created {
 						// logging
 						logger.WithField("app", soft.Name).Info("Application found")
+					}
+
+					// add args
+					if len(args) > 0 {
+						soft.Args = args
 					}
 
 					endpoint, created := soft.AddEndpoint(

@@ -4,9 +4,14 @@
 package rpm
 
 import (
+	"bytes"
 	"encoding/binary"
-	"time"
+	"path"
+	"sort"
+	"strings"
 	"unicode/utf8"
+
+	"github.com/situation-sh/situation/models"
 )
 
 type Pkg struct {
@@ -20,12 +25,12 @@ type Install struct {
 	Idx  uint   `db:"idx"`
 }
 
-func (a *Install) Parse() time.Time {
-	ts := int64(binary.LittleEndian.Uint32(a.Key[:4]))
-	return time.Unix(ts, 0)
+func (a *Install) Parse() int64 {
+	return int64(binary.LittleEndian.Uint32(a.Key[:4]))
 }
 
 func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) interface{} {
+	var step uint32
 	store := p.Blob[storeOffset:]
 	switch typ {
 	case RPM_NULL_TYPE:
@@ -34,21 +39,65 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 		r, _ := utf8.DecodeRune(store[off : off+cnt])
 		return r
 	case RPM_INT8_TYPE:
-		return uint8(store[off])
+		step = 1
+		out := make([]uint8, cnt)
+		for i := uint32(0); i < cnt; i++ {
+			out[i] = uint8(store[off+i])
+		}
+		if cnt == 1 {
+			return out[0]
+		}
+		return out
 	case RPM_INT16_TYPE:
-		return binary.BigEndian.Uint16(store[off : off+2*cnt])
+		step = 2
+		out := make([]uint16, cnt)
+		for i := uint32(0); i < cnt; i++ {
+			out[i] = binary.BigEndian.Uint16(store[off+i*step : off+(i+1)*step])
+		}
+		if cnt == 1 {
+			return out[0]
+		}
+		return out
 	case RPM_INT32_TYPE:
-		return binary.BigEndian.Uint32(store[off : off+4*cnt])
+		step = 4
+		out := make([]uint32, cnt)
+		for i := uint32(0); i < cnt; i++ {
+			out[i] = binary.BigEndian.Uint32(store[off+i*step : off+(i+1)*step])
+		}
+		if cnt == 1 {
+			return out[0]
+		}
+		return out
 	case RPM_INT64_TYPE:
-		return binary.BigEndian.Uint64(store[off : off+8*cnt])
+		step = 8
+		out := make([]uint32, cnt)
+		for i := uint32(0); i < cnt; i++ {
+			out[i] = binary.BigEndian.Uint32(store[off+i*step : off+(i+1)*step])
+		}
+		if cnt == 1 {
+			return out[0]
+		}
+		return out
 	case RPM_STRING_TYPE:
 		n := uint32(len(store))
 		i := off
 		for ; (i < n) && (store[i] != 0); i++ {
 		}
-		return string(store[off : i+1])
+		return string(store[off:i])
 	case RPM_BIN_TYPE:
 		return store[off : off+cnt]
+	case RPM_STRING_ARRAY_TYPE:
+		out := make([]string, cnt)
+		end := int(off)
+		start := 0
+
+		for k := uint32(0); k < cnt; k++ {
+			start = end
+			end += bytes.IndexByte(store[end:], 0x0)
+			out[k] = string(store[start:end])
+			end += 1
+		}
+		return out
 	default:
 		// we currently do not handle other types
 
@@ -56,12 +105,52 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 	return nil
 }
 
-func (p *Pkg) Parse() map[string]interface{} {
-	out := make(map[string]interface{})
+func keepLeaves(files []string) []string {
+	n := len(files)
+	if n <= 1 {
+		return files
+	}
+	// sort the files
+
+	sort.Strings(files)
+
+	base := files[n-1]
+	out := []string{base}
+
+	// for i := n - 2; i >= 0; {
+	for i := n - 2; i >= 0; i-- {
+		for ; i >= 0 && strings.HasPrefix(base, files[i]); i-- {
+		}
+		if i < 0 {
+			return out
+		}
+		out = append(out, files[i])
+		base = files[i] // new base
+	}
+	return out
+}
+
+func reassembleFiles(basenames []string, dirnames []string, dirindexes []uint32) []string {
+	out := make([]string, len(basenames))
+	for i, f := range basenames {
+		out[i] = path.Join(dirnames[dirindexes[i]], f)
+	}
+	return out
+}
+
+func (p *Pkg) Parse() *models.Package {
+	pkg := models.NewPackage()
+	pkg.Manager = "rpm"
+
+	// out := make(map[string]interface{})
 	nIndex := binary.BigEndian.Uint32(p.Blob[:4])
 	// hSize := binary.BigEndian.Uint32(data[4:8])
 	headerSize := uint32(16)
 	storeOffset := 8 + headerSize*nIndex
+
+	var basenames []string
+	var dirnames []string
+	var dirindexes []uint32
 
 	for i := uint32(0); i < nIndex; i++ {
 		header := p.Blob[8+headerSize*i : 8+headerSize*(i+1)]
@@ -73,15 +162,41 @@ func (p *Pkg) Parse() map[string]interface{} {
 
 		switch tag {
 		case RPMTAG_NAME:
-			out["name"] = p.Value(storeOffset, typ, off, cnt)
+			v := p.Value(storeOffset, typ, off, cnt)
+			pkg.Name, _ = v.(string)
 		case RPMTAG_VERSION:
-			out["version"] = p.Value(storeOffset, typ, off, cnt)
-		case RPMTAG_RELEASE:
-			out["release"] = p.Value(storeOffset, typ, off, cnt)
+			v := p.Value(storeOffset, typ, off, cnt)
+			pkg.Version, _ = v.(string)
 		case RPMTAG_VENDOR:
-			out["vendor"] = p.Value(storeOffset, typ, off, cnt)
+			v := p.Value(storeOffset, typ, off, cnt)
+			pkg.Vendor, _ = v.(string)
+		case RPMTAG_BASENAMES:
+			switch v := p.Value(storeOffset, typ, off, cnt); t := v.(type) {
+			case []string:
+				basenames = t
+			default:
+			}
+			// out["basenames"] = p.Value(storeOffset, typ, off, cnt)
+		case RPMTAG_DIRNAMES:
+			switch v := p.Value(storeOffset, typ, off, cnt); t := v.(type) {
+			case []string:
+				dirnames = t
+			default:
+			}
+			// out["dirnames"] = p.Value(storeOffset, typ, off, cnt)
+		case RPMTAG_DIRINDEXES:
+			switch v := p.Value(storeOffset, typ, off, cnt); t := v.(type) {
+			case []uint32:
+				dirindexes = t
+			default:
+			}
 		default:
 		}
 	}
-	return out
+
+	if len(basenames) > 0 && len(dirnames) > 0 && len(dirindexes) == len(basenames) {
+		pkg.Files = keepLeaves(reassembleFiles(basenames, dirnames, dirindexes))
+	}
+
+	return pkg
 }

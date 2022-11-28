@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.12.0
+VERSION    := 0.13.0
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -48,10 +48,11 @@ GO_LDFLAGS_PROD        := $(GO_LDFLAGS_STRIP) $(GO_LDFLAGS_STRIP_DWARF)
 GO_LDFLAGS             ?= -ldflags '$(GO_LDFLAGS_BASE) $(GO_LDFLAGS_PROD)'
 
 # build command
-BUILD := CGO_ENABLED=0 $(GO) build $(GO_LDFLAGS)
+BUILD := $(GO) build $(GO_LDFLAGS)
 
 # name of the final binary
 BIN     := situation
+CURDIR  := $(realpath .)
 BIN_DIR := bin
 
 
@@ -60,13 +61,13 @@ dash-split = $(word $2,$(subst -, ,$1))
 
 
 .DEFAULT_GOAL := bin/$(BIN)-$(VERSION)-$(GOARCH)-$(GOOS)
-
 .DEFAULT:
 	@echo -e '\033[31mUnknown command "$@"\033[0m'
 	@echo 'Usage: make [command] [variable=]...'
 	@echo ''
 	@echo 'Commands:'
 	@echo '             all    build for linux and windows (amd64)'
+	@echo '            test    run tests'
 	@echo '           clear    remove the build artifacts'
 	@echo '        security    run gosec and govulncheck'
 	@echo '        analysis    run goweight'
@@ -75,6 +76,8 @@ dash-split = $(word $2,$(subst -, ,$1))
 	@echo 'Variables:'
 	@echo '            GOOS    target OS'
 	@echo '          GOARCH    target architecture'
+
+.PHONY: version all security analysis test clear
 
 version:
 	@echo "$(VERSION)"
@@ -85,7 +88,7 @@ go.mod:
 	$(GO) mod init $(MODULE)
 	$(GO) mod tidy
 
-all: bin/$(BIN)-$(VERSION)-amd64-linux bin/$(BIN)-$(VERSION)-amd64-windows.exe
+all: $(BIN_DIR)/$(BIN)-$(VERSION)-amd64-linux $(BIN_DIR)/$(BIN)-$(VERSION)-amd64-windows.exe
 
 $(BIN_DIR)/$(BIN)-$(VERSION)-%: $(shell find . -path "*.go")
 	@mkdir -p $(@D)
@@ -103,7 +106,6 @@ analysis: .goweight.json
 
 .goweight.json:
 	@goweight --json . | jq > $@
-
 
 
 docs-module-status:
@@ -131,8 +133,11 @@ test: .gocoverprofile.html
 .gocoverprofile.html: .gocoverprofile.txt
 	$(GO) tool cover -html=$^ -o $@
 
+
 clear:
 	rm -f $(BIN_DIR)/$(BIN)-$(VERSION)-*
 	rm -f .go*.json
 	rm -f .go*.txt
 	rm -f .go*.html
+
+clean: clear

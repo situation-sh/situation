@@ -46,8 +46,19 @@ func RandomApplicationEndpoint() *models.ApplicationEndpoint {
 func RandomApplication() *models.Application {
 	return &models.Application{
 		Name:      gofakeit.Name(),
-		Version:   gofakeit.AppVersion(),
+		Args:      []string{gofakeit.Name(), gofakeit.Name(), gofakeit.Name()},
 		Endpoints: []*models.ApplicationEndpoint{RandomApplicationEndpoint(), RandomApplicationEndpoint()},
+	}
+}
+
+func RandomPackage() *models.Package {
+	return &models.Package{
+		Name:            gofakeit.Name(),
+		Version:         gofakeit.AppVersion(),
+		Vendor:          gofakeit.Company(),
+		Manager:         gofakeit.RandomString([]string{"msi", "builtin", "manual", "rpm", "dpkg"}),
+		InstallTimeUnix: gofakeit.Date().Unix(),
+		Applications:    []*models.Application{RandomApplication(), RandomApplication()},
 	}
 }
 
@@ -108,22 +119,23 @@ func RandomGPU() *models.GPU {
 
 func RandomMachine() *models.Machine {
 	return &models.Machine{
+		InternalID:          gofakeit.IntRange(1, 10000),
 		Hostname:            gofakeit.NounCommon(),
 		HostID:              gofakeit.UUID(),
 		Arch:                gofakeit.RandomString([]string{"amd64", "386", "aarch64"}),
 		Platform:            gofakeit.RandomString([]string{"windows", "linux"}),
 		Distribution:        gofakeit.NounCommon(),
 		DistributionVersion: gofakeit.AppVersion(),
-		ParentMachine:       nil,
+		ParentMachine:       -1,
 		CPU:                 RandomCPU(),
 		NICS:                []*models.NetworkInterface{RandomNIC(), RandomNIC()},
 		Disks:               []*models.Disk{RandomDisk()},
 		GPUS:                []*models.GPU{RandomGPU()},
-		Applications: []*models.Application{
-			RandomApplication(),
-			RandomApplication(),
-			RandomApplication(),
-			RandomApplication()},
+		Packages: []*models.Package{
+			RandomPackage(),
+			RandomPackage(),
+			RandomPackage(),
+			RandomPackage()},
 		Uptime: time.Duration(gofakeit.Uint64()),
 	}
 }
