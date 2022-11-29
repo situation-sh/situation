@@ -21,7 +21,7 @@ func NewScheduler(modules []Module) *Scheduler {
 }
 
 func (s *Scheduler) getModuleByName(name string) Module {
-	for _, mod := range modules {
+	for _, mod := range s.modules {
 		if mod.Name() == name {
 			return mod
 		}
@@ -56,7 +56,7 @@ func (s *Scheduler) buildTasksList() ([]Module, error) {
 
 	for len(tasks) < n {
 		i := 0
-		for _, m := range modules {
+		for _, m := range s.modules {
 			if _, ok := alreadyAdded[m.Name()]; ok {
 				continue
 			}
