@@ -1,12 +1,51 @@
 package models
 
-import "net"
+import (
+	"net"
+)
+
+// Package is a wrapper around application that stores distribution
+// information of applications (executables)
+type Package struct {
+	Name            string         `json:"name,omitempty"`
+	Version         string         `json:"version,omitempty"`
+	Vendor          string         `json:"vendor,omitempty"`
+	Manager         string         `json:"manager,omitempty"`
+	InstallTimeUnix int64          `json:"install_time,omitempty"`
+	Applications    []*Application `json:"applications"`
+	Files           []string       `json:"-"` // ignore that field for the moment
+}
+
+func NewPackage() *Package {
+	return &Package{
+		Applications: make([]*Application, 0),
+		Files:        make([]string, 0),
+	}
+}
+
+// Equal check if two packages are the same. Here we assume
+// that Name and Version must be set
+func (pkg *Package) Equal(other *Package) bool {
+	if !(pkg.Name == other.Name && len(pkg.Name) > 0) {
+		return false
+	}
+	if !(pkg.Version == other.Version && len(pkg.Version) > 0) {
+		return false
+	}
+	if pkg.Vendor != other.Vendor {
+		return false
+	}
+	if pkg.Manager != other.Manager {
+		return false
+	}
+	return true
+}
 
 // Application is a structure that represents all the
 // types of apps we can have on a system
 type Application struct {
 	Name      string                 `json:"name,omitempty"`
-	Version   string                 `json:"version,omitempty"`
+	Args      []string               `json:"args,omitempty"`
 	Endpoints []*ApplicationEndpoint `json:"endpoints"`
 }
 

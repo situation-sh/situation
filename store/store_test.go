@@ -90,7 +90,7 @@ func TestGetMachinesByOpenTCPPort(t *testing.T) {
 	m0 := test.RandomMachine()
 	ports := make([]uint16, 0)
 	// ensure all the apps listen on TCP
-	for _, app := range m0.Applications {
+	for _, app := range m0.Applications() {
 		for _, e := range app.Endpoints {
 			e.Protocol = "tcp"
 			ports = append(ports, e.Port)

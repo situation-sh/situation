@@ -92,7 +92,7 @@ func getOrCreateMachineFromEndpoint(
 		machine.DistributionVersion = version                        // container image version
 		machine.HostID = container.ID                                // container ID
 		machine.Uptime = time.Since(time.Unix(container.Created, 0)) //
-		machine.ParentMachine = parent                               // underlying machine
+		machine.ParentMachine = parent.InternalID                    // underlying machine
 		// fmt.Printf("%+v\n", machine)
 
 		// logging
@@ -102,7 +102,7 @@ func getOrCreateMachineFromEndpoint(
 			WithField("platform", machine.Platform).
 			WithField("distribution", machine.Distribution).
 			WithField("distribution_version", machine.DistributionVersion).
-			WithField("parent", machine.ParentMachine.HostID).
+			WithField("parent", machine.ParentMachine).
 			Info("Create new container")
 
 		store.InsertMachine(machine)
@@ -201,20 +201,22 @@ func RunBasic(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 
 			machine := getOrCreateMachineFromEndpoint(endpoint, container, network.IPAM, p.machine, logger)
 
+			apps := machine.Applications() // bypass the packages
 			// here we have a machine
 			// we must update its app
 			var app *models.Application
 			// get the app.
 			// :warning: we consider a single app by container
-			if len(machine.Applications) > 0 {
-				app = machine.Applications[0]
+			if len(apps) > 0 {
+				app = apps[0]
 			} else {
+				app, _ = machine.GetOrCreateApplicationByName(machine.Distribution)
 				// or create it
-				app = &models.Application{
-					Name:    machine.Distribution,
-					Version: machine.DistributionVersion,
-				}
-				machine.Applications = append(machine.Applications, app)
+				// app = &models.Application{
+				// 	Name: machine.Distribution,
+				// 	// Version: machine.DistributionVersion,
+				// }
+				// machine.Applications = append(machine.Applications, app)
 			}
 
 			// add an endpoint for every exposed ports

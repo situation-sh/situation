@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/situation-sh/situation/models"
-	"github.com/situation-sh/situation/test"
 )
 
 // GenericTestBackend is a basic function to test a backend
@@ -35,11 +35,15 @@ func GenericTestBackend(b Backend, payload *models.Payload) error {
 }
 
 func TestBackends(t *testing.T) {
-	p := test.RandomPayload()
+	p := models.Payload{}
+	if err := gofakeit.Struct(&p); err != nil {
+		t.Error(err)
+	}
+	// p := test.RandomPayload()
 	// p := randomPayload()
 	for name, b := range backends {
 		fmt.Printf("--- BACKEND: %s\n", name)
-		if err := GenericTestBackend(b, p); err != nil {
+		if err := GenericTestBackend(b, &p); err != nil {
 			t.Errorf("error with backend %s: %v", name, err)
 		}
 	}
