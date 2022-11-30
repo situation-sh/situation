@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.13.0
+VERSION    := 0.13.1
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -36,6 +36,8 @@ GOOS      ?= $(shell go env|grep GOOS  |awk -F '=' '{print $$2}'|sed -e 's/"//g'
 GO_LDFLAGS_SET_VERSION := -X "$(MODULE)/config.Version=$(VERSION)"
 # Put the conmmit in the config file
 GO_LDFLAGS_SET_COMMIT  := -X "$(MODULE)/config.Commit=$(COMMIT)"
+# if cgo link statically
+GO_LDFLAGS_STATIC_LINK := -linkmode external -extldflags "-static"
 # default ld flags
 GO_LDFLAGS_BASE        := $(GO_LDFLAGS_SET_VERSION) $(GO_LDFLAGS_SET_COMMIT)
 # Omit the symbol table and debug information.
@@ -48,13 +50,14 @@ GO_LDFLAGS_PROD        := $(GO_LDFLAGS_STRIP) $(GO_LDFLAGS_STRIP_DWARF)
 GO_LDFLAGS             ?= -ldflags '$(GO_LDFLAGS_BASE) $(GO_LDFLAGS_PROD)'
 
 # build command
-BUILD := $(GO) build $(GO_LDFLAGS)
+BUILD := CGO_ENABLED=0 $(GO) build $(GO_LDFLAGS)
 
 # name of the final binary
 BIN     := situation
 CURDIR  := $(realpath .)
 BIN_DIR := bin
 
+DOCKER := podman
 
 # utils
 dash-split = $(word $2,$(subst -, ,$1))
@@ -77,7 +80,7 @@ dash-split = $(word $2,$(subst -, ,$1))
 	@echo '            GOOS    target OS'
 	@echo '          GOARCH    target architecture'
 
-.PHONY: version all security analysis test clear
+.PHONY: version all security analysis test clean clear module-testing
 
 version:
 	@echo "$(VERSION)"
@@ -90,9 +93,25 @@ go.mod:
 
 all: $(BIN_DIR)/$(BIN)-$(VERSION)-amd64-linux $(BIN_DIR)/$(BIN)-$(VERSION)-amd64-windows.exe
 
+# final binary files
 $(BIN_DIR)/$(BIN)-$(VERSION)-%: $(shell find . -path "*.go")
 	@mkdir -p $(@D)
 	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD) -o $@ main.go
+
+# binaries for module testing purpose
+$(BIN_DIR)/$(BIN)-$(VERSION)-testing-%: $(shell find ./modules -path "*.go")
+	@mkdir -p $(@D)
+	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) CGO_ENABLED=0 $(GO) test $(GO_LDFLAGS) -c -o $@ $(MODULE)/modules
+
+module-testing: $(BIN_DIR)/$(BIN)-$(VERSION)-testing-$(GOARCH)-$(GOOS)
+
+remote-module-testing-%: module-testing
+	ID=$$(head /dev/random|md5sum|head -c 8); \
+	$(DOCKER) run -d --rm -it --name "$$ID" "$*"; \
+	$(DOCKER) cp $(BIN_DIR)/$(BIN)-$(VERSION)-testing-$(GOARCH)-$(GOOS) "$$ID:/tmp/situation"; \
+	$(DOCKER) exec -it "$$ID" sh -c '/tmp/situation -module=dpkg' \
+	$(DOCKER) rm -f "$$ID"
+
 
 security: .gosec.json .govulncheck.json
 
@@ -132,7 +151,6 @@ test: .gocoverprofile.html
 
 .gocoverprofile.html: .gocoverprofile.txt
 	$(GO) tool cover -html=$^ -o $@
-
 
 clear:
 	rm -f $(BIN_DIR)/$(BIN)-$(VERSION)-*
