@@ -7,8 +7,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"path"
-	"sort"
-	"strings"
 	"unicode/utf8"
 
 	"github.com/situation-sh/situation/models"
@@ -104,31 +102,6 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 
 	}
 	return nil
-}
-
-func keepLeaves(files []string) []string {
-	n := len(files)
-	if n <= 1 {
-		return files
-	}
-	// sort the files
-
-	sort.Strings(files)
-
-	base := files[n-1]
-	out := []string{base}
-
-	// for i := n - 2; i >= 0; {
-	for i := n - 2; i >= 0; i-- {
-		for ; i >= 0 && strings.HasPrefix(base, files[i]); i-- {
-		}
-		if i < 0 {
-			return out
-		}
-		out = append(out, files[i])
-		base = files[i] // new base
-	}
-	return out
 }
 
 func reassembleFiles(basenames []string, dirnames []string, dirindexes []uint32) []string {

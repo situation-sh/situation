@@ -4,12 +4,13 @@
 package modules
 
 import (
+	"database/sql"
 	"time"
+
+	_ "modernc.org/sqlite"
 
 	"github.com/situation-sh/situation/modules/rpm"
 	"github.com/situation-sh/situation/store"
-	"github.com/upper/db/v4"
-	"github.com/upper/db/v4/adapter/sqlite"
 )
 
 func init() {
@@ -35,29 +36,35 @@ func (m *RPMModule) Run() error {
 		return err
 	}
 
-	url, err := sqlite.ParseURL("file://" + file)
+	db, err := sql.Open("sqlite", file)
 	if err != nil {
 		return err
 	}
-	session, err := sqlite.Open(url)
+
+	pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
 	if err != nil {
 		return err
 	}
-	defer session.Close()
 
 	machine := store.GetHost()
-
-	pkgColl := session.Collection("Packages")
-	installColl := session.Collection("Installtid")
-
 	pkg := rpm.Pkg{}
 	ins := rpm.Install{}
-	res := pkgColl.Find()
-	for res.Next(&pkg) {
-		p := pkg.Parse() // here we have a models.Package
-		if err := installColl.Find(db.Cond{"hnum": pkg.Hnum}).One(&ins); err == nil {
-			p.InstallTimeUnix = ins.Parse()
+	for pkgRows.Next() {
+		if err := pkgRows.Scan(&pkg.Hnum, &pkg.Blob); err != nil {
+			continue
 		}
+		p := pkg.Parse() // here we have a models.Package
+		installRows, err := db.Query("SELECT key, hnum, idx FROM Installtid WHERE hnum=? LIMIT 1", pkg.Hnum)
+		if err != nil || installRows == nil {
+			continue
+		}
+		if installRows.Next() {
+			if err := installRows.Scan(&ins.Key, &ins.Hnum, &ins.Idx); err != nil {
+				continue
+			}
+		}
+		p.InstallTimeUnix = ins.Parse()
+
 		r := logger.WithField(
 			"name", p.Name).WithField(
 			"version", p.Version).WithField(
@@ -75,7 +82,6 @@ func (m *RPMModule) Run() error {
 		} else {
 			r.Debug("Package found")
 		}
-
 	}
 
 	return nil
