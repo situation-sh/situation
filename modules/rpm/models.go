@@ -12,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/situation-sh/situation/models"
+	"github.com/situation-sh/situation/utils"
 )
 
 type Pkg struct {
@@ -195,7 +196,7 @@ func (p *Pkg) Parse() *models.Package {
 	}
 
 	if len(basenames) > 0 && len(dirnames) > 0 && len(dirindexes) == len(basenames) {
-		pkg.Files = keepLeaves(reassembleFiles(basenames, dirnames, dirindexes))
+		pkg.Files = utils.KeepLeaves(reassembleFiles(basenames, dirnames, dirindexes))
 	}
 
 	return pkg

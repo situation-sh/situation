@@ -4,6 +4,8 @@
 package modules
 
 import (
+	"time"
+
 	"github.com/situation-sh/situation/modules/rpm"
 	"github.com/situation-sh/situation/store"
 	"github.com/upper/db/v4"
@@ -27,6 +29,7 @@ func (m *RPMModule) Dependencies() []string {
 }
 
 func (m *RPMModule) Run() error {
+	logger := GetLogger(m)
 	file, err := rpm.FindDBFile()
 	if err != nil {
 		return err
@@ -55,12 +58,24 @@ func (m *RPMModule) Run() error {
 		if err := installColl.Find(db.Cond{"hnum": pkg.Hnum}).One(&ins); err == nil {
 			p.InstallTimeUnix = ins.Parse()
 		}
+		r := logger.WithField(
+			"name", p.Name).WithField(
+			"version", p.Version).WithField(
+			"install", time.Unix(p.InstallTimeUnix, 0).Format(time.RFC822))
 		// here we can have issues if the packages already exist
 		// ex: if a blank package has been created for an app
 		// For the mapping, we ought to find if the application
 		// name is within the files of the package
 		// InsertPackage tries to do this
-		machine.InsertPackage(p)
+		x, merged := machine.InsertPackage(p)
+		if merged {
+			r.WithField(
+				"apps", x.ApplicationNames()).Info(
+				"Package merged with already found apps")
+		} else {
+			r.Debug("Package found")
+		}
+
 	}
 
 	return nil
