@@ -41,6 +41,19 @@ func (pkg *Package) Equal(other *Package) bool {
 	return true
 }
 
+// ApplicationNames return the names of the apps that are
+// attached to the package
+func (pkg *Package) ApplicationNames() []string {
+	if len(pkg.Applications) == 0 {
+		return []string{}
+	}
+	out := make([]string, len(pkg.Applications))
+	for i, a := range pkg.Applications {
+		out[i] = a.Name
+	}
+	return out
+}
+
 // Application is a structure that represents all the
 // types of apps we can have on a system
 type Application struct {

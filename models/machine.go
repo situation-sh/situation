@@ -156,14 +156,14 @@ func (m *Machine) GetPackageByApplicationPath(path string) *Package {
 // InsertPackage add the given package into the machine.
 // It tries to merge with previously created package
 // base on application path
-// It returns whether the package has been inserted
-// (otherwise it means that it has been merged with
-// another one)
-func (m *Machine) InsertPackage(pkg *Package) bool {
+// It returns whether the package has been merged
+// (otherwise it means that it already exists or
+// should not be created)
+func (m *Machine) InsertPackage(pkg *Package) (*Package, bool) {
 	for _, p := range m.Packages {
 		if p.Equal(pkg) {
 			// we already have the package
-			return false
+			return p, false
 		}
 		for _, app := range p.Applications {
 			for _, f := range pkg.Files {
@@ -174,7 +174,7 @@ func (m *Machine) InsertPackage(pkg *Package) bool {
 					p.Vendor = pkg.Vendor
 					p.Manager = pkg.Manager
 					copy(p.Files, pkg.Files)
-					return false
+					return p, true
 				}
 			}
 		}
@@ -182,5 +182,5 @@ func (m *Machine) InsertPackage(pkg *Package) bool {
 	// otherwise we append the package to the machine
 	// or we can do nothing (not to pollute)
 	// m.Packages = append(m.Packages, pkg)
-	return true
+	return nil, false
 }
