@@ -92,7 +92,8 @@ func TestModules(t *testing.T) {
 		fmt.Printf("--- MODULE: %s\n", name)
 		if err := GenericTestModule(m, nil); err != nil {
 			switch err.(type) {
-			case *MustBeRunAsRootError:
+			case *mustBeRunAsRootError:
+			case *notApplicableError:
 				t.Logf("warning with module %s: %v", name, err)
 			default:
 				t.Errorf("error with module %s: %v", name, err)

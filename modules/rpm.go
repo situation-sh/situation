@@ -5,12 +5,14 @@ package modules
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	_ "modernc.org/sqlite"
 
 	"github.com/situation-sh/situation/modules/rpm"
 	"github.com/situation-sh/situation/store"
+	"github.com/situation-sh/situation/utils"
 )
 
 func init() {
@@ -26,11 +28,18 @@ func (m *RPMModule) Name() string {
 func (m *RPMModule) Dependencies() []string {
 	// depends on ping to ensure a rather fresh
 	// arp table
-	return []string{"netstat"}
+	return []string{"host-basic", "netstat"}
 }
 
 func (m *RPMModule) Run() error {
 	logger := GetLogger(m)
+	machine := store.GetHost()
+	if !utils.Includes([]string{"fedora", "rocky", "centos", "redhat", "almalinux", "opensuse-leap", "opensuse-tumbleweed"}, machine.Distribution) {
+		msg := fmt.Sprintf("The distribution %s is not supported", machine.Distribution)
+		logger.Warnf(msg)
+		return &notApplicableError{msg: msg}
+	}
+
 	file, err := rpm.FindDBFile()
 	if err != nil {
 		return err
@@ -46,7 +55,6 @@ func (m *RPMModule) Run() error {
 		return err
 	}
 
-	machine := store.GetHost()
 	pkg := rpm.Pkg{}
 	ins := rpm.Install{}
 	for pkgRows.Next() {

@@ -4,10 +4,12 @@
 package modules
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/situation-sh/situation/modules/dpkg"
 	"github.com/situation-sh/situation/store"
+	"github.com/situation-sh/situation/utils"
 )
 
 func init() {
@@ -21,14 +23,20 @@ func (m *DPKGModule) Name() string {
 }
 
 func (m *DPKGModule) Dependencies() []string {
-	// depends on ping to ensure a rather fresh
-	// arp table
-	return []string{"netstat"}
+	// host-basic is to check the distribution
+	// netstat is to only fill the packages that have a running app
+	// (see models.Machine.InsertPackages)
+	return []string{"host-basic", "netstat"}
 }
 
 func (m *DPKGModule) Run() error {
 	logger := GetLogger(m)
 	machine := store.GetHost()
+	if !utils.Includes([]string{"debian", "ubuntu", "linuxmint"}, machine.Distribution) {
+		msg := fmt.Sprintf("The distribution %s is not supported", machine.Distribution)
+		logger.Warnf(msg)
+		return &notApplicableError{msg: msg}
+	}
 	packages, err := dpkg.GetInstalledPackages()
 	if err != nil {
 		return err
