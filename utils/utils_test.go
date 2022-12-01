@@ -2,11 +2,14 @@ package utils
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
 	"net"
 	"os"
+	"os/exec"
 	"sort"
 	"testing"
+	"time"
 )
 
 func ksStat(data []int, max int, points int) float64 {
@@ -45,12 +48,34 @@ func TestRandUint16(t *testing.T) {
 	}
 }
 
+func TestFallback(t *testing.T) {
+	max := 255
+	n := 20 * max
+	data := make([]byte, n)
+	intData := make([]int, n)
+	fallbackFillRandom(data)
+	for i, b := range data {
+		intData[i] = int(b)
+	}
+	S := ksStat(intData, int(max), 20)
+	t.Log(S)
+	if S > 0.01 {
+		t.Errorf("The random number generator is suffering, S = %.3f", S)
+	}
+}
+
 func TestRandomTCPPort(t *testing.T) {
 	var a uint16 = 10000
 	var b uint16 = 50000
+	var p uint16
 
 	for i := 0; i < 100000; i++ {
-		p := RandomTCPPort(a, b)
+		if i%2 == 0 {
+			p = RandomTCPPort(a, b)
+		} else {
+			p = RandomTCPPort(b, a)
+		}
+
 		if p < a || p >= b {
 			t.Errorf("Generated port (%d) is out of bound [%d, %d[", p, a, b)
 		}
@@ -140,6 +165,32 @@ func TestExtractNetworks(t *testing.T) {
 	}
 }
 
+func TestIsReserved(t *testing.T) {
+	a := net.IPv4(192, 168, 0, 1)
+	b := net.IPv4(8, 8, 8, 8)
+	c := net.IPv4(192, 168, 0, 0)
+	d := net.IPv4(192, 168, 0, 255)
+	e := net.IPv6zero
+	var f net.IP = nil
+
+	for _, ip := range []net.IP{a, b, e, f} {
+		if IsReserved(ip) {
+			t.Errorf("the ip %v must not be reserved", ip)
+		}
+	}
+
+	for _, ip := range []net.IP{c, d} {
+		if !IsReserved(ip) {
+			t.Errorf("the ip %v must be reserved", ip)
+		}
+	}
+
+	// if ip4 := ip.To4(); ip4 != nil {
+	// 	return ip4[3] == 0 || ip4[3] == 255
+	// }
+	// return false
+}
+
 func randomString(size int) string {
 	bytes := RandBytes(size)
 	for i, b := range bytes {
@@ -193,6 +244,150 @@ func TestKeepLeaves(t *testing.T) {
 	for i, e := range out {
 		if expect[i] != e {
 			t.Errorf("bad pruning, expect %s, got %s", expect[i], e)
+		}
+	}
+
+}
+
+func TestIncludes(t *testing.T) {
+	slice := []string{"a", "b", "c", "d"}
+	notslice := []string{"e", "f", "g", "h"}
+
+	for _, s := range slice {
+		if !Includes(slice, s) {
+			t.Errorf("the element %s is not in %v", s, slice)
+		}
+	}
+
+	for _, s := range notslice {
+		if Includes(slice, s) {
+			t.Errorf("the element %s is in %v", s, slice)
+		}
+	}
+}
+
+func TestGetKeys(t *testing.T) {
+	trueKeys := []string{"a", "b", "c", "d"}
+	m := map[string]interface{}{
+		"a": 0,
+		"b": time.Now(),
+		"c": "xxx",
+		"d": []string{"o", "oo", "ooo"},
+	}
+	keys := GetKeys(m)
+	if len(keys) != len(trueKeys) {
+		t.Errorf("bad array length (expect %d): %v", len(trueKeys), keys)
+	}
+
+	for _, k := range trueKeys {
+		if !Includes(keys, k) {
+			t.Errorf("keys does not include %s: %v", k, keys)
+		}
+	}
+}
+
+func TestGetLines(t *testing.T) {
+	f, err := os.CreateTemp("", "getlines")
+	if err != nil {
+		t.Error(err)
+	}
+	fp := f.Name()
+	// close and remove that files
+	// in the end
+	defer func() {
+		os.Remove(fp)
+	}()
+
+	content := "line"
+	for i := 1; i <= 10; i++ {
+		f.WriteString(fmt.Sprintf("%s%d\n", content, i))
+	}
+	f.Close()
+
+	lines, err := GetLines(fp)
+	if err != nil {
+		t.Error(err)
+	}
+	for i, line := range lines {
+		expected := fmt.Sprintf("%s%d", content, i+1)
+		if line != expected {
+			t.Errorf("bad line, expect %s, got %s", expected, line)
+		}
+	}
+
+	trimNumber := func(s string) string {
+		out := ""
+		for _, r := range s {
+			if r >= 48 && r < 58 {
+				continue
+			}
+			out += string(r)
+		}
+		return out
+	}
+
+	lines, err = GetLines(fp, trimNumber)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, line := range lines {
+		if line != content {
+			t.Errorf("bad line, expect %s, got %s", content, line)
+		}
+	}
+
+}
+
+func TestGetCmd(t *testing.T) {
+	args := []string{"-i"}
+	cmd := exec.Command("sh", args...)
+	cmd.Start()
+	defer cmd.Process.Kill()
+
+	cmdline, err := GetCmd(cmd.Process.Pid)
+	if err != nil {
+		t.Error(err)
+	}
+	for i, arg := range cmdline {
+		if arg != args[i] {
+			t.Errorf("bad command line, expect %s, got %s", args[i], arg)
+		}
+	}
+}
+
+func TestFlags(t *testing.T) {
+	type unknown struct{}
+
+	flags := map[string]interface{}{
+		"bool":        true,
+		"int":         int(0),
+		"int64":       int64(0),
+		"string":      "s",
+		"stringslice": []string{"a", "b"},
+		"duration":    time.Second,
+		"other":       unknown{},
+	}
+
+	for k, v := range flags {
+		BuildFlag(k, v, "", nil)
+	}
+
+	for k, v := range BuiltFlags() {
+		switch value := v.(type) {
+		case []string:
+			f, ok := flags[k].([]string)
+			if !ok {
+				t.Errorf("bad flag type: %v", flags[k])
+			}
+			for i, e := range value {
+				if f[i] != e {
+					t.Errorf("bad flags, expected %v, got %v", flags[k], v)
+				}
+			}
+		default:
+			if flags[k] != v {
+				t.Errorf("bad flags, expected %v, got %v", flags[k], v)
+			}
 		}
 	}
 
