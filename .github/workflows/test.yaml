@@ -4,7 +4,7 @@ on:
   pull_request:
 env:
   test-module-binary: bin/situation-*module-testing-*linux
-  test-module-binary-path: /tmp/situation/situation-test-modules
+  artifact-name: test-module-binary
 
 jobs:
   build:
@@ -24,15 +24,18 @@ jobs:
         env:
           cache-name: cache-mtb
         with:
-          path: ${{ env.test-module-binary-path }}
+          path: ${{ env.test-module-binary }}
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**.go') }}
       # build the binary
       - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
         name: Build module testing binary
-        run: |
-          make test-module
-          mkdir -p /tmp/situation
-          cp ${{ env.test-module-binary }} ${{ env.test-module-binary-path }}
+        run: make test-module
+      - name: Upload module testing binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.artifact-name }}
+          path: ${{ env.test-module-binary }}
+          retention-days: 1
 
   test:
     needs: build
@@ -42,20 +45,15 @@ jobs:
         image: ["fedora:36", "ubuntu:22.04"]
     container:
       image: ${{ matrix.image }}
-      volumes:
-        - "/tmp/situation:/tmp/situation"
     steps:
-      - name: Checkout Source
-        uses: actions/checkout@v3
-      - name: Cache module testing binary
-        id: cache-mtb
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-mtb
+      - name: Download module testing binary
+        uses: actions/download-artifact@v3
         with:
-          path: ${{ env.test-module-binary-path }}
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**.go') }}
-      # run the test if cache hits
-      - if: ${{ steps.cache-mtb.outputs.cache-hit == 'true' }}
-        name: Test modules
-        run: ${{ env.test-module-binary-path }}
+          name: ${{ env.artifact-name }}
+      - name: Debug
+        run: |
+          pwd
+          ls -alh
+          ls -alh ./bin
+      - name: Run the binary
+        run: ${{ env.test-module-binary }}
