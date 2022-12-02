@@ -42,7 +42,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ["fedora:36", "ubuntu:22.04"]
+        image:
+          [
+            "debian:10",
+            "ubuntu:22.04",
+            "fedora:36",
+            "rockylinux:9.0",
+            "alpine:3.17",
+          ]
     container:
       image: ${{ matrix.image }}
     steps:
