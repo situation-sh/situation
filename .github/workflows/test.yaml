@@ -54,7 +54,8 @@ jobs:
       - name: Debug
         run: |
           pwd
-          ls -alh
-          ls -alh ./bin
+          ls -alhR
       - name: Run the binary
-        run: ${{ env.test-module-binary }}
+        run: |
+          chmod +x ${{ env.test-module-binary }}
+          ${{ env.test-module-binary }}
