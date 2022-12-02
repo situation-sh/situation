@@ -50,6 +50,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.artifact-name }}
+          path: bin
       - name: Debug
         run: |
           pwd
