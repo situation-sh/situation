@@ -1,8 +1,10 @@
-name: Test
+name: test
+
 on:
   pull_request:
 env:
   test-module-binary: bin/situation-*module-testing-*linux
+  test-module-binary-path: /tmp/situation/situation-test-modules
 
 jobs:
   build:
@@ -22,12 +24,15 @@ jobs:
         env:
           cache-name: cache-mtb
         with:
-          path: ${{ env.test-module-binary }}
+          path: ${{ env.test-module-binary-path }}
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**.go') }}
       # build the binary
       - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
         name: Build module testing binary
-        run: make test-module
+        run: |
+          make test-module
+          mkdir -p /tmp/situation
+          cp ${{ env.test-module-binary }} ${{ env.test-module-binary-path }}
 
   test:
     needs: build
@@ -37,6 +42,8 @@ jobs:
         image: ["fedora:36", "ubuntu:22.04"]
     container:
       image: ${{ matrix.image }}
+      volumes:
+        - "/tmp/situation:/tmp/situation"
     steps:
       - name: Checkout Source
         uses: actions/checkout@v3
@@ -46,10 +53,9 @@ jobs:
         env:
           cache-name: cache-mtb
         with:
-          path: ${{ env.test-module-binary }}
+          path: ${{ env.test-module-binary-path }}
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**.go') }}
-
       # run the test if cache hits
       - if: ${{ steps.cache-mtb.outputs.cache-hit == 'true' }}
         name: Test modules
-        run: ${{ env.test-module-binary }}
+        run: ${{ env.test-module-binary-path }}
