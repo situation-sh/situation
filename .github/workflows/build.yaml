@@ -13,19 +13,22 @@ on:
       - "**.go"
       - ".github/workflows/build.yaml"
 
+env:
+  GO111MODULE: on
+  CGO_ENABLED: 0
+
 jobs:
   tests: # source: https://github.com/securego/gosec#integrating-with-code-scanning
     runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: "1.19.1"
+          go-version: "1.19.3"
+          cache: true
       # run gosec scanner
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
@@ -51,12 +54,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - name: Checkout Source
+        uses: actions/checkout@v3
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: "1.19.1"
+          go-version: "1.19.3"
+          cache: true
       # Run build of the application
       - name: Run build
         run: make all COMMIT=$GITHUB_SHA

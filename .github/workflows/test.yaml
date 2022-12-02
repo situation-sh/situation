@@ -1,0 +1,68 @@
+name: test
+
+on:
+  pull_request:
+env:
+  test-module-binary: bin/situation-*module-testing-*linux
+  artifact-name: test-module-binary
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.19.3"
+          cache: true
+      - name: Cache module testing binary
+        id: cache-mtb
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-mtb
+        with:
+          path: ${{ env.test-module-binary }}
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**.go') }}
+      # build the binary
+      - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
+        name: Build module testing binary
+        run: make test-module
+      - name: Upload module testing binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.artifact-name }}
+          path: ${{ env.test-module-binary }}
+          retention-days: 1
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          [
+            "debian:10",
+            "ubuntu:22.04",
+            "fedora:36",
+            "rockylinux:9.0",
+            "alpine:3.17",
+          ]
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - name: Download module testing binary
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.artifact-name }}
+          path: bin
+      - name: Debug
+        run: |
+          pwd
+          ls -alhR
+      - name: Run the binary
+        run: |
+          chmod +x ${{ env.test-module-binary }}
+          ${{ env.test-module-binary }}

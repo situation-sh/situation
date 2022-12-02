@@ -15,17 +15,17 @@ const fileName = "rpmdb.sqlite"
 const defaultPath = "/var/lib/rpm/rpmdb.sqlite"
 const fallbackDirectory = "/usr/lib"
 
-type FileFound struct {
+type fileFound struct {
 	path string
 }
 
-func (m *FileFound) Error() string {
+func (m *fileFound) Error() string {
 	return fmt.Sprintf("Got it! (%s)", m.path)
 }
 
 func walker(path string, d fs.DirEntry, err error) error {
 	if err == nil && d.Name() == fileName {
-		return &FileFound{path: path}
+		return &fileFound{path: path}
 	}
 	return nil
 }
@@ -36,7 +36,7 @@ func FindDBFile() (string, error) {
 	}
 
 	err := filepath.WalkDir(fallbackDirectory, walker)
-	if ff, ok := err.(*FileFound); ok {
+	if ff, ok := err.(*fileFound); ok {
 		return ff.path, nil
 	}
 	return "", fmt.Errorf("DB file not found")

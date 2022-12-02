@@ -56,7 +56,8 @@ func (m *NetstatModule) Run() error {
 	}
 
 	if runtime.GOOS == "linux" && u.Uid != "0" {
-		return &MustBeRunAsRootError{UID: u.Uid}
+		logger.Warnf("On Linux, the %s module must be run as root", m.Name())
+		return &mustBeRunAsRootError{uid: u.Uid}
 	}
 
 	machine := store.GetHost()

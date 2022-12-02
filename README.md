@@ -1,5 +1,8 @@
 # Situation
 
+[![build](https://github.com/situation-sh/situation/actions/workflows/build.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/build.yaml)
+[![test](https://github.com/situation-sh/situation/actions/workflows/test.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/test.yaml)
+
 The autonomous data collector.
 
 Situation is a project that aims to **discover** everything on information systems, on its own. In a way, it lies between [nmap](https://nmap.org/), [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) and [osquery](https://osquery.io/). However it mainly differs from them on the following aspect: **user do not declare what to collect or where**.
@@ -192,107 +195,107 @@ kdeconnectd      ::             1716/tcp6
 
 ## Modules
 
-|Name|Dependencies|Architectures|Linux|Windows|System requirements|Required Go modules|
-|---|---|---|---|---|---|---|
-|[arp](arp.md)|[`Ping`](ping.md)|:grey_question:|:white_check_mark:|:white_check_mark:||<ul><li>[`golang.org/x/sys/windows`](https://pkg.go.dev/golang.org/x/sys/windows)</li><li>[`github.com/vishvananda/netlink`](https://pkg.go.dev/github.com/vishvananda/netlink/)</li></ul>|
-|[docker](docker.md)|[`Host network`](host_network.md) [`TCP Scan`](tcp_scan.md)|:grey_question:|:white_check_mark:|:children_crossing:|Must belong to `docker` group (Linux + unix socket)|<ul><li>[`github.com/docker/docker/client`](https://pkg.go.dev/github.com/docker/docker/client)</li><li> [`github.com/docker/docker/api/types`](https://pkg.go.dev/github.com/docker/docker/api/types)</li><li>[`github.com/docker/docker/api/types/filters`](https://pkg.go.dev/github.com/docker/docker/api/types/filters)</li><li>[`github.com/docker/docker/api/types/network`](https://pkg.go.dev/github.com/docker/docker/api/types/network)</li></ul>|
-|[host-basic](host_basic.md)||:grey_question:|:white_check_mark:|:white_check_mark:||<ul><li>[`github.com/shirou/gopsutil/v3/host`](https://pkg.go.dev/github.com/shirou/gopsutil/v3/host)</li></ul>|
-|[host-cpu](host_cpu.md)|[`Host basic`](host_basic.md)|:grey_question:|:white_check_mark:|:white_check_mark:||<ul><li>[`github.com/shirou/gopsutil/v3/cpu`](https://pkg.go.dev/github.com/shirou/gopsutil/v3/cpu)</li></ul>|
-|[host-network](host_network.md)|[`Host basic`](host_basic.md)|:grey_question:|:white_check_mark:|:white_check_mark:|||
-|[netstat](netstat.md)|[`Host basic`](host_basic.md)|:grey_question:|:white_check_mark:|:white_check_mark:|Need root privileges|<ul><li>[`github.com/cakturk/gonetstat/netstat`](https://pkg.go.dev/github.com/cakturk/gonetstat/netstat)</li></ul>|
-|[ping](ping.md)|[`Host network`](host_network.md)|:grey_question:|:white_check_mark:|:white_check_mark:||<ul><li>[`github.com/goping/ping`](https://pkg.go.dev/github.com/goping/ping)</li></ul>|
-|[tcp-scan](tcp_scan.md)|[`ARP`](arp.md)|:grey_question:|:white_check_mark:|:white_check_mark:|||
+| Name                            | Dependencies                                                | Architectures   | Linux              | Windows             | System requirements                                 | Required Go modules                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------- | ----------------------------------------------------------- | --------------- | ------------------ | ------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [arp](arp.md)                   | [`Ping`](ping.md)                                           | :grey_question: | :white_check_mark: | :white_check_mark:  |                                                     | <ul><li>[`golang.org/x/sys/windows`](https://pkg.go.dev/golang.org/x/sys/windows)</li><li>[`github.com/vishvananda/netlink`](https://pkg.go.dev/github.com/vishvananda/netlink/)</li></ul>                                                                                                                                                                                                                                                                   |
+| [docker](docker.md)             | [`Host network`](host_network.md) [`TCP Scan`](tcp_scan.md) | :grey_question: | :white_check_mark: | :children_crossing: | Must belong to `docker` group (Linux + unix socket) | <ul><li>[`github.com/docker/docker/client`](https://pkg.go.dev/github.com/docker/docker/client)</li><li> [`github.com/docker/docker/api/types`](https://pkg.go.dev/github.com/docker/docker/api/types)</li><li>[`github.com/docker/docker/api/types/filters`](https://pkg.go.dev/github.com/docker/docker/api/types/filters)</li><li>[`github.com/docker/docker/api/types/network`](https://pkg.go.dev/github.com/docker/docker/api/types/network)</li></ul> |
+| [host-basic](host_basic.md)     |                                                             | :grey_question: | :white_check_mark: | :white_check_mark:  |                                                     | <ul><li>[`github.com/shirou/gopsutil/v3/host`](https://pkg.go.dev/github.com/shirou/gopsutil/v3/host)</li></ul>                                                                                                                                                                                                                                                                                                                                              |
+| [host-cpu](host_cpu.md)         | [`Host basic`](host_basic.md)                               | :grey_question: | :white_check_mark: | :white_check_mark:  |                                                     | <ul><li>[`github.com/shirou/gopsutil/v3/cpu`](https://pkg.go.dev/github.com/shirou/gopsutil/v3/cpu)</li></ul>                                                                                                                                                                                                                                                                                                                                                |
+| [host-network](host_network.md) | [`Host basic`](host_basic.md)                               | :grey_question: | :white_check_mark: | :white_check_mark:  |                                                     |                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| [netstat](netstat.md)           | [`Host basic`](host_basic.md)                               | :grey_question: | :white_check_mark: | :white_check_mark:  | Need root privileges                                | <ul><li>[`github.com/cakturk/gonetstat/netstat`](https://pkg.go.dev/github.com/cakturk/gonetstat/netstat)</li></ul>                                                                                                                                                                                                                                                                                                                                          |
+| [ping](ping.md)                 | [`Host network`](host_network.md)                           | :grey_question: | :white_check_mark: | :white_check_mark:  |                                                     | <ul><li>[`github.com/goping/ping`](https://pkg.go.dev/github.com/goping/ping)</li></ul>                                                                                                                                                                                                                                                                                                                                                                      |
+| [tcp-scan](tcp_scan.md)         | [`ARP`](arp.md)                                             | :grey_question: | :white_check_mark: | :white_check_mark:  |                                                     |                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### ARP
 
 
-|             ID Card |                                                                                                                                                                                                                    |
-| ------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|        Dependencies | [`Ping`](ping.md)                                                                                                                                                                                                  |
-|       Architectures | :grey_question:                                                                                                                                                                                                       |
-|               Linux | :white_check_mark:                                                                                                                                                                                                 |
-|             Windows | :white_check_mark:                                                                                                                                                                                                 |
-| System requirements |                                                                                                                                                                                                                    |
+|             ID Card |                                                                                                                                                                                            |
+| ------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|        Dependencies | [`Ping`](ping.md)                                                                                                                                                                          |
+|       Architectures | :grey_question:                                                                                                                                                                            |
+|               Linux | :white_check_mark:                                                                                                                                                                         |
+|             Windows | :white_check_mark:                                                                                                                                                                         |
+| System requirements |                                                                                                                                                                                            |
 | Required Go modules | <ul><li>[`golang.org/x/sys/windows`](https://pkg.go.dev/golang.org/x/sys/windows)</li><li>[`github.com/vishvananda/netlink`](https://pkg.go.dev/github.com/vishvananda/netlink/)</li></ul> |
 
 ### Docker
 
-|             ID Card |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|        Dependencies | [`Host network`](host_network.md) [`TCP Scan`](tcp_scan.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-|       Architectures | :grey_question:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-|               Linux | :white_check_mark:                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-|             Windows | :children_crossing:                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| System requirements | Must belong to `docker` group (Linux + unix socket)                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|             ID Card |                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|        Dependencies | [`Host network`](host_network.md) [`TCP Scan`](tcp_scan.md)                                                                                                                                                                                                                                                                                                                                                                                                  |
+|       Architectures | :grey_question:                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|               Linux | :white_check_mark:                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|             Windows | :children_crossing:                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| System requirements | Must belong to `docker` group (Linux + unix socket)                                                                                                                                                                                                                                                                                                                                                                                                          |
 | Required Go modules | <ul><li>[`github.com/docker/docker/client`](https://pkg.go.dev/github.com/docker/docker/client)</li><li> [`github.com/docker/docker/api/types`](https://pkg.go.dev/github.com/docker/docker/api/types)</li><li>[`github.com/docker/docker/api/types/filters`](https://pkg.go.dev/github.com/docker/docker/api/types/filters)</li><li>[`github.com/docker/docker/api/types/network`](https://pkg.go.dev/github.com/docker/docker/api/types/network)</li></ul> |
 
 ### Host basic
 
-|             ID Card |                                                                                                                             |
-| ------------------: | :-------------------------------------------------------------------------------------------------------------------------- |
-|        Dependencies |                                                                                                                             |
-|       Architectures | :grey_question:                                                                                                                |
-|               Linux | :white_check_mark:                                                                                            |
-|             Windows | :white_check_mark:                                                                                            |
-| System requirements |                                                                                                                             |
+|             ID Card |                                                                                                                 |
+| ------------------: | :-------------------------------------------------------------------------------------------------------------- |
+|        Dependencies |                                                                                                                 |
+|       Architectures | :grey_question:                                                                                                 |
+|               Linux | :white_check_mark:                                                                                              |
+|             Windows | :white_check_mark:                                                                                              |
+| System requirements |                                                                                                                 |
 | Required Go modules | <ul><li>[`github.com/shirou/gopsutil/v3/host`](https://pkg.go.dev/github.com/shirou/gopsutil/v3/host)</li></ul> |
 
 ### Host CPU
 
 
-|             ID Card |                                                                                                                           |
-| ------------------: | :------------------------------------------------------------------------------------------------------------------------ |
-|        Dependencies | [`Host basic`](host_basic.md)                                                                                             |
-|       Architectures | :grey_question:                                                                                                              |
-|               Linux | :white_check_mark:                                                                                          |
-|             Windows | :white_check_mark:                                                                                          |
-| System requirements |                                                                                                                           |
+|             ID Card |                                                                                                               |
+| ------------------: | :------------------------------------------------------------------------------------------------------------ |
+|        Dependencies | [`Host basic`](host_basic.md)                                                                                 |
+|       Architectures | :grey_question:                                                                                               |
+|               Linux | :white_check_mark:                                                                                            |
+|             Windows | :white_check_mark:                                                                                            |
+| System requirements |                                                                                                               |
 | Required Go modules | <ul><li>[`github.com/shirou/gopsutil/v3/cpu`](https://pkg.go.dev/github.com/shirou/gopsutil/v3/cpu)</li></ul> |
 
 ### Host network
 
-|             ID Card |                                  |
-| ------------------: | :------------------------------- |
-|        Dependencies | [`Host basic`](host_basic.md)    |
-|       Architectures | :grey_question:                     |
-|               Linux | :white_check_mark: |
-|             Windows | :white_check_mark: |
-| System requirements |                                  |
-| Required Go modules |                                  |
+|             ID Card |                               |
+| ------------------: | :---------------------------- |
+|        Dependencies | [`Host basic`](host_basic.md) |
+|       Architectures | :grey_question:               |
+|               Linux | :white_check_mark:            |
+|             Windows | :white_check_mark:            |
+| System requirements |                               |
+| Required Go modules |                               |
 
 ### Netstat 
 
-|             ID Card |                                                                                                                                   |
-| ------------------: | :-------------------------------------------------------------------------------------------------------------------------------- |
-|        Dependencies | [`Host basic`](host_basic.md)                                                                                                     |
-|       Architectures | :grey_question:                                                                                                                      |
-|               Linux | :white_check_mark:                                                                                                                |
-|             Windows | :white_check_mark:                                                                                                                |
-| System requirements | Need root privileges                                                                                                              |
+|             ID Card |                                                                                                                       |
+| ------------------: | :-------------------------------------------------------------------------------------------------------------------- |
+|        Dependencies | [`Host basic`](host_basic.md)                                                                                         |
+|       Architectures | :grey_question:                                                                                                       |
+|               Linux | :white_check_mark:                                                                                                    |
+|             Windows | :white_check_mark:                                                                                                    |
+| System requirements | Need root privileges                                                                                                  |
 | Required Go modules | <ul><li>[`github.com/cakturk/go-netstat/netstat`](https://pkg.go.dev/github.com/cakturk/go-netstat/netstat)</li></ul> |
 
 ### Ping
 
-|             ID Card |                                                                                                       |
-| ------------------: | :---------------------------------------------------------------------------------------------------- |
-|        Dependencies | [`Host network`](host_network.md)                                                                     |
-|       Architectures | :grey_question:                                                                                          |
-|               Linux | :white_check_mark:                                                                      |
-|             Windows | :white_check_mark:                                                                      |
-| System requirements |                                                                                                       |
+|             ID Card |                                                                                           |
+| ------------------: | :---------------------------------------------------------------------------------------- |
+|        Dependencies | [`Host network`](host_network.md)                                                         |
+|       Architectures | :grey_question:                                                                           |
+|               Linux | :white_check_mark:                                                                        |
+|             Windows | :white_check_mark:                                                                        |
+| System requirements |                                                                                           |
 | Required Go modules | <ul><li>[`github.com/go-ping/ping`](https://pkg.go.dev/github.com/go-ping/ping)</li></ul> |
 
 ### TCP Scan
 
 
-|             ID Card |                                  |
-| ------------------: | :------------------------------- |
-|        Dependencies | [`ARP`](arp.md)                  |
-|       Architectures | :grey_question:                     |
+|             ID Card |                    |
+| ------------------: | :----------------- |
+|        Dependencies | [`ARP`](arp.md)    |
+|       Architectures | :grey_question:    |
 |               Linux | :white_check_mark: |
 |             Windows | :white_check_mark: |
-| System requirements |                                  |
-| Required Go modules |                                  |
+| System requirements |                    |
+| Required Go modules |                    |
 
 ## Backends
 

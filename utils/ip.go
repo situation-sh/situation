@@ -1,11 +1,7 @@
 package utils
 
 import (
-	"encoding/binary"
 	"net"
-
-	"github.com/google/gopacket/routing"
-	"github.com/pkg/errors"
 )
 
 // CopyIP returns a new buffer containing
@@ -18,12 +14,13 @@ func CopyIP(ip net.IP) net.IP {
 
 // BaseNetwork returns the strict CIDR network
 // Example 192.168.1.15/24 -> 192.168.1.0/24
-func BaseNetwork(n *net.IPNet) *net.IPNet {
-	return &net.IPNet{
-		IP:   n.IP.Mask(n.Mask),
-		Mask: n.Mask,
-	}
-}
+// Seems useless
+// func BaseNetwork(n *net.IPNet) *net.IPNet {
+// 	return &net.IPNet{
+// 		IP:   n.IP.Mask(n.Mask),
+// 		Mask: n.Mask,
+// 	}
+// }
 
 // Iterate returns a channel yielding IP addresses
 // included in IP network. It makes copies to avoid
@@ -89,29 +86,31 @@ func ExtractNetworks(iface *net.Interface, keepLocalAddress bool) []*net.IPNet {
 
 // PreferredNetwork returns the (non-strict) network
 // where your system sends outgoing request.
-func PreferredNetwork() (*net.IPNet, error) {
-	// call google
-	ip := net.ParseIP("8.8.8.8")
+// Seems useless
+// func PreferredNetwork() (*net.IPNet, error) {
+// 	// call google
+// 	ip := net.ParseIP("8.8.8.8")
 
-	router, err := routing.New()
-	if err != nil {
-		return nil, errors.Wrap(err, "error while creating routing object")
-	}
+// 	router, err := routing.New()
+// 	if err != nil {
+// 		return nil, errors.Wrap(err, "error while creating routing object")
+// 	}
 
-	iface, _, _, err := router.Route(ip)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error routing to ip: %s", ip)
-	}
+// 	iface, _, _, err := router.Route(ip)
+// 	if err != nil {
+// 		return nil, errors.Wrapf(err, "error routing to ip: %s", ip)
+// 	}
 
-	networks := ExtractNetworks(iface, true)
-	return networks[0], nil
-}
+// 	networks := ExtractNetworks(iface, true)
+// 	return networks[0], nil
+// }
 
-func Uint32ToIP(u uint32) net.IP {
-	ip := make(net.IP, 4)
-	binary.LittleEndian.PutUint32(ip, u)
-	return ip
-}
+// Seems useless
+// func Uint32ToIP(u uint32) net.IP {
+// 	ip := make(net.IP, 4)
+// 	binary.LittleEndian.PutUint32(ip, u)
+// 	return ip
+// }
 
 func IsReserved(ip net.IP) bool {
 	if ip4 := ip.To4(); ip4 != nil {

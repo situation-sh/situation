@@ -10,3 +10,13 @@ func GetKeys(m map[string]interface{}) []string {
 	}
 	return out
 }
+
+// Includes check if a slice includes a given element (string)
+func Includes(slice []string, s string) bool {
+	for _, x := range slice {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}

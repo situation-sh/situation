@@ -30,7 +30,7 @@ var useICMP bool = func() bool {
 	// On alpine VM with root account, we notice that
 	// the ping privilege must be set to true
 	if runtime.GOOS == "linux" && u.Uid == "0" {
-		return true
+		return false
 	}
 	return false
 }()
