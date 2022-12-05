@@ -18,6 +18,16 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// description: retrieve information about docker containers
+// data:
+//   - z
+//
+// status:
+//
+//	linux: ok
+//	windows: ok
+//	mac: unknown
+// requirements: user must be root 
 type DockerModule struct{}
 
 func (m *DockerModule) Name() string {

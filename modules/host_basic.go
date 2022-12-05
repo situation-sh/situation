@@ -17,6 +17,12 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// DESCRIPTION(0) retrieve basic information about the host
+// DATA(0) hostid, architecture, platform, distribution, version, uptime
+// OS(linux) ok
+// OS(windows) ok
+// OS(macos) unknown
+// ARCH(amd64) ok
 type HostBasicModule struct{}
 
 func (m *HostBasicModule) Name() string {

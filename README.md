@@ -2,6 +2,7 @@
 
 [![build](https://github.com/situation-sh/situation/actions/workflows/build.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/build.yaml)
 [![test](https://github.com/situation-sh/situation/actions/workflows/test.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/test.yaml)
+[![codecov](https://codecov.io/gh/situation-sh/situation/branch/main/graph/badge.svg?token=JC1KQNCXBQ)](https://codecov.io/gh/situation-sh/situation)
 
 The autonomous data collector.
 

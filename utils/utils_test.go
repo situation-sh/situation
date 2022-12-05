@@ -59,7 +59,7 @@ func TestFallback(t *testing.T) {
 	}
 	S := ksStat(intData, int(max), 20)
 	t.Log(S)
-	if S > 0.01 {
+	if S > 0.015 {
 		t.Errorf("The random number generator is suffering, S = %.3f", S)
 	}
 }
