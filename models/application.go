@@ -7,12 +7,12 @@ import (
 // Package is a wrapper around application that stores distribution
 // information of applications (executables)
 type Package struct {
-	Name            string         `json:"name,omitempty"`
-	Version         string         `json:"version,omitempty"`
-	Vendor          string         `json:"vendor,omitempty"`
-	Manager         string         `json:"manager,omitempty"`
-	InstallTimeUnix int64          `json:"install_time,omitempty"`
-	Applications    []*Application `json:"applications"`
+	Name            string         `json:"name,omitempty" jsonschema:"description=name of the package,example=openssh,example=musl-gcc,example=python,example=texlive"`
+	Version         string         `json:"version,omitempty" jsonschema:"description=version of the package,example=8.8p1,example=1.2.3,example=3.10.8,example=2021"`
+	Vendor          string         `json:"vendor,omitempty" jsonschema:"description=name of the organization that produce the package or its maintainer,example=Fedora Project,example=bob@debian.org"`
+	Manager         string         `json:"manager,omitempty" jsonschema:"description=program that manages the package installation,example=rpm,example=dpkg,example=msi,example=builtin"`
+	InstallTimeUnix int64          `json:"install_time,omitempty" jsonschema:"description=UNIX timestamp of the package installation,example=1670520587"`
+	Applications    []*Application `json:"applications" jsonschema:"description=list of the applications provided by this package"`
 	Files           []string       `json:"-"` // ignore that field for the moment
 }
 
@@ -57,17 +57,17 @@ func (pkg *Package) ApplicationNames() []string {
 // Application is a structure that represents all the
 // types of apps we can have on a system
 type Application struct {
-	Name      string                 `json:"name,omitempty"`
-	Args      []string               `json:"args,omitempty"`
-	Endpoints []*ApplicationEndpoint `json:"endpoints"`
+	Name      string                 `json:"name,omitempty" jsonschema:"description=path (or name) of the application,example=/usr/sbin/sshd,example=/usr/bin/musl-gcc,example=C:\\Windows\\System32\\svchost.exe,example=wininit.exe,example=System"`
+	Args      []string               `json:"args,omitempty" jsonschema:"description=list of arguments passed to app"` // we cannot put example right now (PR in progress: https://github.com/invopop/jsonschema/pull/31)
+	Endpoints []*ApplicationEndpoint `json:"endpoints"  jsonschema:"description=list of network endpoints open by this app"`
 }
 
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
 type ApplicationEndpoint struct {
-	Port     uint16 `json:"port"`
-	Protocol string `json:"protocol"`
-	Addr     net.IP `json:"addr"`
+	Port     uint16 `json:"port" jsonschema:"description=port,example=22,example=80,example=443,example=49667"`
+	Protocol string `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
+	Addr     net.IP `json:"addr" jsonschema:"description=binding IP address,example=0.0.0.0,example=::,example=127.0.0.1,example=192.168.122.23"`
 }
 
 func (s *Application) lastEndpoint() *ApplicationEndpoint {
