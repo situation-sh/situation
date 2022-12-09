@@ -3,7 +3,7 @@ package models
 // CPU gathers few information about processor
 type CPU struct {
 	ModelName string `json:"model_name,omitempty" jsonschema:"description=common name of the CPU,example=Intel Xeon Processor (Cooperlake),example=Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz"`
-	Vendor    string `json:"vendor,omitempty" jsonschema:"description=CPU 12-chars vendor string,example=GenuineIntel,example=AuthenticAMD"`
+	Vendor    string `json:"vendor,omitempty" jsonschema:"description=CPU 12-chars vendor string,example=GenuineIntel,example=AuthenticAMD,minLength=12,maxLength=12"`
 	Cores     int    `json:"cores,omitempty" jsonschema:"description=number of cores,example=2,example=6"`
 }
 

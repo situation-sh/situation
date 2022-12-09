@@ -12,7 +12,7 @@ import (
 // an information system. It can be a physical machine,
 // a VM, a container...
 type Machine struct {
-	InternalID          int                 `json:"internal_id" jsonschema:"description=internal reference of the machine (if we want to point to this machine within the json),example=53127"`
+	InternalID          int                 `json:"internal_id" jsonschema:"description=internal reference of the machine (if we want to point to this machine within the json),example=53127,minimum=1"`
 	Hostname            string              `json:"hostname,omitempty" jsonschema:"description=name of the machine,example=DESKTOP-2HHPC7I,example=PC-JEAN-LUC,example=server07"`
 	HostID              string              `json:"host_id,omitempty" jsonschema:"description=machine uuid identifier,example=8375c6c3-de33-41a4-bdb2-4e467d9f632c"`
 	Arch                string              `json:"arch,omitempty" jsonschema:"description=architecture,example=x86_64"`

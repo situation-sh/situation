@@ -65,7 +65,7 @@ type Application struct {
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
 type ApplicationEndpoint struct {
-	Port     uint16 `json:"port" jsonschema:"description=port,example=22,example=80,example=443,example=49667"`
+	Port     uint16 `json:"port" jsonschema:"description=port,example=22,example=80,example=443,example=49667,minimum=1,maximum=65535"`
 	Protocol string `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
 	Addr     net.IP `json:"addr" jsonschema:"description=binding IP address,example=0.0.0.0,example=::,example=127.0.0.1,example=192.168.122.23"`
 }
