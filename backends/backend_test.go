@@ -2,12 +2,15 @@ package backends
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"sync"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
+	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/models"
+	"github.com/urfave/cli/v2"
 )
 
 // GenericTestBackend is a basic function to test a backend
@@ -47,4 +50,42 @@ func TestBackends(t *testing.T) {
 			t.Errorf("error with backend %s: %v", name, err)
 		}
 	}
+}
+
+func TestPrepare(t *testing.T) {
+	proxy := &StdoutBackend{}
+	name := proxy.Name()
+	backend, exists := backends[name]
+	if !exists {
+		t.Errorf("the backend %s is not registered", name)
+	}
+	key := fmt.Sprintf("backends.%s.enabled", name)
+
+	fs := flag.NewFlagSet("test", flag.ExitOnError)
+	// define a flag equal to false by default
+	fs.Bool(key, false, "")
+	// fake the cmdline option
+	fs.Set(key, "true")
+
+	c := cli.NewContext(nil, fs, nil)
+	if !c.IsSet(key) {
+		t.Errorf("the key %s not set in context", key)
+	}
+
+	config.InjectContext(c)
+
+	if !isEnabled(backend) {
+		t.Errorf("backend %s is not enabled", name)
+	}
+
+	prepareBackends()
+	if len(enabledBackends) != 1 {
+		t.Errorf("1 backend expected, got %v", enabledBackends)
+	}
+
+	if err := Init(); err != nil {
+		t.Error(err)
+	}
+	Write(&models.Payload{})
+	Close()
 }

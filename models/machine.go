@@ -12,21 +12,21 @@ import (
 // an information system. It can be a physical machine,
 // a VM, a container...
 type Machine struct {
-	InternalID          int                 `json:"internal_id"`
-	Hostname            string              `json:"hostname,omitempty"`
-	HostID              string              `json:"host_id,omitempty"`
-	Arch                string              `json:"arch,omitempty"`
-	Platform            string              `json:"platform,omitempty"`
-	Distribution        string              `json:"distribution,omitempty"`
-	DistributionVersion string              `json:"distribution_version,omitempty"`
-	ParentMachine       int                 `json:"parent_machine,omitempty"`
-	CPU                 *CPU                `json:"cpu,omitempty"`
-	NICS                []*NetworkInterface `json:"nics"`
-	Packages            []*Package          `json:"packages"`
-	Disks               []*Disk             `json:"disks"`
-	GPUS                []*GPU              `json:"gpus"`
-	Agent               *uuid.UUID          `json:"hosted_agent,omitempty"`
-	Uptime              time.Duration       `json:"uptime,omitempty"`
+	InternalID          int                 `json:"internal_id" jsonschema:"description=internal reference of the machine (if we want to point to this machine within the json),example=53127,minimum=1"`
+	Hostname            string              `json:"hostname,omitempty" jsonschema:"description=name of the machine,example=DESKTOP-2HHPC7I,example=PC-JEAN-LUC,example=server07"`
+	HostID              string              `json:"host_id,omitempty" jsonschema:"description=machine uuid identifier,example=8375c6c3-de33-41a4-bdb2-4e467d9f632c"`
+	Arch                string              `json:"arch,omitempty" jsonschema:"description=architecture,example=x86_64"`
+	Platform            string              `json:"platform,omitempty" jsonschema:"description=system base platform,example=linux,example=windows,example=docker"`
+	Distribution        string              `json:"distribution,omitempty" jsonschema:"description=OS name (or base image),example=fedora,example=Microsoft Windows 10 Home,example=postgres"`
+	DistributionVersion string              `json:"distribution_version,omitempty" jsonschema:"description=OS version (or image version),example=36,example=10.0.19044 Build 19044,example=latest"`
+	Uptime              time.Duration       `json:"uptime,omitempty" jsonschema:"description=machine uptime in seconds,example=15763,example=8518"`
+	ParentMachine       int                 `json:"parent_machine,omitempty" jsonschema:"description=internal reference of the parent machine (docker or VM cases especially),example=53127"`
+	Agent               *uuid.UUID          `json:"hosted_agent,omitempty" jsonschema:"description=collector identifier (agent case)"`
+	CPU                 *CPU                `json:"cpu,omitempty" jsonschema:"description=CPU information"`
+	NICS                []*NetworkInterface `json:"nics" jsonschema:"description=list of network devices"`
+	Packages            []*Package          `json:"packages" jsonschema:"description=list of packages"`
+	Disks               []*Disk             `json:"disks" jsonschema:"description=list of disks"`
+	GPUS                []*GPU              `json:"gpus" jsonschema:"description=list of GPU"`
 }
 
 // NewMachine inits a new Machine structure
