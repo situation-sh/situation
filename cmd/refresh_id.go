@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -71,7 +70,7 @@ func runRefreshIDCmd(c *cli.Context) error {
 		return err
 	}
 
-	raw, err := ioutil.ReadFile(binaryFile) //#nosec (https://github.com/securego/gosec/issues/821)
+	raw, err := os.ReadFile(binaryFile) //#nosec (https://github.com/securego/gosec/issues/821)
 	if err != nil {
 		return err
 	}
