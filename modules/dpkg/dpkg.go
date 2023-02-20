@@ -112,7 +112,9 @@ func GetInstalledPackages() ([]*models.Package, error) {
 					out = append(out, pkg)
 				}
 			}
-			f.Close()
+			if f.Close() != nil {
+				continue
+			}
 		}
 	}
 	return out, nil
