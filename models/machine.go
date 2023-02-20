@@ -1,12 +1,13 @@
 package models
 
 import (
-	"math/rand"
 	"net"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+var machineCounter = 0
 
 // Machine is a generic structure to represent nodes on
 // an information system. It can be a physical machine,
@@ -31,8 +32,11 @@ type Machine struct {
 
 // NewMachine inits a new Machine structure
 func NewMachine() *Machine {
+	// increment ID
+	machineCounter++
+	// return new machine
 	return &Machine{
-		InternalID: 1 + rand.Intn(65535), // ensure the InternalId is greater than 1
+		InternalID: machineCounter, // ensure the InternalId is greater than 1
 		Packages:   make([]*Package, 0),
 		NICS:       make([]*NetworkInterface, 0),
 		Disks:      make([]*Disk, 0),
@@ -124,7 +128,7 @@ func (m *Machine) GetOrCreateApplicationByEndpoint(port uint16, protocol string,
 	endpoint := ApplicationEndpoint{
 		Port:     port,
 		Protocol: protocol,
-		Addr:     addr,
+		Addr:     IP(addr),
 	}
 	app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
 	pkg := Package{Applications: []*Application{&app}}

@@ -39,7 +39,7 @@ func RandomApplicationEndpoint() *models.ApplicationEndpoint {
 	return &models.ApplicationEndpoint{
 		Port:     gofakeit.Uint16(),
 		Protocol: gofakeit.RandomString([]string{"tcp", "udp"}),
-		Addr:     net.ParseIP(gofakeit.IPv4Address()),
+		Addr:     models.IP(net.ParseIP(gofakeit.IPv4Address())),
 	}
 }
 

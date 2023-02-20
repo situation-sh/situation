@@ -45,7 +45,7 @@ type ModuleError struct {
 
 // ExtraInfo stores extra agent/scan informations
 type ExtraInfo struct {
-	Agent     uuid.UUID      `json:"agent" jsonschema:"description=agent uuid identifier,example=cafecafe-cafe-cafe-cafe-cafecafecafe"`
+	Agent     uuid.UUID      `json:"agent" jsonschema:"description=agent uuid identifier"`
 	Version   string         `json:"version" jsonschema:"description=agent version,example=0.13.2"`
 	Duration  time.Duration  `json:"duration" jsonschema:"description=scan duration in nanoseconds,example=2010899300"`
 	Timestamp time.Time      `json:"timestamp" jsonschema:"description=timestamp of the end of the scan,example=2022-12-09T10:47:34.0210722+01:00"`
