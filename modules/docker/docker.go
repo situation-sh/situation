@@ -73,26 +73,34 @@ func splitImageName(image string) (string, string) {
 
 func getOrCreateMachineFromEndpoint(
 	endpoint types.EndpointResource,
-	container types.Container,
+	container types.ContainerJSON,
 	ipam network.IPAM,
 	parent *models.Machine,
 	logger *logrus.Entry) *models.Machine {
 	machine := store.GetMachineByHostID(container.ID)
 	// Otherwise, create it
+
 	if machine == nil {
 		image, version := splitImageName(container.Image)
 
+		uptime := time.Duration(-1)
+		createdAt, err := time.Parse(time.RFC3339, container.Created)
+		if err == nil {
+			// here we have the right uptime (int64 -> ns)
+			uptime = time.Since(createdAt)
+		}
 		// machine
 		machine = models.NewMachine()
-		if len(container.Names) > 0 {
-			machine.Hostname = strings.TrimPrefix(container.Names[0], "/") // use container name
-		}
-		machine.Platform = "docker"                                  // set platform to docker
-		machine.Distribution = image                                 // container image
-		machine.DistributionVersion = version                        // container image version
-		machine.HostID = container.ID                                // container ID
-		machine.Uptime = time.Since(time.Unix(container.Created, 0)) //
-		machine.ParentMachine = parent.InternalID                    // underlying machine
+		// if len(container.Names) > 0 {
+		// 	machine.Hostname = strings.TrimPrefix(container.Names[0], "/") // use container name
+		// }
+		machine.Hostname = container.Name
+		machine.Platform = "docker"               // set platform to docker
+		machine.Distribution = image              // container image
+		machine.DistributionVersion = version     // container image version
+		machine.HostID = container.ID             // container ID
+		machine.Uptime = uptime                   //
+		machine.ParentMachine = parent.InternalID // underlying machine
 		// fmt.Printf("%+v\n", machine)
 
 		// logging
@@ -199,7 +207,15 @@ func RunBasic(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 				continue
 			}
 
-			machine := getOrCreateMachineFromEndpoint(endpoint, container, network.IPAM, p.machine, logger)
+			// we prefer inspect because of the startedAt property (=uptime)
+			// that is easier to get
+			containerJSON, err := p.client.ContainerInspect(ctx, container.ID)
+			if err != nil {
+				// normally we can't be here because the container exist.
+				// If something goes wrong just continue
+				continue
+			}
+			machine := getOrCreateMachineFromEndpoint(endpoint, containerJSON, network.IPAM, p.machine, logger)
 
 			apps := machine.Applications() // bypass the packages
 			// here we have a machine
