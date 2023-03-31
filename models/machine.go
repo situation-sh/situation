@@ -20,7 +20,7 @@ type Machine struct {
 	Platform            string              `json:"platform,omitempty" jsonschema:"description=system base platform,example=linux,example=windows,example=docker"`
 	Distribution        string              `json:"distribution,omitempty" jsonschema:"description=OS name (or base image),example=fedora,example=Microsoft Windows 10 Home,example=postgres"`
 	DistributionVersion string              `json:"distribution_version,omitempty" jsonschema:"description=OS version (or image version),example=36,example=10.0.19044 Build 19044,example=latest"`
-	Uptime              time.Duration       `json:"uptime,omitempty" jsonschema:"description=machine uptime in seconds,example=15763,example=8518"`
+	Uptime              time.Duration       `json:"uptime,omitempty" jsonschema:"description=machine uptime in nanoseconds,example=22343000000000,example=13521178203519"`
 	ParentMachine       int                 `json:"parent_machine,omitempty" jsonschema:"description=internal reference of the parent machine (docker or VM cases especially),example=53127"`
 	Agent               *uuid.UUID          `json:"hosted_agent,omitempty" jsonschema:"description=collector identifier (agent case)"`
 	CPU                 *CPU                `json:"cpu,omitempty" jsonschema:"description=CPU information"`
@@ -128,7 +128,7 @@ func (m *Machine) GetOrCreateApplicationByEndpoint(port uint16, protocol string,
 	endpoint := ApplicationEndpoint{
 		Port:     port,
 		Protocol: protocol,
-		Addr:     IP(addr),
+		Addr:     addr,
 	}
 	app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
 	pkg := Package{Applications: []*Application{&app}}
