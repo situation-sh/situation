@@ -63,18 +63,18 @@ type Application struct {
 }
 
 // IP is used to denote either ipv4 or ipv6 address
-type IP net.IP
+// type IP net.IP
 
-func (ip IP) Equal(other net.IP) bool {
-	return (net.IP(ip)).Equal(other)
-}
+// func (ip IP) Equal(other net.IP) bool {
+// 	return (net.IP(ip)).Equal(other)
+// }
 
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
 type ApplicationEndpoint struct {
 	Port     uint16 `json:"port" jsonschema:"description=port,example=22,example=80,example=443,example=49667,minimum=1,maximum=65535"`
 	Protocol string `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
-	Addr     IP     `json:"addr" jsonschema:"description=binding IP address"`
+	Addr     net.IP `json:"addr" jsonschema:"description=binding IP address"`
 }
 
 func (s *Application) lastEndpoint() *ApplicationEndpoint {
@@ -96,7 +96,7 @@ func (s *Application) AddEndpoint(addr net.IP, port uint16, proto string) (*Appl
 	}
 
 	s.Endpoints = append(s.Endpoints,
-		&ApplicationEndpoint{Addr: IP(addr), Port: port, Protocol: proto})
+		&ApplicationEndpoint{Addr: addr, Port: port, Protocol: proto})
 
 	return s.lastEndpoint(), true
 }
