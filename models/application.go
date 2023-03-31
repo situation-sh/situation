@@ -110,7 +110,7 @@ func (s *Application) AddEndpoint(addr net.IP, port uint16, proto string) (*Appl
 	return s.lastEndpoint(), true
 }
 
-func (Application) JSONSchema() *jsonschema.Schema {
+func (ApplicationEndpoint) JSONSchema() *jsonschema.Schema {
 	properties := orderedmap.New()
 	properties.Set("port", &jsonschema.Schema{
 		Type:        "integer",
