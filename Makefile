@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.13.2
+VERSION    := 0.13.3
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -119,7 +119,7 @@ remote-module-testing-%: module-testing
 security: .gosec.json .govulncheck.json
 
 .gosec.json:
-	@gosec -fmt json ./... | jq > $@
+	@gosec -fmt json -exclude-dir dev ./... | jq > $@
 
 .govulncheck.json:
 	@govulncheck --json ./... | jq > $@

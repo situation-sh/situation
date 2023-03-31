@@ -2,6 +2,9 @@ package models
 
 import (
 	"net"
+
+	"github.com/iancoleman/orderedmap"
+	"github.com/invopop/jsonschema"
 )
 
 // Package is a wrapper around application that stores distribution
@@ -62,12 +65,25 @@ type Application struct {
 	Endpoints []*ApplicationEndpoint `json:"endpoints"  jsonschema:"description=list of network endpoints open by this app"`
 }
 
+// IP is used to denote either ipv4 or ipv6 address
+// type IP net.IP
+
+// func (ip IP) Equal(other net.IP) bool {
+// 	return (net.IP(ip)).Equal(other)
+// }
+
+// type ApplicationEndpoint struct {
+// 	Port     uint16 `json:"port" jsonschema:"description=port,example=22,example=80,example=443,example=49667,minimum=1,maximum=65535"`
+// 	Protocol string `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
+// 	Addr     net.IP `json:"addr" jsonschema:"description=binding IP address"`
+// }
+
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
 type ApplicationEndpoint struct {
-	Port     uint16 `json:"port" jsonschema:"description=port,example=22,example=80,example=443,example=49667,minimum=1,maximum=65535"`
-	Protocol string `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
-	Addr     net.IP `json:"addr" jsonschema:"description=binding IP address,example=0.0.0.0,example=::,example=127.0.0.1,example=192.168.122.23"`
+	Port     uint16
+	Protocol string
+	Addr     net.IP
 }
 
 func (s *Application) lastEndpoint() *ApplicationEndpoint {
@@ -92,4 +108,51 @@ func (s *Application) AddEndpoint(addr net.IP, port uint16, proto string) (*Appl
 		&ApplicationEndpoint{Addr: addr, Port: port, Protocol: proto})
 
 	return s.lastEndpoint(), true
+}
+
+func (Application) JSONSchema() *jsonschema.Schema {
+	properties := orderedmap.New()
+	properties.Set("port", &jsonschema.Schema{
+		Type:        "integer",
+		Maximum:     65535,
+		Minimum:     1,
+		Description: "port",
+		Examples: []interface{}{
+			22,
+			80,
+			443,
+			49667,
+		},
+	})
+
+	properties.Set("protocol", &jsonschema.Schema{
+		Type:        "string",
+		Description: "transport layer protocol",
+		Examples: []interface{}{
+			"tcp",
+			"udp",
+		},
+	})
+
+	properties.Set("addr", &jsonschema.Schema{
+		Title: "IPv4 or IPv6 address",
+		AnyOf: []*jsonschema.Schema{
+			{Type: "string", Format: "ipv4"},
+			{Type: "string", Format: "ipv6"},
+		},
+		Description: "binding IP address",
+		Examples: []interface{}{
+			"192.168.10.103",
+			"0.0.0.0",
+			"::",
+			"fe80::c1b2:a320:f799:10e0",
+		},
+	})
+
+	return &jsonschema.Schema{
+		Properties:           properties,
+		AdditionalProperties: jsonschema.FalseSchema,
+		Type:                 "object",
+		Required:             []string{"port", "protocol", "addr"},
+	}
 }
