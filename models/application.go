@@ -81,9 +81,9 @@ type Application struct {
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
 type ApplicationEndpoint struct {
-	Port     uint16
-	Protocol string
-	Addr     net.IP
+	Port     uint16 `json:"port"`
+	Protocol string `json:"protocol"`
+	Addr     net.IP `json:"addr"`
 }
 
 func (s *Application) lastEndpoint() *ApplicationEndpoint {
