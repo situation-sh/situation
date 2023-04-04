@@ -1,6 +1,6 @@
 module github.com/situation-sh/situation
 
-go 1.19
+go 1.20
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.20.2
@@ -8,10 +8,11 @@ require (
 	github.com/docker/docker v23.0.2+incompatible
 	github.com/go-ping/ping v1.1.0
 	github.com/google/uuid v1.3.0
+	github.com/iancoleman/orderedmap v0.2.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/jaypipes/ghw v0.10.0
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
-	github.com/shirou/gopsutil/v3 v3.23.2
+	github.com/shirou/gopsutil/v3 v3.23.3
 	github.com/sirupsen/logrus v1.9.0
 	github.com/urfave/cli/v2 v2.25.1
 	github.com/vishvananda/netlink v1.1.0
@@ -33,7 +34,6 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/iancoleman/orderedmap v0.2.0 // indirect
 	github.com/jaypipes/pcidb v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -48,6 +48,7 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20221212215047-62379fc7944b // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/shoenig/go-m1cpu v0.1.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect

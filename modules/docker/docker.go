@@ -79,9 +79,8 @@ func getOrCreateMachineFromEndpoint(
 	logger *logrus.Entry) *models.Machine {
 	machine := store.GetMachineByHostID(container.ID)
 	// Otherwise, create it
-
 	if machine == nil {
-		image, version := splitImageName(container.Image)
+		image, version := splitImageName(container.Config.Image)
 
 		uptime := time.Duration(-1)
 		createdAt, err := time.Parse(time.RFC3339, container.Created)
@@ -94,7 +93,7 @@ func getOrCreateMachineFromEndpoint(
 		// if len(container.Names) > 0 {
 		// 	machine.Hostname = strings.TrimPrefix(container.Names[0], "/") // use container name
 		// }
-		machine.Hostname = container.Name
+		machine.Hostname = strings.TrimPrefix(container.Name, "/")
 		machine.Platform = "docker"               // set platform to docker
 		machine.Distribution = image              // container image
 		machine.DistributionVersion = version     // container image version
