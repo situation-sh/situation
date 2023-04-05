@@ -2,6 +2,7 @@
 
 [![build](https://github.com/situation-sh/situation/actions/workflows/build.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/build.yaml)
 [![test](https://github.com/situation-sh/situation/actions/workflows/test.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/test.yaml)
+[![codecov](https://codecov.io/gh/situation-sh/situation/branch/main/graph/badge.svg?token=JC1KQNCXBQ)](https://codecov.io/gh/situation-sh/situation)
 
 The autonomous data collector.
 
@@ -14,9 +15,8 @@ When we run tools like `nmap` or `telegraf`, we know the targets (ex: a subnetwo
 
 Situation is bound to collect data, nothing more. To go further, `situation` provides a [json schema](https://github.com/situation-sh/situation/releases/download/v0.9.0/schema.json) for the output data.
 
-
-:fire: 
-    Situation is a early stage project. It currently targets Linux and Windows but keep in mind that it has not been extensively tested. It does not mean that is a dangerous codebase, only that it may fail.
+:fire:
+Situation is a early stage project. It currently targets Linux and Windows but keep in mind that it has not been extensively tested. It does not mean that is a dangerous codebase, only that it may fail.
 
 ## Installation
 
@@ -24,16 +24,13 @@ Situation is bound to collect data, nothing more. To go further, `situation` pro
 
 The agent is currently available for Linux and Windows on x86_64 architectures.
 
-
 ```bash
 wget -qO situation https://github.com/situation-sh/situation/releases/download/v0.9.0/situation-0.9.0-amd64-linux && chmod +x situation
 ```
 
-
 ```bash
 curl -sLo ./situation https://github.com/situation-sh/situation/releases/download/v0.9.0/situation-0.9.0-amd64-linux && chmod +x ./situation
 ```
-
 
 ```ps1
 Invoke-RestMethod -OutFile situation.exe -Uri situation https://github.com/situation-sh/situation/releases/download/v0.9.0/situation-0.9.0-amd64-windows.exe
@@ -47,11 +44,11 @@ As the agent makes use of generics, you need to have the [Go compiler `>=1.18`](
 go install github.com/situation-sh/situation
 ```
 
-:warning: 
-    [Pre-built binaries](pre_built_binaries.md) are compiled with extra flags to reduce the binary size and also set the version inside the binary. See the [Makefile](https://github.com/situation-sh/situation/-/blob/main/Makefile) for more details.
+:warning:
+[Pre-built binaries](pre_built_binaries.md) are compiled with extra flags to reduce the binary size and also set the version inside the binary. See the [Makefile](https://github.com/situation-sh/situation/-/blob/main/Makefile) for more details.
 
-:warning: 
-    The `$GOPATH/bin` folder must be in your PATH to run `situation` directly from the command line
+:warning:
+The `$GOPATH/bin` folder must be in your PATH to run `situation` directly from the command line
 
 ## Quick start
 
@@ -59,11 +56,9 @@ go install github.com/situation-sh/situation
 
 You guess it
 
-
 ```bash
 situation
 ```
-
 
 ```ps1
 situation.exe
@@ -71,31 +66,26 @@ situation.exe
 
 You can get the output json schema with the `schema` subcommand.
 
-
 ```bash
 situation schema
 ```
-
 
 ```ps1
 situation.exe schema
 ```
 
-Every agent as an internal UUID (`cafecafe-cafe-cafe-cafe-cafecafecafe`) by default. 
+Every agent as an internal UUID (`cafecafe-cafe-cafe-cafe-cafecafecafe`) by default.
 This can be printed with `id` subcommand,
-
 
 ```bash
 situation id
 ```
-
 
 ```ps1
 situation.exe id
 ```
 
 and refreshed with `refresh-id` subcommand.
-
 
 ```bash
 situation refresh-id
@@ -105,16 +95,14 @@ situation refresh-id
 
 ### One-liners
 
-While `situation` aims to send collected data to a "remote" place for further analysis, 
+While `situation` aims to send collected data to a "remote" place for further analysis,
 its output can be quickly worked by basic cli tools like [jq](https://stedolan.github.io/jq/).
 
 #### Network discovery
 
-
 ```bash
 situation | jq -r '.machines[] | .nics[] | .mac + "\t" + .ip'
 ```
-
 
 ```ps1
 situation.exe | jq -r '.machines[] | .nics[] | .mac + \"\t\" + .ip'
@@ -130,11 +118,9 @@ c1:d3:d2:ab:41:cb       192.168.1.31
 
 You can even put the results in a csv file:
 
-
 ```bash
 situation | jq -r '.machines[] | .nics[] | [.mac,.ip] | @csv' > output.csv
 ```
-
 
 ```ps1
 situation.exe | jq -r '.machines[] | .nics[] | [.mac,.ip] | @csv' > output.csv
@@ -142,11 +128,9 @@ situation.exe | jq -r '.machines[] | .nics[] | [.mac,.ip] | @csv' > output.csv
 
 #### Open ports
 
-
 ```bash
 situation | jq -r '(.machines[] | .applications[] | .endpoints[] | [.addr,(.port|tostring)+"/"+.protocol])|@tsv'
 ```
-
 
 ```ps1
 situation.exe | jq -r '(.machines[] | .applications[] | .endpoints[] | [.addr,(.port|tostring)+\"/\"+.protocol])|@tsv'
@@ -168,16 +152,13 @@ situation.exe | jq -r '(.machines[] | .applications[] | .endpoints[] | [.addr,(.
 
 #### List services
 
-
 ```bash
 situation | jq -r '(["Service","Address","Port"]|(., map(length*"-"))), (.machines[]|select(.hosted_agent)|.applications[]|.name as $n|.endpoints[]|[$n,.addr,(.port|tostring)+"/"+.protocol])|@tsv' | column -ts $'\t'
 ```
 
-
 ```ps1
 situation.exe | jq -r '([\"Service\",\"Address\",\"Port\"]), (.machines[]|select(.hosted_agent)|.applications[]|.name as $n|.endpoints[]|[$n,.addr,(.port|tostring)+\"/\"+.protocol])|@csv' | ConvertFrom-Csv
 ```
-
 
 ```console
 Service          Address        Port
@@ -207,7 +188,6 @@ kdeconnectd      ::             1716/tcp6
 | [tcp-scan](tcp_scan.md)         | [`ARP`](arp.md)                                             | :grey_question: | :white_check_mark: | :white_check_mark:  |                                                     |                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ### ARP
-
 
 |             ID Card |                                                                                                                                                                                            |
 | ------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -242,7 +222,6 @@ kdeconnectd      ::             1716/tcp6
 
 ### Host CPU
 
-
 |             ID Card |                                                                                                               |
 | ------------------: | :------------------------------------------------------------------------------------------------------------ |
 |        Dependencies | [`Host basic`](host_basic.md)                                                                                 |
@@ -263,7 +242,7 @@ kdeconnectd      ::             1716/tcp6
 | System requirements |                               |
 | Required Go modules |                               |
 
-### Netstat 
+### Netstat
 
 |             ID Card |                                                                                                                       |
 | ------------------: | :-------------------------------------------------------------------------------------------------------------------- |
@@ -287,7 +266,6 @@ kdeconnectd      ::             1716/tcp6
 
 ### TCP Scan
 
-
 |             ID Card |                    |
 | ------------------: | :----------------- |
 |        Dependencies | [`ARP`](arp.md)    |
@@ -303,59 +281,52 @@ kdeconnectd      ::             1716/tcp6
 
 The default behavior of Situation is to print the final payload to stdout.
 
-
 ```bash
 situation --backends.stdout.enabled=false
 ```
 
-
 ```yaml
 backends:
-    stdout:
-        enabled: false
+  stdout:
+    enabled: false
 ```
 
-
-:warning: 
-    Due to a bug in a third party library, the `enabled` attribute cannot be changed in the configuration file (see [this issue](https://github.com/urfave/cli/issues/1395))
+:warning:
+Due to a bug in a third party library, the `enabled` attribute cannot be changed in the configuration file (see [this issue](https://github.com/urfave/cli/issues/1395))
 
 ### File
 
 The payload can also be stored in a file.
 
-
 ```bash
 situation --backends.file.enabled=true --backends.file.format=json --backends.file.path=/tmp/situation.json
 ```
 
-
 ```yaml
 backends:
-    file:
-        enabled: true
-        format: json
-        path: /tmp/situation.json
+  file:
+    enabled: true
+    format: json
+    path: /tmp/situation.json
 ```
 
 ### HTTP
 
 Finally, the http backend is very convenient to send the payload (json) directly to a remote server.
 
-
 ```bash
-situation --backends.http.enabled=true --backends.http.url=http://localhost:8000/situation/ --backends.http.method=POST --backends.http.header.content-type=application/json --backends.http.header.authorization="Bearer <APIKEY>" 
+situation --backends.http.enabled=true --backends.http.url=http://localhost:8000/situation/ --backends.http.method=POST --backends.http.header.content-type=application/json --backends.http.header.authorization="Bearer <APIKEY>"
 ```
-
 
 ```yaml
 backends:
-    http:
-        enabled: true
-        url: http://localhost:8000/situation/
-        method: POST
-        header:
-            content-type: application/json
-            authorization: "Bearer <APIKEY>" 
+  http:
+    enabled: true
+    url: http://localhost:8000/situation/
+    method: POST
+    header:
+      content-type: application/json
+      authorization: "Bearer <APIKEY>"
 ```
 
 ## Developers
@@ -406,7 +377,7 @@ flowchart LR
     classDef empty fill:transparent,stroke:#444,color:transparent;
 ```
 
-### Modules 
+### Modules
 
 #### Introduction
 
@@ -526,7 +497,6 @@ func SetDefault(m Module, key string, value interface{}, usage string) {
 }
 ```
 
-
 #### Logging
 
 The logging is managed by [logrus](https://github.com/Sirupsen/logrus). To log some information, the `modules` package expose a `GetLogger` function that returns a contextual logger (relative to the module).
@@ -609,21 +579,21 @@ func (m * HeavyModule) Run() error {
 }
 ```
 
-### Store 
+### Store
 
 The **Store** is the internal memory where the agent put collected data. It has an internal structure with some helpers we advise to use. The store is closely related to the models defined in the `models` module. The store can be filled and queried as well (we try to make it **thread-safe**).
 
 Basically, the store is a list of machines (`models.Machine`), so you may look for machines (to get information or to enrich it) or merely insert new ones.
 
-:warning: 
-    The store and the models are rather instable. Especially, developers are likely to update the models (add/modify/remove attribute). Even if some functions help hiding the details, some changes can obviously have a wide impact.
+:warning:
+The store and the models are rather instable. Especially, developers are likely to update the models (add/modify/remove attribute). Even if some functions help hiding the details, some changes can obviously have a wide impact.
 
 ### Contributing
 
-When contributing to this project, please first discuss the change you wish to make via Github **issue**. 
-The issue should be enough documented to well understand the bug or the requested feature.  
+When contributing to this project, please first discuss the change you wish to make via Github **issue**.
+The issue should be enough documented to well understand the bug or the requested feature.
 
-#### License 
+#### License
 
 All the code submitted in this project follows the [project LICENSE](https://{{ go_module }}/blob/main/LICENSE.md).
 
@@ -636,11 +606,9 @@ All the code submitted in this project follows the [project LICENSE](https://{{ 
 5. Push the commits to your feature branch in your fork.
 6. Submit a pull request (PR) to the main branch in the main Github project.
 
-
-
 #### Coding Style
 
-*Taken from [moby/moby](https://github.com/moby/moby/blob/master/CONTRIBUTING.md#coding-style)*
+_Taken from [moby/moby](https://github.com/moby/moby/blob/master/CONTRIBUTING.md#coding-style)_
 
 Unless explicitly stated, we follow all coding guidelines from the Go
 community. While some of these standards may seem arbitrary, they somehow seem to result in a solid, consistent codebase.
@@ -688,4 +656,3 @@ kool-aid is a lot easier than going thirsty.
 ## Roadmap
 
 More modules :grin:
-

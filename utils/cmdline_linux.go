@@ -16,7 +16,7 @@ func GetCmd(pid int) ([]string, error) {
 	}
 
 	// read the file
-	buffer, err := os.ReadFile(p)
+	buffer, err := os.ReadFile(p) // #nosec G304 -- False positive
 	if err != nil {
 		return nil, err
 	}

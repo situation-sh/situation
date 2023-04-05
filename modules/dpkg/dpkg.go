@@ -98,8 +98,10 @@ func GetInstalledPackages() ([]*models.Package, error) {
 		}
 		if strings.HasPrefix(entry.Name(), logFilePrefix) {
 			// treat that file
+			// d is a constant
+			// entry is a file of d
 			file := filepath.Join(d, entry.Name())
-			f, err := os.Open(file)
+			f, err := os.Open(file) // #nosec G304 -- False positive: 'file' has the following format: /var/log/dpkg.log*
 			if err != nil {
 				// ignore this file
 				continue

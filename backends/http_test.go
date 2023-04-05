@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 )
 
 func postPayload(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +12,7 @@ func postPayload(w http.ResponseWriter, r *http.Request) {
 }
 
 func runServer(wg *sync.WaitGroup) *http.Server {
-	srv := &http.Server{Addr: "127.0.0.1:38080"}
+	srv := &http.Server{Addr: "127.0.0.1:38080", ReadHeaderTimeout: 3 * time.Second}
 
 	http.HandleFunc("/api/discovery/situation/", postPayload)
 
