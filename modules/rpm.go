@@ -4,7 +4,6 @@
 package modules
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -53,17 +52,17 @@ func (m *RPMModule) Run() error {
 	defer db.Close()
 	// db.SetConnMaxIdleTime(100 * time.Millisecond)
 	// db.SetConnMaxLifetime(100 * time.Millisecond)
-	// db.SetMaxOpenConns(100)
-	ctx := context.Background()
+	db.SetMaxOpenConns(1)
+	// ctx := context.Background()
 
-	conn, err := db.Conn(ctx)
-	if err != nil {
-		return err
-	}
+	// conn, err := db.Conn(ctx)
+	// if err != nil {
+	// 	return err
+	// }
 	// defer conn.Close()
 
-	// pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
-	pkgRows, err := conn.QueryContext(ctx, "SELECT hnum, blob FROM Packages")
+	pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
+	// pkgRows, err := conn.QueryContext(ctx, "SELECT hnum, blob FROM Packages")
 	if err != nil {
 		return err
 	}
@@ -76,8 +75,8 @@ func (m *RPMModule) Run() error {
 			continue
 		}
 		p := pkg.Parse() // here we have a models.Package
-		// installRows, err := db.Query("SELECT key, hnum, idx FROM Installtid WHERE hnum=? LIMIT 1", pkg.Hnum)
-		installRows, err := conn.QueryContext(ctx, "SELECT key, hnum, idx FROM Installtid WHERE hnum=? LIMIT 1", pkg.Hnum)
+		installRows, err := db.Query("SELECT key, hnum, idx FROM Installtid WHERE hnum=? LIMIT 1", pkg.Hnum)
+		// installRows, err := conn.QueryContext(ctx, "SELECT key, hnum, idx FROM Installtid WHERE hnum=? LIMIT 1", pkg.Hnum)
 		if err != nil || installRows == nil {
 			continue
 		}
@@ -108,6 +107,6 @@ func (m *RPMModule) Run() error {
 		}
 	}
 
-	conn.Close()
+	// conn.Close()
 	return nil
 }
