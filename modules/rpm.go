@@ -60,7 +60,7 @@ func (m *RPMModule) Run() error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	// defer conn.Close()
 
 	// pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
 	pkgRows, err := conn.QueryContext(ctx, "SELECT hnum, blob FROM Packages")
@@ -86,6 +86,7 @@ func (m *RPMModule) Run() error {
 				continue
 			}
 		}
+		installRows.Close()
 		p.InstallTimeUnix = ins.Parse()
 
 		r := logger.WithField(
@@ -107,5 +108,6 @@ func (m *RPMModule) Run() error {
 		}
 	}
 
+	conn.Close()
 	return nil
 }
