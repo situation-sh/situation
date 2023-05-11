@@ -19,7 +19,7 @@ require (
 	github.com/winlabs/gowin32 v0.0.0-20221003142512-0d265587d3c9
 	golang.org/x/sys v0.6.0
 	gopkg.in/yaml.v3 v3.0.1
-	modernc.org/sqlite v1.21.1
+	modernc.org/sqlite v1.22.1
 )
 
 require (
@@ -65,7 +65,7 @@ require (
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/cc/v3 v3.40.0 // indirect
 	modernc.org/ccgo/v3 v3.16.13 // indirect
-	modernc.org/libc v1.22.3 // indirect
+	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
 	modernc.org/memory v1.5.0 // indirect
 	modernc.org/opt v0.1.3 // indirect
