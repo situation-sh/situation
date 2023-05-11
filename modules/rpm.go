@@ -49,7 +49,7 @@ func (m *RPMModule) Run() error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	// defer db.Close()
 	// db.SetConnMaxIdleTime(100 * time.Millisecond)
 	// db.SetConnMaxLifetime(100 * time.Millisecond)
 	db.SetMaxOpenConns(1)
