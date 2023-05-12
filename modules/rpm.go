@@ -49,8 +49,8 @@ func (m *RPMModule) Run() error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
-	// db.SetConnMaxIdleTime(100 * time.Millisecond)
+	// defer db.Close()
+	db.SetConnMaxIdleTime(1 * time.Millisecond)
 	// db.SetConnMaxLifetime(100 * time.Millisecond)
 
 	// 1 connection for pkgRows
@@ -104,5 +104,7 @@ func (m *RPMModule) Run() error {
 	}
 
 	// conn.Close()
-	return nil
+	// db.Close()
+	fmt.Printf("%+v\n", db.Stats())
+	return db.Close()
 }
