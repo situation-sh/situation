@@ -106,5 +106,5 @@ func (m *RPMModule) Run() error {
 	// conn.Close()
 	// db.Close()
 	fmt.Printf("%+v\n", db.Stats())
-	return db.Close()
+	return nil
 }
