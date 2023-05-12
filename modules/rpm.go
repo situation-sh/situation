@@ -49,17 +49,13 @@ func (m *RPMModule) Run() error {
 	if err != nil {
 		return err
 	}
-	// defer db.Close()
+	defer db.Close()
 	// db.SetConnMaxIdleTime(100 * time.Millisecond)
 	// db.SetConnMaxLifetime(100 * time.Millisecond)
-	db.SetMaxOpenConns(1)
-	// ctx := context.Background()
 
-	// conn, err := db.Conn(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer conn.Close()
+	// 1 connection for pkgRows
+	// 1 connection for installRows
+	db.SetMaxOpenConns(2)
 
 	pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
 	// pkgRows, err := conn.QueryContext(ctx, "SELECT hnum, blob FROM Packages")
