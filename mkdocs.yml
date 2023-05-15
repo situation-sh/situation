@@ -11,6 +11,8 @@ theme:
     scheme: nord
   font:
     text: Inter
+  features:
+    - content.code.copy
 
 nav:
   - Home: index.md
@@ -58,8 +60,12 @@ markdown_extensions:
 plugins:
   - search:
       lang: [en]
-  - markdownextradata
   - section-index
+  # - markdownextradata
+  #
+  - macros:
+      verbose: true
+      module_name: docs/macros/main
 
 extra_css:
   - css/extra.css
