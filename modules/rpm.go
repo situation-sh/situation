@@ -50,7 +50,7 @@ func (m *RPMModule) Run() error {
 		return err
 	}
 	// defer db.Close()
-	db.SetConnMaxIdleTime(1 * time.Millisecond)
+	// db.SetConnMaxIdleTime(1 * time.Millisecond)
 	// db.SetConnMaxLifetime(100 * time.Millisecond)
 
 	// 1 connection for pkgRows
