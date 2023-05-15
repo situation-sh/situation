@@ -30,7 +30,7 @@ You can get the output json schema with the `schema` subcommand.
     situation.exe schema
     ```
 
-Every agent as an internal UUID (`cafecafe-cafe-cafe-cafe-cafecafecafe`) by default. 
+Every agent as an internal UUID (`cafecafe-cafe-cafe-cafe-cafecafecafe`) by default.
 This can be printed with `id` subcommand,
 
 === "Linux"
@@ -60,7 +60,7 @@ and refreshed with `refresh-id` subcommand.
 
 ## One-liners
 
-While `situation` aims to send collected data to a "remote" place for further analysis, 
+While `situation` aims to send collected data to a "remote" place for further analysis,
 its output can be quickly worked by basic cli tools like [jq](https://stedolan.github.io/jq/).
 
 ### Network discovery
@@ -140,7 +140,6 @@ You can even put the results in a csv file:
     ```ps1
     situation.exe | jq -r '([\"Service\",\"Address\",\"Port\"]), (.machines[]|select(.hosted_agent)|.applications[]|.name as $n|.endpoints[]|[$n,.addr,(.port|tostring)+\"/\"+.protocol])|@csv' | ConvertFrom-Csv
     ```
-
 
 ```console
 Service          Address        Port
