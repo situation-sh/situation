@@ -105,6 +105,14 @@ func (m *RPMModule) Run() error {
 		}
 	}
 
+	if err = pkgRows.Err(); err != nil {
+		return err
+	}
+
+	if err = db.Close(); err != nil {
+		return err
+	}
+
 	// conn.Close()
 	// db.Close()
 	// fmt.Printf("%+v\n", db.Stats())
