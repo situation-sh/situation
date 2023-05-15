@@ -6,7 +6,6 @@ package modules
 import (
 	"database/sql"
 	"fmt"
-	"runtime"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -33,7 +32,6 @@ func (m *RPMModule) Dependencies() []string {
 }
 
 func (m *RPMModule) Run() error {
-	fmt.Println("GOROUTINES:", runtime.NumGoroutine())
 	logger := GetLogger(m)
 	machine := store.GetHost()
 	if !utils.Includes([]string{"fedora", "rocky", "centos", "redhat", "almalinux", "opensuse-leap", "opensuse-tumbleweed"}, machine.Distribution) {
