@@ -57,7 +57,7 @@ func (m *RPMModule) Run() error {
 
 	// 1 connection for pkgRows
 	// 1 connection for installRows
-	db.SetMaxOpenConns(2)
+	// db.SetMaxOpenConns(2)
 
 	pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
 	// pkgRows, err := conn.QueryContext(ctx, "SELECT hnum, blob FROM Packages")
