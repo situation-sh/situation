@@ -68,7 +68,6 @@ func (m *RPMModule) Run() error {
 	pkg := rpm.Pkg{}
 	ins := rpm.Install{}
 
-	var installRows *sql.Rows = nil
 	for pkgRows.Next() {
 		// fmt.Printf("%+v\n", db.Stats())
 		if err := pkgRows.Scan(&pkg.Hnum, &pkg.Blob); err != nil {
