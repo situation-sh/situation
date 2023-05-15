@@ -108,15 +108,18 @@ func (m *RPMModule) Run() error {
 	}
 
 	if installRows != nil {
+		fmt.Println("close installRows")
 		if err := installRows.Close(); err != nil {
 			return err
 		}
 	}
 
+	fmt.Println("close pkgRows")
 	if err = pkgRows.Close(); err != nil {
 		return err
 	}
 
+	fmt.Println("close db")
 	if err = db.Close(); err != nil {
 		return err
 	}
