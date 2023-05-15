@@ -58,11 +58,7 @@ jobs:
         with:
           name: ${{ env.artifact-name }}
           path: bin
-      - name: Debug
-        run: |
-          pwd
-          ls -alhR
       - name: Run the binary
         run: |
           chmod +x ${{ env.test-module-binary }}
-          ${{ env.test-module-binary }}
+          ${{ env.test-module-binary }} -test.v 5
