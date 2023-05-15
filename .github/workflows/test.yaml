@@ -25,7 +25,7 @@ jobs:
           cache-name: cache-mtb
         with:
           path: ${{ env.test-module-binary }}
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**.go') }}
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/*.go') }}
       # build the binary
       - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
         name: Build module testing binary

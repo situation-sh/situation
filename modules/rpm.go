@@ -107,25 +107,13 @@ func (m *RPMModule) Run() error {
 		}
 	}
 
-	if installRows != nil {
-		fmt.Println("close installRows")
-		if err := installRows.Close(); err != nil {
-			return err
-		}
-	}
-
-	fmt.Println("close pkgRows")
 	if err = pkgRows.Close(); err != nil {
-		return err
+		return fmt.Errorf("error while closing query: %v", err)
 	}
 
-	fmt.Println("close db")
 	if err = db.Close(); err != nil {
-		return err
+		return fmt.Errorf("error while closing db: %v", err)
 	}
 
-	// conn.Close()
-	// db.Close()
-	// fmt.Printf("%+v\n", db.Stats())
 	return nil
 }
