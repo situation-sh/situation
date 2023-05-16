@@ -60,6 +60,8 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 	pinger.Count = 1
 	pinger.SetPrivileged(useICMP)
 	pinger.Timeout = 300 * time.Millisecond
+	// see https://github.com/go-ping/ping/issues/168
+	pinger.Size = 548
 
 	// callback when a target responds
 	pinger.OnRecv = func(p *ping.Packet) {
