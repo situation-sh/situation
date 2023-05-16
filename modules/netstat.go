@@ -66,7 +66,7 @@ func portFilter(e *netstat.SockTabEntry) bool {
 	if e.LocalAddr.IP.IsLoopback() {
 		return false
 	}
-	if e.State != netstat.Listen || flowFilter(e.State) {
+	if e.State == netstat.Listen || flowFilter(e.State) {
 		return true
 	}
 	return false
@@ -116,7 +116,7 @@ func (m *NetstatModule) Run() error {
 					if created {
 						// logging
 						logger.WithField("app", soft.Name).
-							WithField("pid", soft.Name).
+							WithField("pid", soft.PID).
 							Info("Application found")
 					}
 
