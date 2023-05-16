@@ -8,19 +8,13 @@ env:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
         uses: actions/checkout@v3
       # Setup Go
       - name: Setup Go
         uses: actions/setup-go@v4
-        with:
-          go-version: "1.20.4"
-          cache: true
       - name: Cache module testing binary
         id: cache-mtb
         uses: actions/cache@v3
@@ -31,12 +25,12 @@ jobs:
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/*.go') }}
       # build the binary
       - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
-        name: Build module testing binary
-        run: make test-module
-      - name: Upload module testing binary
+        name: Build module testing binaries
+        run: make build-test
+      - name: Upload module testing binaries
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.artifact-basename }}-${{ runner.os }}
+          name: ${{ env.artifact-basename }}
           path: ${{ env.test-module-binary }}
           retention-days: 1
 
@@ -59,12 +53,16 @@ jobs:
       - name: Download module testing binary
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.artifact-basename }}-${{ runner.os }}
+          name: ${{ env.artifact-basename }}
           path: bin
+      - name: Export binary name
+        run: |
+          echo "situation=$(ls bin/situation-*linux | tail -n 1)" >> "$GITHUB_ENV"
+          echo $GITHUB_ENV
       - name: Run the binary
         run: |
-          chmod +x ${{ env.test-module-binary }}
-          ${{ env.test-module-binary }} -test.v 5
+          chmod +x ${{ env.situation }}
+          ${{ env.situation }}
 
   test-windows:
     strategy:
@@ -84,4 +82,4 @@ jobs:
           echo $env:GITHUB_ENV
       - name: Run the binary
         run: |
-          ${{ env.situation }} -test.v 5
+          ${{ env.situation }}
