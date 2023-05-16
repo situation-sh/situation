@@ -9,8 +9,7 @@ When we run tools like `nmap` or `telegraf`, we know the targets (ex: a subnetwo
 - frictionless deployment (single binary, just download and run)
 - no blind spots (who knows exactly what runs on his/her system?)
 
-Situation is bound to collect data, nothing more. To go further, `situation` provides a [json schema](https://{{ variables.go_module }}/releases/download/v{{ variables.version }}/schema.json) for the output data.
-
+Situation is bound to collect data, nothing more. To go further, `situation` provides a [json schema]({{ github_repo }}/releases/download/{{ latest_tag() }}/schema.json) for the output data.
 
 !!! tip "Status"
-    Situation is a early stage project. It currently targets Linux and Windows but keep in mind that it has not been extensively tested. It does not mean that is a dangerous codebase, only that it may fail.
+    Situation is a young project. It currently targets Linux and Windows but keep in mind that it has not been tested on all the machines on Earth. It does not mean that is a dangerous codebase, only that it may fail.
