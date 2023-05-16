@@ -62,21 +62,20 @@ func (pkg *Package) ApplicationNames() []string {
 type Application struct {
 	Name      string                 `json:"name,omitempty" jsonschema:"description=path (or name) of the application,example=/usr/sbin/sshd,example=/usr/bin/musl-gcc,example=C:\\Windows\\System32\\svchost.exe,example=wininit.exe,example=System"`
 	Args      []string               `json:"args,omitempty" jsonschema:"description=list of arguments passed to app"` // we cannot put example right now (PR in progress: https://github.com/invopop/jsonschema/pull/31)
-	Endpoints []*ApplicationEndpoint `json:"endpoints"  jsonschema:"description=list of network endpoints open by this app"`
+	Endpoints []*ApplicationEndpoint `json:"endpoints" jsonschema:"description=list of network endpoints open by this app"`
+	PID       uint                   `json:"pid,omitempty" jsonschema:"description=processus ID,example=5452,example=19420"`
+	Flows     []*Flow                `json:"flows,omitempty"`
 }
 
-// IP is used to denote either ipv4 or ipv6 address
-// type IP net.IP
-
-// func (ip IP) Equal(other net.IP) bool {
-// 	return (net.IP(ip)).Equal(other)
-// }
-
-// type ApplicationEndpoint struct {
-// 	Port     uint16 `json:"port" jsonschema:"description=port,example=22,example=80,example=443,example=49667,minimum=1,maximum=65535"`
-// 	Protocol string `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
-// 	Addr     net.IP `json:"addr" jsonschema:"description=binding IP address"`
-// }
+// Flow aims to represent a layer 4 connection
+type Flow struct {
+	LocalAddr  net.IP `json:"local_addr"`
+	LocalPort  uint16 `json:"local_port"`
+	RemoteAddr net.IP `json:"remote_addr"`
+	RemotePort uint16 `json:"remote_port"`
+	Protocol   string `json:"protocol"`
+	Status     string `json:"status"`
+}
 
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
@@ -154,5 +153,66 @@ func (ApplicationEndpoint) JSONSchema() *jsonschema.Schema {
 		AdditionalProperties: jsonschema.FalseSchema,
 		Type:                 "object",
 		Required:             []string{"port", "protocol", "addr"},
+	}
+}
+
+func (Flow) JSONSchema() *jsonschema.Schema {
+	properties := orderedmap.New()
+
+	for _, prop := range []string{"local_port", "remote_port"} {
+		properties.Set(prop, &jsonschema.Schema{
+			Type:        "integer",
+			Maximum:     65535,
+			Minimum:     1,
+			Description: "port",
+			Examples: []interface{}{
+				22,
+				80,
+				443,
+				49667,
+			},
+		})
+	}
+
+	for _, prop := range []string{"local_addr", "remote_addr"} {
+		properties.Set(prop, &jsonschema.Schema{
+			Title: "IPv4 or IPv6 address",
+			AnyOf: []*jsonschema.Schema{
+				{Type: "string", Format: "ipv4"},
+				{Type: "string", Format: "ipv6"},
+			},
+			Description: "binding IP address",
+			Examples: []interface{}{
+				"192.168.10.103",
+				"0.0.0.0",
+				"::",
+				"fe80::c1b2:a320:f799:10e0",
+			},
+		})
+	}
+
+	properties.Set("protocol", &jsonschema.Schema{
+		Type:        "string",
+		Description: "transport layer protocol",
+		Examples: []interface{}{
+			"tcp",
+			"udp",
+		},
+	})
+
+	properties.Set("status", &jsonschema.Schema{
+		Type:        "string",
+		Description: "Link status",
+		Examples: []interface{}{
+			"forwarded",
+			"established",
+		},
+	})
+
+	return &jsonschema.Schema{
+		Properties:           properties,
+		AdditionalProperties: jsonschema.FalseSchema,
+		Type:                 "object",
+		Required:             []string{"local_port", "local_addr", "remote_port", "remote_addr", "protocol", "status"},
 	}
 }
