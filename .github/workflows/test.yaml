@@ -67,14 +67,20 @@ jobs:
           ${{ env.test-module-binary }} -test.v 5
 
   test-windows:
+    strategy:
+      matrix:
+        os: [windows-2022, windows-2019, windows-10]
     needs: build
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Download module testing binary
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.artifact-basename }}-${{ runner.os }}
           path: bin
+      - name: Export binary name
+        run: |
+          echo "situation=$(ls bin/situation-*.exe | Select-Object -First 1)" >> "$GITHUB_ENV"
       - name: Run the binary
         run: |
-          ${{ env.test-module-binary }} -test.v 5
+          ${{ env.situation }} -test.v 5
