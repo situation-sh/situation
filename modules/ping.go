@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-ping/ping"
+	ping "github.com/prometheus-community/pro-bing"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/store"
