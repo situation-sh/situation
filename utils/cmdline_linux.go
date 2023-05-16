@@ -10,7 +10,12 @@ import (
 )
 
 func GetCmd(pid int) ([]string, error) {
+	if pid <= 0 {
+		return nil, fmt.Errorf("the PID is not strictly positive")
+	}
+
 	p := fmt.Sprintf("/proc/%d/cmdline", pid)
+
 	if !FileExists(p) {
 		return nil, fmt.Errorf("cannot retrieve cmdline file for process with pid=%d", pid)
 	}
@@ -21,8 +26,13 @@ func GetCmd(pid int) ([]string, error) {
 		return nil, err
 	}
 
-	// arguments are separated by null bytes
-	slices := bytes.Split(buffer, []byte{0})
+	// in general arguments are separated by null bytes
+	// so we convert it to spaces first
+	slices := bytes.Split(
+		bytes.ReplaceAll(buffer, []byte{0}, []byte{32}),
+		[]byte{32},
+	)
+
 	// specify max capacity to len(slices)
 	out := make([]string, 0, len(slices))
 	for _, b := range slices {
