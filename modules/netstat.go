@@ -45,12 +45,28 @@ func listeningPortFilter(e *netstat.SockTabEntry) bool {
 	return true
 }
 
+func flowFilter(state netstat.SkState) bool {
+	for _, s := range []netstat.SkState{
+		netstat.Established,
+		netstat.FinWait1,
+		netstat.FinWait2,
+		netstat.TimeWait,
+		netstat.CloseWait,
+		netstat.LastAck,
+		netstat.Closing} {
+		if s == state {
+			return true
+		}
+	}
+	return false
+}
+
 // portFilter returns true when the connection is listening, established or close-wait
 func portFilter(e *netstat.SockTabEntry) bool {
 	if e.LocalAddr.IP.IsLoopback() {
 		return false
 	}
-	if e.State != netstat.Listen || e.State == netstat.Established || e.State == netstat.CloseWait {
+	if e.State != netstat.Listen || flowFilter(e.State) {
 		return true
 	}
 	return false
@@ -105,7 +121,7 @@ func (m *NetstatModule) Run() error {
 					}
 
 					// NEW: add flows
-					if entry.State == netstat.Established || entry.State == netstat.CloseWait {
+					if flowFilter(entry.State) {
 						flow := models.Flow{
 							LocalAddr:  entry.LocalAddr.IP,
 							RemoteAddr: entry.RemoteAddr.IP,

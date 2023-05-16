@@ -204,8 +204,8 @@ func (Flow) JSONSchema() *jsonschema.Schema {
 		Type:        "string",
 		Description: "Link status",
 		Examples: []interface{}{
-			"forwarded",
-			"established",
+			"CLOSE_WAIT",
+			"ESTABLISHED",
 		},
 	})
 
