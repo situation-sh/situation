@@ -74,7 +74,7 @@ jobs:
       - name: Download module testing binary
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.artifact-basename }}-${{ runner.os }}
+          name: ${{ env.artifact-basename }}
           path: bin
       - name: Export binary name
         run: |
