@@ -58,7 +58,7 @@ jobs:
       - name: Export binary name
         run: |
           echo "situation=$(ls bin/situation-*linux | tail -n 1)" >> "$GITHUB_ENV"
-          echo $GITHUB_ENV
+          echo "$GITHUB_ENV"
       - name: Run the binary
         run: |
           chmod +x ${{ env.situation }}
@@ -78,7 +78,7 @@ jobs:
           path: bin
       - name: Export binary name
         run: |
-          $env:GITHUB_ENV += "`nsituation=$(ls bin/situation-*.exe | Select-Object -First 1)"
+          $env:GITHUB_ENV = "situation=$(ls bin/situation-*.exe | Select-Object -First 1)"
           echo $env:GITHUB_ENV
       - name: Run the binary
         run: |
