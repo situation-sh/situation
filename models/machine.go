@@ -138,6 +138,16 @@ func (m *Machine) GetOrCreateApplicationByEndpoint(port uint16, protocol string,
 	return &app, true
 }
 
+// GetApplicationByPID returns a local app given its processus ID
+func (m *Machine) GetApplicationByPID(pid uint) *Application {
+	for _, p := range m.Applications() {
+		if p.PID == pid {
+			return p
+		}
+	}
+	return nil
+}
+
 func (m *Machine) Applications() []*Application {
 	out := make([]*Application, 0)
 	for _, p := range m.Packages {
