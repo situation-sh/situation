@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func GetCmd(pid int) ([]string, error) {
@@ -28,9 +29,10 @@ func GetCmd(pid int) ([]string, error) {
 
 	// in general arguments are separated by null bytes
 	// so we convert it to spaces first
+	spaceByte := []byte(" ")
 	slices := bytes.Split(
-		bytes.ReplaceAll(buffer, []byte{0}, []byte{32}),
-		[]byte{32},
+		bytes.ReplaceAll(buffer, []byte{0}, spaceByte),
+		spaceByte,
 	)
 
 	// specify max capacity to len(slices)
@@ -39,6 +41,15 @@ func GetCmd(pid int) ([]string, error) {
 		if len(b) > 0 {
 			out = append(out, string(b))
 		}
+	}
+
+	if len(out) > 0 {
+		p = fmt.Sprintf("/proc/%d/exe", pid)
+		bin, err := filepath.EvalSymlinks(p)
+		if err != nil {
+			return nil, err
+		}
+		out[0] = bin
 	}
 	return out, nil
 }
