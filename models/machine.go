@@ -104,11 +104,15 @@ func (m *Machine) GetOrCreateApplicationByName(name string) (*Application, bool)
 			}
 		}
 	}
-	app := Application{Name: name}
-	pkg := Package{Applications: []*Application{&app}}
-	m.Packages = append(m.Packages, &pkg)
+	app := NewApplication()
+	app.Name = name
+
+	pkg := NewPackage()
+	pkg.Applications = append(pkg.Applications, app)
+	// pkg := Package{Applications: []*Application{app}}
+	m.Packages = append(m.Packages, pkg)
 	// m.Applications = append(m.Applications, &Application{Name: name})
-	return &app, true
+	return app, true
 }
 
 // GetOrCreateApplicationByEndpoint returns the app running on this machine
@@ -130,12 +134,17 @@ func (m *Machine) GetOrCreateApplicationByEndpoint(port uint16, protocol string,
 		Protocol: protocol,
 		Addr:     addr,
 	}
-	app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
-	pkg := Package{Applications: []*Application{&app}}
-	m.Packages = append(m.Packages, &pkg)
+	app := NewApplication()
+	app.Endpoints = append(app.Endpoints, &endpoint)
+	// app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
+
+	pkg := NewPackage()
+	pkg.Applications = append(pkg.Applications, app)
+	// pkg := Package{Applications: []*Application{&app}}
+	m.Packages = append(m.Packages, pkg)
 	// m.Applications = append(m.Applications,
 	// 	&Application{Endpoints: []*ApplicationEndpoint{&endpoint}})
-	return &app, true
+	return app, true
 }
 
 // GetApplicationByPID returns a local app given its processus ID
