@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.13.9
+VERSION    := 0.14.1
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -75,7 +75,8 @@ dash-split = $(word $2,$(subst -, ,$1))
 	@echo ''
 	@echo 'Commands:'
 	@echo '             all    build for linux and windows (amd64)'
-	@echo '            test    run tests'
+	@echo '            test    run tests locally'
+	@echo '      build-test    build test binaries (linux and windows, amd64)'
 	@echo '           clear    remove the build artifacts'
 	@echo '        security    run gosec and govulncheck'
 	@echo '        analysis    run goweight'
@@ -85,7 +86,7 @@ dash-split = $(word $2,$(subst -, ,$1))
 	@echo '            GOOS    target OS'
 	@echo '          GOARCH    target architecture'
 
-.PHONY: version all security analysis test test-module clean clear
+.PHONY: version all security analysis test build-test clean clear
 
 version:
 	@echo "$(VERSION)"
@@ -98,8 +99,10 @@ go.mod:
 
 all: $(BIN_PREFIX)-amd64-linux $(BIN_PREFIX)-amd64-windows.exe
 
+build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testing-amd64-windows.exe
+
 # final binary files
-$(BIN_PREFIX)-%: $(shell find . -path "*.go")
+$(BIN_PREFIX)-%: $(shell find . -path "*.go" -not -path "./.*")
 	@mkdir -p $(@D)
 	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD) -o $@ main.go
 
@@ -148,8 +151,6 @@ docs-module-status:
 	echo '</div>' >> $$outfile;		 
 
 test: .gocoverprofile.html
-
-test-module: $(BIN_PREFIX)-module-testing-$(GOARCH)-$(GOOS)
 
 .gocoverprofile.txt: $(shell find . -path "*_test.go")
 	$(GO) test -coverprofile=$@ -covermode=atomic ./...

@@ -15,7 +15,7 @@ import (
 const (
 	logDir        = "/var/log"
 	logFilePrefix = "dpkg.log"
-	dpkgDir       = "/var/lib/dpkg"
+	dpkgDir       = "/var/lib/dpkg/info"
 	logFormat     = "2006-01-02 15:04:05" // see https://pkg.go.dev/time#pkg-constants
 	manager       = "dpkg"
 )
@@ -70,8 +70,8 @@ func parseLogLine(line string) *models.Package {
 		return nil
 	}
 	// get name and version
-	name := strings.SplitN(chunks[4], ":", 1)[0] // remove the arch
-	version := strings.SplitN(chunks[5], "-", 1)[0]
+	name := strings.Split(chunks[4], ":")[0] // remove the arch
+	version := strings.Split(chunks[5], "-")[0]
 	return &models.Package{
 		Name:            name,
 		Version:         version,

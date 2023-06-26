@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/cakturk/go-netstat/netstat"
+	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/store"
 	"github.com/situation-sh/situation/utils"
 )
@@ -44,6 +45,33 @@ func listeningPortFilter(e *netstat.SockTabEntry) bool {
 	return true
 }
 
+func flowFilter(state netstat.SkState) bool {
+	for _, s := range []netstat.SkState{
+		netstat.Established,
+		netstat.FinWait1,
+		netstat.FinWait2,
+		netstat.TimeWait,
+		netstat.CloseWait,
+		netstat.LastAck,
+		netstat.Closing} {
+		if s == state {
+			return true
+		}
+	}
+	return false
+}
+
+// portFilter returns true when the connection is listening, established or close-wait
+func portFilter(e *netstat.SockTabEntry) bool {
+	if e.LocalAddr.IP.IsLoopback() {
+		return false
+	}
+	if e.State == netstat.Listen || flowFilter(e.State) {
+		return true
+	}
+	return false
+}
+
 // helper for the Run function
 type netstatProvider func(accept netstat.AcceptFn) ([]netstat.SockTabEntry, error)
 
@@ -67,7 +95,7 @@ func (m *NetstatModule) Run() error {
 	// loop over all providers
 	for k, provider := range providers {
 		// list all entries by protocol
-		if entries, err := provider(listeningPortFilter); err == nil {
+		if entries, err := provider(portFilter); err == nil {
 			for _, entry := range entries {
 				if entry.Process != nil {
 					// ignore docker-proxy
@@ -83,9 +111,34 @@ func (m *NetstatModule) Run() error {
 						args = args[1:]
 					}
 					soft, created := machine.GetOrCreateApplicationByName(name)
+					soft.PID = uint(entry.Process.Pid)
+
 					if created {
 						// logging
-						logger.WithField("app", soft.Name).Info("Application found")
+						logger.WithField("app", soft.Name).
+							WithField("pid", soft.PID).
+							Info("Application found")
+					}
+
+					// NEW: add flows
+					if flowFilter(entry.State) {
+						flow := models.Flow{
+							LocalAddr:  entry.LocalAddr.IP,
+							RemoteAddr: entry.RemoteAddr.IP,
+							LocalPort:  entry.LocalAddr.Port,
+							RemotePort: entry.RemoteAddr.Port,
+							Protocol:   protocols[k],
+							Status:     entry.State.String(),
+						}
+						soft.Flows = append(soft.Flows, &flow)
+						logger.WithField("app", soft.Name).
+							WithField("flow-local-addr", flow.LocalAddr).
+							WithField("flow-local-port", flow.LocalPort).
+							WithField("flow-remote-addr", flow.RemoteAddr).
+							WithField("flow-remote-port", flow.RemotePort).
+							WithField("flow-proto", flow.Protocol).
+							WithField("flow-status", flow.Status).
+							Info("Flow found")
 					}
 
 					// add args

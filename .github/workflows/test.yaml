@@ -3,8 +3,8 @@ name: test
 on:
   pull_request:
 env:
-  test-module-binary: bin/situation-*module-testing-*linux
-  artifact-name: test-module-binary
+  test-module-binary: bin/situation-*module-testing-*
+  artifact-basename: situation-module-testing
 
 jobs:
   build:
@@ -15,9 +15,6 @@ jobs:
       # Setup Go
       - name: Setup Go
         uses: actions/setup-go@v4
-        with:
-          go-version: "1.20.3"
-          cache: true
       - name: Cache module testing binary
         id: cache-mtb
         uses: actions/cache@v3
@@ -28,16 +25,16 @@ jobs:
           key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/*.go') }}
       # build the binary
       - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
-        name: Build module testing binary
-        run: make test-module
-      - name: Upload module testing binary
+        name: Build module testing binaries
+        run: make build-test
+      - name: Upload module testing binaries
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.artifact-name }}
+          name: ${{ env.artifact-basename }}
           path: ${{ env.test-module-binary }}
           retention-days: 1
 
-  test:
+  test-linux:
     needs: build
     runs-on: ubuntu-latest
     strategy:
@@ -56,9 +53,33 @@ jobs:
       - name: Download module testing binary
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.artifact-name }}
+          name: ${{ env.artifact-basename }}
           path: bin
+      - name: Export binary name
+        run: |
+          echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
+          cat $GITHUB_ENV
       - name: Run the binary
         run: |
-          chmod +x ${{ env.test-module-binary }}
-          ${{ env.test-module-binary }} -test.v 5
+          chmod +x ${{ env.SITUATION }}
+          ${{ env.SITUATION }}
+
+  test-windows:
+    strategy:
+      matrix:
+        os: [windows-2022, windows-2019, windows-10]
+    needs: build
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download module testing binary
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.artifact-basename }}
+          path: bin
+      - name: Export binary name
+        run: |
+          echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
+          Get-Content $env:GITHUB_ENV
+      - name: Run the binary
+        run: |
+          & $env:SITUATION
