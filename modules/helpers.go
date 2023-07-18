@@ -43,4 +43,6 @@ func RegisterModule(module Module) {
 		panic(fmt.Errorf("two modules have the same name: %s", name))
 	}
 	modules[name] = module
+	// add a default parameter to disable the module
+	SetDefault(module, "disabled", false, fmt.Sprintf("Disable module %s", name))
 }

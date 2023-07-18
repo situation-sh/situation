@@ -22,14 +22,24 @@ func GetModuleNames() []string {
 	return list
 }
 
+func isDisabled(m Module) bool {
+	disabled, err := GetConfig[bool](m, "disabled")
+	// if there is an error we prefer disable the module
+	if err != nil {
+		return true
+	}
+	return disabled
+}
+
 // GetEnabledModules returns the list of the modules that
 // are not disabled
 func GetEnabledModules() []Module {
 	list := make([]Module, 0, len(modules))
 	for _, mod := range modules {
-		// if IsDisabled(mod) {
-		// 	continue
-		// }
+		isDisabled(mod)
+		if isDisabled(mod) {
+			continue
+		}
 		list = append(list, mod)
 	}
 	return list
