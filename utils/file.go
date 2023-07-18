@@ -52,7 +52,7 @@ func KeepLeaves(files []string) []string {
 // the second is called on the result of the first one and so one
 // ex: callback2(callback1(callback0(line)))
 func GetLines(file string, callbacks ...func(string) string) ([]string, error) {
-	f, err := os.Open(file)
+	f, err := os.Open(file) // #nosec G304 -- GetLines is a helper function
 	if err != nil {
 		return nil, err
 	}

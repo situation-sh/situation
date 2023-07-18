@@ -1,38 +1,42 @@
 package models
 
 import (
-	"math/rand"
 	"net"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+var machineCounter = 0
+
 // Machine is a generic structure to represent nodes on
 // an information system. It can be a physical machine,
 // a VM, a container...
 type Machine struct {
-	InternalID          int                 `json:"internal_id"`
-	Hostname            string              `json:"hostname,omitempty"`
-	HostID              string              `json:"host_id,omitempty"`
-	Arch                string              `json:"arch,omitempty"`
-	Platform            string              `json:"platform,omitempty"`
-	Distribution        string              `json:"distribution,omitempty"`
-	DistributionVersion string              `json:"distribution_version,omitempty"`
-	ParentMachine       int                 `json:"parent_machine,omitempty"`
-	CPU                 *CPU                `json:"cpu,omitempty"`
-	NICS                []*NetworkInterface `json:"nics"`
-	Packages            []*Package          `json:"packages"`
-	Disks               []*Disk             `json:"disks"`
-	GPUS                []*GPU              `json:"gpus"`
-	Agent               *uuid.UUID          `json:"hosted_agent,omitempty"`
-	Uptime              time.Duration       `json:"uptime,omitempty"`
+	InternalID          int                 `json:"internal_id" jsonschema:"description=internal reference of the machine (if we want to point to this machine within the json),example=53127,minimum=1"`
+	Hostname            string              `json:"hostname,omitempty" jsonschema:"description=name of the machine,example=DESKTOP-2HHPC7I,example=PC-JEAN-LUC,example=server07"`
+	HostID              string              `json:"host_id,omitempty" jsonschema:"description=machine uuid identifier,example=8375c6c3-de33-41a4-bdb2-4e467d9f632c"`
+	Arch                string              `json:"arch,omitempty" jsonschema:"description=architecture,example=x86_64"`
+	Platform            string              `json:"platform,omitempty" jsonschema:"description=system base platform,example=linux,example=windows,example=docker"`
+	Distribution        string              `json:"distribution,omitempty" jsonschema:"description=OS name (or base image),example=fedora,example=Microsoft Windows 10 Home,example=postgres"`
+	DistributionVersion string              `json:"distribution_version,omitempty" jsonschema:"description=OS version (or image version),example=36,example=10.0.19044 Build 19044,example=latest"`
+	Uptime              time.Duration       `json:"uptime,omitempty" jsonschema:"description=machine uptime in nanoseconds,example=22343000000000,example=13521178203519"`
+	ParentMachine       int                 `json:"parent_machine,omitempty" jsonschema:"description=internal reference of the parent machine (docker or VM cases especially),example=53127"`
+	Agent               *uuid.UUID          `json:"hosted_agent,omitempty" jsonschema:"description=collector identifier (agent case)"`
+	CPU                 *CPU                `json:"cpu,omitempty" jsonschema:"description=CPU information"`
+	NICS                []*NetworkInterface `json:"nics" jsonschema:"description=list of network devices"`
+	Packages            []*Package          `json:"packages" jsonschema:"description=list of packages"`
+	Disks               []*Disk             `json:"disks" jsonschema:"description=list of disks"`
+	GPUS                []*GPU              `json:"gpus" jsonschema:"description=list of GPU"`
 }
 
 // NewMachine inits a new Machine structure
 func NewMachine() *Machine {
+	// increment ID
+	machineCounter++
+	// return new machine
 	return &Machine{
-		InternalID: 1 + rand.Intn(65535), // ensure the InternalId is greater than 1
+		InternalID: machineCounter, // ensure the InternalId is greater than 1
 		Packages:   make([]*Package, 0),
 		NICS:       make([]*NetworkInterface, 0),
 		Disks:      make([]*Disk, 0),
@@ -100,11 +104,15 @@ func (m *Machine) GetOrCreateApplicationByName(name string) (*Application, bool)
 			}
 		}
 	}
-	app := Application{Name: name}
-	pkg := Package{Applications: []*Application{&app}}
-	m.Packages = append(m.Packages, &pkg)
+	app := NewApplication()
+	app.Name = name
+
+	pkg := NewPackage()
+	pkg.Applications = append(pkg.Applications, app)
+	// pkg := Package{Applications: []*Application{app}}
+	m.Packages = append(m.Packages, pkg)
 	// m.Applications = append(m.Applications, &Application{Name: name})
-	return &app, true
+	return app, true
 }
 
 // GetOrCreateApplicationByEndpoint returns the app running on this machine
@@ -126,12 +134,27 @@ func (m *Machine) GetOrCreateApplicationByEndpoint(port uint16, protocol string,
 		Protocol: protocol,
 		Addr:     addr,
 	}
-	app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
-	pkg := Package{Applications: []*Application{&app}}
-	m.Packages = append(m.Packages, &pkg)
+	app := NewApplication()
+	app.Endpoints = append(app.Endpoints, &endpoint)
+	// app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
+
+	pkg := NewPackage()
+	pkg.Applications = append(pkg.Applications, app)
+	// pkg := Package{Applications: []*Application{&app}}
+	m.Packages = append(m.Packages, pkg)
 	// m.Applications = append(m.Applications,
 	// 	&Application{Endpoints: []*ApplicationEndpoint{&endpoint}})
-	return &app, true
+	return app, true
+}
+
+// GetApplicationByPID returns a local app given its processus ID
+func (m *Machine) GetApplicationByPID(pid uint) *Application {
+	for _, p := range m.Applications() {
+		if p.PID == pid {
+			return p
+		}
+	}
+	return nil
 }
 
 func (m *Machine) Applications() []*Application {

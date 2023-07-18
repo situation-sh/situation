@@ -73,26 +73,33 @@ func splitImageName(image string) (string, string) {
 
 func getOrCreateMachineFromEndpoint(
 	endpoint types.EndpointResource,
-	container types.Container,
+	container types.ContainerJSON,
 	ipam network.IPAM,
 	parent *models.Machine,
 	logger *logrus.Entry) *models.Machine {
 	machine := store.GetMachineByHostID(container.ID)
 	// Otherwise, create it
 	if machine == nil {
-		image, version := splitImageName(container.Image)
+		image, version := splitImageName(container.Config.Image)
 
+		uptime := time.Duration(-1)
+		createdAt, err := time.Parse(time.RFC3339, container.Created)
+		if err == nil {
+			// here we have the right uptime (int64 -> ns)
+			uptime = time.Since(createdAt)
+		}
 		// machine
 		machine = models.NewMachine()
-		if len(container.Names) > 0 {
-			machine.Hostname = strings.TrimPrefix(container.Names[0], "/") // use container name
-		}
-		machine.Platform = "docker"                                  // set platform to docker
-		machine.Distribution = image                                 // container image
-		machine.DistributionVersion = version                        // container image version
-		machine.HostID = container.ID                                // container ID
-		machine.Uptime = time.Since(time.Unix(container.Created, 0)) //
-		machine.ParentMachine = parent.InternalID                    // underlying machine
+		// if len(container.Names) > 0 {
+		// 	machine.Hostname = strings.TrimPrefix(container.Names[0], "/") // use container name
+		// }
+		machine.Hostname = strings.TrimPrefix(container.Name, "/")
+		machine.Platform = "docker"               // set platform to docker
+		machine.Distribution = image              // container image
+		machine.DistributionVersion = version     // container image version
+		machine.HostID = container.ID             // container ID
+		machine.Uptime = uptime                   //
+		machine.ParentMachine = parent.InternalID // underlying machine
 		// fmt.Printf("%+v\n", machine)
 
 		// logging
@@ -178,9 +185,9 @@ func RunBasic(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 		// loop over the containers
 		for containerID, endpoint := range network.Containers {
 			// fmt.Printf("\t - %v [%v] %s\n",
-			// endpoint.IPv4Address,
-			// endpoint.IPv6Address,
-			// endpoint.Name)
+			// 	endpoint.IPv4Address,
+			// 	endpoint.IPv6Address,
+			// 	endpoint.Name)
 			// container, err := m.getContainerByName(endpoint.Name)
 			container, err := getContainerByID(ctx, p.client, containerID)
 			// fmt.Printf(" ENDPOINT: %+v\n", endpoint)
@@ -199,7 +206,15 @@ func RunBasic(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 				continue
 			}
 
-			machine := getOrCreateMachineFromEndpoint(endpoint, container, network.IPAM, p.machine, logger)
+			// we prefer inspect because of the startedAt property (=uptime)
+			// that is easier to get
+			containerJSON, err := p.client.ContainerInspect(ctx, container.ID)
+			if err != nil {
+				// normally we can't be here because the container exist.
+				// If something goes wrong just continue
+				continue
+			}
+			machine := getOrCreateMachineFromEndpoint(endpoint, containerJSON, network.IPAM, p.machine, logger)
 
 			apps := machine.Applications() // bypass the packages
 			// here we have a machine
@@ -220,22 +235,28 @@ func RunBasic(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 			}
 
 			// add an endpoint for every exposed ports
+			// TODO: Here we have a problem with the IP -> it is the Host IP and
+			// not the container IP. One can set to 0.0.0.0 for the moment until
+			// we find a workaround (we can run netstat in the namespace but it
+			// won't work on windows)
 			for _, port := range container.Ports {
-				var ip net.IP
-				if port.IP == "" {
-					ip = net.IPv4zero
-				} else if port.IP == "::" {
-					ip = net.IPv6zero
-				} else {
-					ip = net.ParseIP(port.IP)
-				}
-				endpoint, created := app.AddEndpoint(ip, port.PrivatePort, port.Type)
+				// fmt.Println("IP:", port.IP)
+				// var ip net.IP
+				// if port.IP == "" {
+				// 	ip = net.IPv4zero
+				// } else if port.IP == "::" {
+				// 	ip = net.IPv6zero
+				// } else {
+				// 	ip = net.ParseIP(port.IP)
+				// }
+				ip := net.IPv4zero
+				ep, created := app.AddEndpoint(ip, port.PrivatePort, port.Type)
 				if created {
 					logger.
 						WithField("container", machine.Hostname).
-						WithField("ip", endpoint.Addr).
-						WithField("port", endpoint.Port).
-						WithField("proto", endpoint.Protocol).
+						WithField("ip", ep.Addr).
+						WithField("port", ep.Port).
+						WithField("proto", ep.Protocol).
 						Info("Application endpoint found")
 				}
 			}

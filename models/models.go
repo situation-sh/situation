@@ -20,7 +20,7 @@ type Performance struct {
 	// occur simultaneously, and as a result HeapAlloc tends to
 	// change smoothly (in contrast with the sawtooth that is
 	// typical of stop-the-world garbage collectors).
-	HeapAlloc uint64 `json:"heap_alloc"`
+	HeapAlloc uint64 `json:"heap_alloc" jsonschema:"description=bytes allocated in the heap that represent reachable objects"`
 
 	// HeapSys is bytes of heap memory obtained from the OS.
 	//
@@ -33,28 +33,28 @@ type Performance struct {
 	// for a measure of the latter).
 	//
 	// HeapSys estimates the largest size the heap has had.
-	HeapSys uint64 `json:"heap_sys"`
+	HeapSys uint64 `json:"heap_sys" jsonschema:"description=the amount of virtual address space reserved for the heap (it estimates the largest size the heap has had)"`
 }
 
 // ModuleError is a structure to send possible errors
 // at the module level
 type ModuleError struct {
-	Module  string `json:"module"`
-	Message string `json:"message"`
+	Module  string `json:"module" jsonschema:"description=name of the module,example=docker,example=rpm"`
+	Message string `json:"message" jsonschema:"description=error message"`
 }
 
 // ExtraInfo stores extra agent/scan informations
 type ExtraInfo struct {
-	Agent     uuid.UUID      `json:"agent"`
-	Version   string         `json:"version"`
-	Duration  time.Duration  `json:"duration"`
-	Timestamp time.Time      `json:"timestamp"`
-	Errors    []*ModuleError `json:"errors"`
-	Perfs     Performance    `json:"perfs"`
+	Agent     uuid.UUID      `json:"agent" jsonschema:"description=agent uuid identifier"`
+	Version   string         `json:"version" jsonschema:"description=agent version,example=0.13.2"`
+	Duration  time.Duration  `json:"duration" jsonschema:"description=scan duration in nanoseconds,example=2010899300"`
+	Timestamp time.Time      `json:"timestamp" jsonschema:"description=timestamp of the end of the scan,example=2022-12-09T10:47:34.0210722+01:00"`
+	Errors    []*ModuleError `json:"errors" jsonschema:"description=list of the encountered errors"`
+	Perfs     Performance    `json:"perfs" jsonschema:"description=agent performances"`
 }
 
 // Payload is the full data that is sent to the server
 type Payload struct {
-	Machines []*Machine `json:"machines"`
-	Extra    *ExtraInfo `json:"extra"`
+	Machines []*Machine `json:"machines" jsonschema:"description=list of the machines"`
+	Extra    *ExtraInfo `json:"extra" jsonschema:"description=scan extra information (agent only)"`
 }

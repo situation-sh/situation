@@ -49,20 +49,31 @@ func (m *RPMModule) Run() error {
 	if err != nil {
 		return err
 	}
+	// defer db.Close()
+	// db.SetConnMaxIdleTime(1 * time.Millisecond)
+	// db.SetConnMaxLifetime(100 * time.Millisecond)
+
+	// 1 connection for pkgRows
+	// 1 connection for installRows
+	// db.SetMaxOpenConns(2)
 
 	pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
+	// pkgRows, err := conn.QueryContext(ctx, "SELECT hnum, blob FROM Packages")
 	if err != nil {
 		return err
 	}
 
 	pkg := rpm.Pkg{}
 	ins := rpm.Install{}
+
 	for pkgRows.Next() {
+		// fmt.Printf("%+v\n", db.Stats())
 		if err := pkgRows.Scan(&pkg.Hnum, &pkg.Blob); err != nil {
 			continue
 		}
 		p := pkg.Parse() // here we have a models.Package
 		installRows, err := db.Query("SELECT key, hnum, idx FROM Installtid WHERE hnum=? LIMIT 1", pkg.Hnum)
+		// installRows, err := conn.QueryContext(ctx, "SELECT key, hnum, idx FROM Installtid WHERE hnum=? LIMIT 1", pkg.Hnum)
 		if err != nil || installRows == nil {
 			continue
 		}
@@ -71,6 +82,7 @@ func (m *RPMModule) Run() error {
 				continue
 			}
 		}
+		installRows.Close()
 		p.InstallTimeUnix = ins.Parse()
 
 		r := logger.WithField(
@@ -90,6 +102,14 @@ func (m *RPMModule) Run() error {
 		} else {
 			r.Debug("Package found")
 		}
+	}
+
+	if err = pkgRows.Close(); err != nil {
+		return fmt.Errorf("error while closing query: %v", err)
+	}
+
+	if err = db.Close(); err != nil {
+		return fmt.Errorf("error while closing db: %v", err)
 	}
 
 	return nil
