@@ -35,7 +35,7 @@ func collectFiles(directory string) (*token.FileSet, []*ast.File, error) {
 		f := path.Join(directory, info.Name())
 
 		if strings.HasSuffix(f, ".go") {
-			src, err := os.ReadFile(f)
+			src, err := os.ReadFile(f) //#nosec G304 -- If the file is not valid, that will be triggered by parser.ParseFile
 			if err != nil {
 				log.Warnf("ignoring %s (cannot read file: %v)", entry.Name(), err)
 				continue

@@ -93,13 +93,15 @@ func (m *RPMModule) Run() error {
 				continue
 			}
 		}
-		installRows.Close()
+		if err := installRows.Close(); err != nil {
+			// once again ignore on error
+			continue
+		}
 		p.InstallTimeUnix = ins.Parse()
 
-		r := logger.WithField(
-			"name", p.Name).WithField(
-			"version", p.Version).WithField(
-			"install", time.Unix(p.InstallTimeUnix, 0).Format(time.RFC822))
+		r := logger.WithField("name", p.Name).
+			WithField("version", p.Version).
+			WithField("install", time.Unix(p.InstallTimeUnix, 0).Format(time.RFC822))
 		// here we can have issues if the packages already exist
 		// ex: if a blank package has been created for an app
 		// For the mapping, we ought to find if the application
@@ -107,9 +109,8 @@ func (m *RPMModule) Run() error {
 		// InsertPackage tries to do this
 		x, merged := machine.InsertPackage(p)
 		if merged {
-			r.WithField(
-				"apps", x.ApplicationNames()).Info(
-				"Package merged with already found apps")
+			r.WithField("apps", x.ApplicationNames()).
+				Info("Package merged with already found apps")
 		} else {
 			r.Debug("Package found")
 		}

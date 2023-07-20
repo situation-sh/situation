@@ -42,7 +42,7 @@ func detectImportPath(dir string, base string, levels int) (string, error) {
 			continue
 		}
 		if entry.Name() == "go.mod" {
-			file, err := os.Open(path.Join(dir, entry.Name()))
+			file, err := os.Open(path.Join(dir, "go.mod")) //#nosec G304 -- Only the 'module ...' line will be parsed
 			if err != nil {
 				return "", err
 			}
