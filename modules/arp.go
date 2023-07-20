@@ -1,3 +1,7 @@
+// LINUX(ARPModule) ok
+// WINDOWS(ARPModule) ok
+// MACOS(ARPModule) ?
+// ROOT(ARPModule) no
 package modules
 
 import (
@@ -12,6 +16,16 @@ func init() {
 	RegisterModule(&ARPModule{})
 }
 
+// ARPModule reads internal ARP table to find network neighbors.
+// It **does not send ARP requests** but leverage the [Ping] module
+// that is likely to update the local table.
+//
+// On Linux, it uses the Netlink API with the [netlink] library.
+// On Windows, it calls `GetIpNetTable2`.
+//
+// [Ping]: ping.md
+//
+// [netlink]: https://github.com/vishvananda/netlink1
 type ARPModule struct{}
 
 func (m *ARPModule) Name() string {

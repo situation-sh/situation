@@ -1,4 +1,4 @@
-# Modules 
+# Modules
 
 ## Introduction
 
@@ -118,7 +118,6 @@ func SetDefault(m Module, key string, value interface{}, usage string) {
 }
 ```
 
-
 ## Logging
 
 The logging is managed by [logrus](https://github.com/Sirupsen/logrus). To log some information, the `modules` package expose a `GetLogger` function that returns a contextual logger (relative to the module).
@@ -200,3 +199,40 @@ func (m * HeavyModule) Run() error {
     // ...
 }
 ```
+
+## Documentation
+
+Documenting a module is mandatory. There are two things to do. The first thing is to document the `Module` object as follows:
+
+```go
+// MyNewModule retrieves data from ...
+//
+// It mainly depends on the following external library:
+//  - ... 
+//
+// On Windows, it collect data by calling...
+// On Linux, it reads ...
+type MyNewModule struct {}
+```
+
+One must have a synospis (first line) and then some details about the module.
+One may include how data is collected with regards to the platform and also
+other relevant things (edge cases, libraries, privileges, options etc.)
+
+The second point is to fill some standard notes, as follows:
+
+```go
+// LINUX(MyNewModule) ok
+// WINDOWS(MyNewModule) ok
+// MACOS(MyNewModule) ?
+// ROOT(MyNewModule) no
+package modules
+```
+
+The format of the note is given by the [doc](https://pkg.go.dev/go/doc#Note) package. We use it as follows: `<KEY>(<MODULE-NAME>) <VALUE>`
+
+Currently there are 4 attributes to provide: `LINUX`, `WINDOWS`, `MACOS` and `ROOT`. Their corresponding values must be
+`yes`/`ok` (meaning "supported"), `no` (meaning "not supported"), or `?` (meaning "don't know").
+
+!!! warning
+    For `ROOT`, `yes`/`ok` means that root privileges are required

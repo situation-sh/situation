@@ -1,78 +1,33 @@
-article>p {
-    text-align: justify;
+article > p {
+  text-align: justify;
 }
 
 #modules table {
-    font-size: x-small;
+  font-size: x-small;
 }
 
 #modules table th {
-    min-width: unset;
+  min-width: unset;
 }
 
-:root>* {
-    /* Polar Night */
-    --nord0: #2e3440;
-    --nord1: #3b4252;
-    --nord2: #434c5e;
-    --nord3: #4c566a;
-    /* Snow Storm */
-    --nord4: #d8dee9;
-    --nord5: #e5e9f0;
-    --nord6: #eceff4;
-    /* Frost */
-    --nord7: #8fbcbb;
-    --nord8: #88c0d0;
-    --nord9: #81a1c1;
-    --nord10: #5e81ac;
-    /* Aurora */
-    --nord11: #bf616a;
-    --nord12: #d08770;
-    --nord13: #ebcb8b;
-    --nord14: #a3be8c;
-    --nord15: #b48ead;
+[data-md-color-scheme="sweden"] {
+  --md-primary-fg-color: #1a3050;
+  --md-primary-fg-color--light: #005293;
+  --md-primary-fg-color--dark: #142638;
+  --md-accent-fg-color: #fecb00;
+  --md-typeset-a-color: var(--md-primary-fg-color--light);
+  --md-admonition-fg-color: var(--nord0);
+  --md-default-bg-color: #fafafa;
 }
 
-
-[data-md-color-scheme="nord"] {
-    --md-primary-fg-color: var(--nord2);
-    --md-primary-fg-color--light: var(--nord3);
-    --md-primary-fg-color--dark: var(--nord0);
-    --md-accent-fg-color: var(--nord8);
-    --md-typeset-a-color: var(--nord10);
-    --md-admonition-fg-color: var(--nord0);
+.md-typeset {
+  font-weight: 200;
+  /* color: var(--md-default-fg-color); */
 }
 
-
-/***** TIP, HINT and IMPORTANT  *****/
-/* border */
-.md-typeset :is(.admonition, details):is(.tip, .hint, .important) {
-    border-color: var(--nord14);
-}
-
-/* title */
-.md-typeset :is(.tip, .hint, .important)> :is(.admonition-title, summary) {
-    background-color: #a3be8c25;
-}
-
-/* icon */
-.md-typeset :is(.tip, .hint, .important)> :is(.admonition-title, summary)::before {
-    background-color: var(--nord14);
-}
-
-/***** WARN, CAUTION and ATTENTION  *****/
-
-/* border */
-.md-typeset :is(.admonition, details):is(.warning, .caution, .attention) {
-    border-color: var(--nord13);
-}
-
-/* title */
-.md-typeset :is(.warning, .caution, .attention)> :is(.admonition-title, summary) {
-    background-color: #ebcb8b25;
-}
-
-/* icon */
-.md-typeset :is(.warning, .caution, .attention)> :is(.admonition-title, summary)::before {
-    background-color: var(--nord13);
+.md-typeset h1 {
+  font-weight: 700;
+  color: var(--md-primary-fg-color--dark);
+  font-size: 3em;
+  margin-bottom: 0.5em;
 }

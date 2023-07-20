@@ -35,6 +35,22 @@ func SetDefault(m Module, key string, value interface{}, usage string) {
 	}
 }
 
+// overrideFlag is used for testing
+func overrideFlag(m Module, key string, value interface{}, usage string) {
+	name := fmt.Sprintf("modules.%s.%s", m.Name(), key)
+	i := -1
+	for k, f := range DefaultFlags {
+		fmt.Println(f.Names()[0])
+		if f.Names()[0] == name {
+			i = k
+		}
+	}
+	// remove old value
+	DefaultFlags = append(DefaultFlags[:i], DefaultFlags[i+1:]...)
+	// set new default
+	SetDefault(m, key, value, usage)
+}
+
 // RegisterModule is the function to call to register a module
 // It panics if two modules have the same name
 func RegisterModule(module Module) {
@@ -43,4 +59,6 @@ func RegisterModule(module Module) {
 		panic(fmt.Errorf("two modules have the same name: %s", name))
 	}
 	modules[name] = module
+	// add a default parameter to disable the module
+	SetDefault(module, DISABLED_KEY, false, fmt.Sprintf("Disable module %s", name))
 }
