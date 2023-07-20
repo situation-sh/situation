@@ -1,13 +1,14 @@
-<div id="modules" markdown>
-|Name|Dependencies|Architectures|Linux|Windows|System requirements|Required Go modules|
-|---|---|---|---|---|---|---|
-|[arp](arp.md)|[`Ping`](ping.md)|++question++|:white_check_mark:|:white_check_mark:||<ul><li>[`golang.org/x/sys/windows`]({{ variables.godoc_base_url }}/golang.org/x/sys/windows)</li><li>[`github.com/vishvananda/netlink`]({{ variables.godoc_base_url }}/github.com/vishvananda/netlink/)</li></ul>|
-|[docker](docker.md)|[`Host network`](host_network.md) [`TCP Scan`](tcp_scan.md)|++question++|:white_check_mark:{ title="OK" }|:military_helmet:{ title="Beta" }|Must belong to `docker` group (Linux + unix socket)|<ul><li>[`github.com/docker/docker/client`]({{ variables.godoc_base_url }}/github.com/docker/docker/client)</li><li> [`github.com/docker/docker/api/types`]({{ variables.godoc_base_url }}/github.com/docker/docker/api/types)</li><li>[`github.com/docker/docker/api/types/filters`]({{ variables.godoc_base_url }}/github.com/docker/docker/api/types/filters)</li><li>[`github.com/docker/docker/api/types/network`]({{ variables.godoc_base_url }}/github.com/docker/docker/api/types/network)</li></ul>|
-|[host-basic](host_basic.md)||++question++|:white_check_mark:{ title="OK" }|:white_check_mark:{ title="OK" }||<ul><li>[`github.com/shirou/gopsutil/v3/host`]({{ variables.godoc_base_url }}/github.com/shirou/gopsutil/v3/host)</li></ul>|
-|[host-cpu](host_cpu.md)|[`Host basic`](host_basic.md)|++question++|:white_check_mark:{ title="OK" }|:white_check_mark:{ title="OK" }||<ul><li>[`github.com/shirou/gopsutil/v3/cpu`]({{ variables.godoc_base_url }}/github.com/shirou/gopsutil/v3/cpu)</li></ul>|
-|[host-disk](host_disk.md)|[`Host basic`](host_basic.md)|++question++|:white_check_mark:{ title="OK" }|:white_check_mark:{ title="OK" }||<ul><li>[`github.com/jaypipes/ghw`]({{ variables.godoc_base_url }}/github.com/jaypipes/ghw)</li></ul>|
-|[host-network](host_network.md)|[`Host basic`](host_basic.md)|++question++|:white_check_mark:{ title="OK" }|:white_check_mark:{ title="OK" }|||
-|[netstat](netstat.md)|[`Host basic`](host_basic.md)|++question++|:white_check_mark:|:white_check_mark:|Need root privileges|<ul><li>[`github.com/cakturk/gonetstat/netstat`]({{ variables.godoc_base_url }}/github.com/cakturk/gonetstat/netstat)</li></ul>|
-|[ping](ping.md)|[`Host network`](host_network.md)|++question++|:white_check_mark:{ title="OK" }|:white_check_mark:{ title="OK" }||<ul><li>[`github.com/goping/ping`]({{ variables.godoc_base_url }}/github.com/goping/ping)</li></ul>|
-|[tcp-scan](tcp_scan.md)|[`ARP`](arp.md)|++question++|:white_check_mark:{ title="OK" }|:white_check_mark:{ title="OK" }|||
-</div>
+| Name | Summary | Dependencies | Status |
+|------|---------|--------------|--------|
+| [host-cpu](host_cpu.md)   | HostCPUModule retrieves host CPU info: model, vendor and the number of cores.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [host-disk](host_disk.md)   | HostDiskModule retrieves basic information about disk: name, model, size, type, controller and partitions.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [host-gpu](host_gpu.md)   | HostGPUModule retrieves basic information about GPU: index, vendor and product name.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [host-network](host_network.md)   | HostNetworkModule retrieves basic newtork information about the host: interfaces along with their mac, ip and mask (IPv4 and IPv6)      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [netstat](netstat.md)   | NetstatModule aims to retrieve infos like the netstat command does It must be run as root to retrieve PID/process information.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }} {{ root_required }}     |
+| [ping](ping.md)   | PingModule pings local networks to discover new hosts.      | [host-network](host_network.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [docker](docker.md)   | DockerModule retrieves information about docker containers.      | [host-network](host_network.md), [tcp-scan](tcp_scan.md)           | {{ linux_ok }} {{ windows_ok }} {{ root_required }}     |
+| [host-basic](host_basic.md)   | HostBasicModule retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime      |            | {{ linux_ok }} {{ windows_ok }}     |
+| [rpm](rpm.md)   | RPMModule reads package information from the rpm package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |
+| [tcp-scan](tcp_scan.md)   | TCPScanModule tries to connect to neighbor TCP ports.      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [arp](arp.md)   | ARPModule reads internal ARP table to find network neighbors.      | [ping](ping.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [dpkg](dpkg.md)   | DPKGModule reads package information from the dpkg package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |
