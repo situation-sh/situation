@@ -1,3 +1,7 @@
+// LINUX(DockerModule) ok
+// WINDOWS(DockerModule) ok
+// MACOS(DockerModule) ?
+// ROOT(DockerModule) yes
 package modules
 
 import (
@@ -18,16 +22,13 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
-// description: retrieve information about docker containers
-// data:
-//   - z
+// DockerModule retrieves information about docker containers.
 //
-// status:
+// It uses the official go client that performs HTTP queries
+// either on port `:2375` (on windows generally) or on UNIX sockets.
 //
-//	linux: ok
-//	windows: ok
-//	mac: unknown
-// requirements: user must be root 
+// We generally need some privileges to reads UNIX sockets, so it may
+// require root privileges (the alternative is to belong to the `docker` group)
 type DockerModule struct{}
 
 func (m *DockerModule) Name() string {

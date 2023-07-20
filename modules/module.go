@@ -1,5 +1,10 @@
 package modules
 
+import "sort"
+
+// DISABLED_KEY provides the option key to disable a module
+const DISABLED_KEY = "disabled"
+
 // internal map of modules
 var modules = make(map[string]Module)
 
@@ -19,11 +24,13 @@ func GetModuleNames() []string {
 		list[i] = name
 		i++
 	}
+	// sort the module names
+	sort.Strings(list)
 	return list
 }
 
 func isDisabled(m Module) bool {
-	disabled, err := GetConfig[bool](m, "disabled")
+	disabled, err := GetConfig[bool](m, DISABLED_KEY)
 	// if there is an error we prefer disable the module
 	if err != nil {
 		return true

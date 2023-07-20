@@ -44,5 +44,5 @@ func RegisterModule(module Module) {
 	}
 	modules[name] = module
 	// add a default parameter to disable the module
-	SetDefault(module, "disabled", false, fmt.Sprintf("Disable module %s", name))
+	SetDefault(module, DISABLED_KEY, false, fmt.Sprintf("Disable module %s", name))
 }

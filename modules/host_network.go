@@ -1,3 +1,7 @@
+// LINUX(HostNetworkModule) ok
+// WINDOWS(HostNetworkModule) ok
+// MACOS(HostNetworkModule) ?
+// ROOT(HostNetworkModule) no
 package modules
 
 import (
@@ -15,6 +19,15 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// HostNetworkModule retrieves basic newtork information about the host:
+// interfaces along with their mac, ip and mask (IPv4 and IPv6)
+//
+// It uses the [go] standard library.
+//
+// On Linux, it uses the Netlink API.
+// On Windows, it calls `GetAdaptersAddresses`.
+//
+// [go]: https://pkg.go.dev/net
 type HostNetworkModule struct{}
 
 func (m *HostNetworkModule) Name() string {

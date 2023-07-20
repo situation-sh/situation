@@ -1,3 +1,7 @@
+// LINUX(TCPScanModule) ok
+// WINDOWS(TCPScanModule) ok
+// MACOS(TCPScanModule) ?
+// ROOT(TCPScanModule) no
 package modules
 
 import (
@@ -17,6 +21,15 @@ func init() {
 	SetDefault(m, "timeout", defaultTCPConnTimeout, "TCP connection attempt duration")
 }
 
+// TCPScanModule tries to connect to neighbor TCP ports.
+//
+// The module only uses the Go standard library.
+//
+// A TCP connect is performed on the [NMAP top 1000 ports].
+// These connection attempts are made concurrently against the hosts previously found.
+// The connections have a 500ms timeout.
+//
+// [NMAP top 1000 ports]: https://nullsec.us/top-1-000-tcp-and-udp-ports-nmap-default/
 type TCPScanModule struct{}
 
 func (m *TCPScanModule) Name() string {

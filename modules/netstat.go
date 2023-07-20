@@ -1,3 +1,7 @@
+// LINUX(NetstatModule) ok
+// WINDOWS(NetstatModule) ok
+// MACOS(NetstatModule) ?
+// ROOT(NetstatModule) yes
 package modules
 
 import (
@@ -21,8 +25,9 @@ func init() {
 // these data, it is rather hard to build reliable links between open
 // ports and programs.
 //
-// Caveats
-// =======
+// This module is then able to create flows between applications according
+// to the tuple (src, srcport, dst, dstport).
+//
 // On windows, the privileges are not checked (because we need to parse
 // the SID or another thing maybe). So the module is always run.
 type NetstatModule struct{}

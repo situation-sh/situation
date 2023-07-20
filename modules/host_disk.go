@@ -1,3 +1,7 @@
+// LINUX(HostDiskModule) ok
+// WINDOWS(HostDiskModule) ok
+// MACOS(HostDiskModule) ?
+// ROOT(HostDiskModule) no
 package modules
 
 import (
@@ -14,6 +18,32 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// HostDiskModule retrieves basic information about disk:
+// name, model, size, type, controller and partitions.
+//
+// It heavily relies on the [ghw] library.
+//
+// On Windows, it uses WMI requests:
+//
+//		```ps1
+//	 SELECT Caption, CreationClassName, Description, DeviceID, FileSystem, FreeSpace, Name, Size, SystemName FROM Win32_LogicalDisk
+//	 ```
+//
+//		```ps1
+//		SELECT DeviceId, MediaType FROM MSFT_PhysicalDisk
+//	 ```
+//
+//		```ps1
+//		SELECT Access, BlockSize, Caption, CreationClassName, Description, DeviceID, DiskIndex, Index, Name, Size, SystemName, Type FROM Win32_DiskPartition
+//	 ```
+//
+//		```ps1
+//		SELECT Antecedent, Dependent FROM Win32_LogicalDiskToPartition
+//	 ```
+//
+// On Linux, it reads `/sys/block/$DEVICE/**` files.
+//
+// [ghw]: https://github.com/jaypipes/ghw/
 type HostDiskModule struct{}
 
 func (m *HostDiskModule) Name() string {
@@ -90,13 +120,13 @@ func (m *HostDiskModule) Run() error {
 			Controller: controllerType(disk.StorageController),
 			Partitions: make([]*models.Partition, 0),
 		}
-		logger.WithField(
-			"name", d.Name).WithField(
-			"model", d.Model).WithField(
-			"size (MiB)", d.Size/(1024*1024)).WithField(
-			"type", d.Type).WithField(
-			"controller", d.Controller).WithField(
-			"#partitions", len(disk.Partitions)).Info("Found disk on host")
+		logger.WithField("name", d.Name).
+			WithField("model", d.Model).
+			WithField("size (MiB)", d.Size/(1024*1024)).
+			WithField("type", d.Type).
+			WithField("controller", d.Controller).
+			WithField("#partitions", len(disk.Partitions)).
+			Info("Found disk on host")
 
 		// embed partitions
 		for _, part := range disk.Partitions {
@@ -107,11 +137,11 @@ func (m *HostDiskModule) Run() error {
 				ReadOnly: part.IsReadOnly,
 			}
 			d.Partitions = append(d.Partitions, &p)
-			logger.WithField(
-				"name", p.Name).WithField(
-				"size (MiB)", p.Size/(1024*1024)).WithField(
-				"type", p.Type).WithField(
-				"read_only", p.ReadOnly).Info("Here is a partition")
+			logger.WithField("name", p.Name).
+				WithField("size (MiB)", p.Size/(1024*1024)).
+				WithField("type", p.Type).
+				WithField("read_only", p.ReadOnly).
+				Info("Here is a partition")
 		}
 
 		machine.Disks = append(machine.Disks, &d)
