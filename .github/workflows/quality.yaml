@@ -52,6 +52,7 @@ jobs:
       # upload code coverage
       - uses: codecov/codecov-action@v3
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./.gocoverprofile.txt # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
