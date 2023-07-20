@@ -40,16 +40,6 @@ func (m *NetstatModule) Dependencies() []string {
 	return []string{"host-basic"}
 }
 
-func listeningPortFilter(e *netstat.SockTabEntry) bool {
-	if e.LocalAddr.IP.IsLoopback() {
-		return false
-	}
-	if e.State != netstat.Listen {
-		return false
-	}
-	return true
-}
-
 func flowFilter(state netstat.SkState) bool {
 	for _, s := range []netstat.SkState{
 		netstat.Established,
