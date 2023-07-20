@@ -11,19 +11,6 @@ on:
       - "mkdocs.yml"
 
 jobs:
-  test:
-    on:
-      pull_request:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v4
-      - run: make update-docs
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-      - run: pip install mkdocs-material mkdocs-section-index mkdocs-markdownextradata-plugin mkdocs-macros-plugin
-      - run: mkdocs build -c
   deploy:
     runs-on: ubuntu-latest
     steps:
