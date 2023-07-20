@@ -1,3 +1,7 @@
+// LINUX(HostGPUModule) ok
+// WINDOWS(HostGPUModule) ok
+// MACOS(HostGPUModule) ?
+// ROOT(HostGPUModule) no
 package modules
 
 import (
@@ -14,6 +18,18 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// HostGPUModule retrieves basic information about GPU:
+// index, vendor and product name.
+//
+// It heavily relies on [ghw].
+// On Linux it reads `/sys/class/drm/` folder. On Windows, it performs
+// the following WMI query:
+//
+//	```ps1
+//	SELECT Caption, CreationClassName, Description, DeviceID, Manufacturer, Name, PNPClass, PNPDeviceID FROM Win32_PnPEntity
+//	```
+//
+// [ghw]: https://github.com/jaypipes/ghw
 type HostGPUModule struct{}
 
 func (m *HostGPUModule) Name() string {

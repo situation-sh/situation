@@ -1,3 +1,7 @@
+// LINUX(HostBasicModule) ok
+// WINDOWS(HostBasicModule) ok
+// MACOS(HostBasicModule) ?
+// ROOT(HostBasicModule) no
 package modules
 
 import (
@@ -17,6 +21,22 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// HostBasicModule retrieves basic information about the host:
+// hostid, architecture, platform, distribution, version and uptime
+//
+// It heavily relies on the [gopsutil] library.
+//
+//	| Data                 | Linux                           | Windows                    |
+//	|----------------------|---------------------------------|----------------------------|
+//	| hostname             | `uname` syscall                 | `GetComputerNameExW` call  |
+//	| arch                 | `uname` syscall                 | `GetNativeSystemInfo` call |
+//	| platform             | `runtime.GOOS` variable         | `runtime.GOOS` variable    |
+//	| distribution         | scanning `/etc/*-release` files | `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\*` register keys |
+//	| distribution version | scanning `/etc/*-release` files | `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\*` register keys |
+//	| hostid               | reading `/sys/class/dmi/id/product_uuid`, `/etc/machine-id` or `/proc/sys/kernel/random/boot_id` | `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography\MachineGuid` register key |
+//	| uptime               | `sysinfo` syscall               | `GetTickCount64` call      |
+//
+// [gopsutil]: https://github.com/shirou/gopsutil/
 type HostBasicModule struct{}
 
 func (m *HostBasicModule) Name() string {

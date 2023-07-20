@@ -1,3 +1,7 @@
+// LINUX(HostCPUModule) ok
+// WINDOWS(HostCPUModule) ok
+// MACOS(HostCPUModule) ?
+// ROOT(HostCPUModule) no
 package modules
 
 import (
@@ -15,6 +19,15 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// HostCPUModule retrieves host CPU info: model, vendor and
+// the number of cores.
+//
+// It heavily relies on the [gopsutil] library.
+//
+// On Linux, it reads `/proc/cpuinfo`.
+// On Windows it performs the `win32_Processor` WMI request
+//
+// [gopsutil]: https://github.com/shirou/gopsutil/
 type HostCPUModule struct{}
 
 func (m *HostCPUModule) Name() string {

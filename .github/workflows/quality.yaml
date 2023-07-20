@@ -1,0 +1,58 @@
+# This is a basic workflow to help you get started with Actions
+
+name: quality
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    paths:
+      - "**.go"
+      - ".github/workflows/quality.yaml"
+
+env:
+  GO111MODULE: on
+  CGO_ENABLED: 0
+
+jobs:
+  gosec: # source: https://github.com/securego/gosec#integrating-with-code-scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+      # run gosec scanner
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          # we let the report trigger content trigger a failure using the GitHub Security features.
+          args: "-no-fail -fmt sarif -out results.sarif ./..."
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: results.sarif
+  codecov:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+      # run codecov coverage
+      - name: Code coverage
+        run: make test
+      # upload code coverage
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./.gocoverprofile.txt # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)

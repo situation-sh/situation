@@ -1,3 +1,7 @@
+// LINUX(PingModule) ok
+// WINDOWS(PingModule) ok
+// MACOS(PingModule) ?
+// ROOT(PingModule) no
 package modules
 
 import (
@@ -41,6 +45,16 @@ func init() {
 	RegisterModule(&PingModule{})
 }
 
+// PingModule pings local networks to discover new hosts.
+//
+// The module relies on [pro-bing] library.
+//
+// A single ping attempt is made on every host of the local networks
+// (the host may belong to several networks). Only IPv4 networks with
+// prefix length >=20 are treated.
+// The ping timeout is hardset to 300ms.
+//
+// [pro-bing]: https://github.com/prometheus-community/pro-bing
 type PingModule struct{}
 
 func (m *PingModule) Name() string {
@@ -152,6 +166,7 @@ func (m *PingModule) Run() error {
 
 	host := store.GetHost()
 	for _, nic := range host.NICS {
+		// network() returns the IPv4 network attached to this nic
 		for _, network := range []*net.IPNet{nic.Network()} {
 			if network == nil {
 				continue

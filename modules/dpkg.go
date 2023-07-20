@@ -1,6 +1,10 @@
 //go:build linux
 // +build linux
 
+// LINUX(DPKGModule) ok
+// WINDOWS(DPKGModule) no
+// MACOS(DPKGModule) no
+// ROOT(DPKGModule) no
 package modules
 
 import (
@@ -16,6 +20,12 @@ func init() {
 	RegisterModule(&DPKGModule{})
 }
 
+// DPKGModule reads package information from the dpkg package manager.
+//
+// This module is relevant for distros that use dpkg, like debian, ubuntu and their
+// derivatives. It only uses the standard library.
+//
+// It reads `/var/log/dpkg.log` and also files from `/var/lib/dpkg/info/`.
 type DPKGModule struct{}
 
 func (m *DPKGModule) Name() string {

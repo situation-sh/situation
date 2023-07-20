@@ -10,7 +10,7 @@ theme:
   palette:
     scheme: nord
   font:
-    text: Inter
+    text: "Inter"
   features:
     - content.code.copy
 
@@ -24,12 +24,15 @@ nav:
       - modules/index.md
       - modules/arp.md
       - modules/docker.md
+      - modules/dpkg.md
       - modules/host_basic.md
       - modules/host_cpu.md
       - modules/host_disk.md
+      - modules/host_gpu.md
       - modules/host_network.md
       - modules/netstat.md
       - modules/ping.md
+      - modules/rpm.md
       - modules/tcp_scan.md
   - "backends.md"
   - Developer:
@@ -61,17 +64,15 @@ plugins:
   - search:
       lang: [en]
   - section-index
-  # - markdownextradata
-  #
   - macros:
       verbose: true
       module_name: docs/macros/main
 
 extra_css:
   - css/extra.css
+  - css/nord.css
 
 extra:
   variables:
-    version: 0.12.0
     go_module: github.com/situation-sh/situation
     godoc_base_url: https://pkg.go.dev
