@@ -7,6 +7,7 @@ require (
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
 	github.com/docker/docker v24.0.2+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/gosnmp/gosnmp v1.36.1
 	github.com/iancoleman/orderedmap v0.2.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/jaypipes/ghw v0.11.0
