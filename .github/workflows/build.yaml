@@ -12,6 +12,8 @@ on:
     paths:
       - "**.go"
       - ".github/workflows/build.yaml"
+      - go.mod
+      - go.sum
 
 env:
   GO111MODULE: on
