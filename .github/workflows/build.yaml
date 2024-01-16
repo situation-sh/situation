@@ -30,7 +30,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.20.3"
+          go-version: "1.21.6"
           cache: true
       # Run build of the application
       - name: Run build
