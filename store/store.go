@@ -147,8 +147,8 @@ func GetAllIPv4Networks() []*net.IPNet {
 	for _, m := range store {
 		for _, nic := range m.NICS {
 			if nic.IP != nil && nic.MaskSize > 0 {
-				network := nic.Network()
-				utils.EnforceMask(network)
+				nw := nic.Network()
+				network := utils.EnforceMask(nw)
 				cidr := network.String()
 				if _, exists := mapper[cidr]; !exists {
 					mapper[cidr] = network

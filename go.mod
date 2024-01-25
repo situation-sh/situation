@@ -1,6 +1,8 @@
 module github.com/situation-sh/situation
 
-go 1.20
+go 1.21
+
+toolchain go1.21.6
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.26.4
@@ -8,7 +10,6 @@ require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/google/uuid v1.5.0
 	github.com/gosnmp/gosnmp v1.37.0
-	github.com/iancoleman/orderedmap v0.3.0
 	github.com/invopop/jsonschema v0.12.0
 	github.com/jaypipes/ghw v0.12.0
 	github.com/prometheus-community/pro-bing v0.3.0
@@ -18,6 +19,7 @@ require (
 	github.com/urfave/cli/v2 v2.27.1
 	github.com/vishvananda/netlink v1.1.0
 	github.com/winlabs/gowin32 v0.0.0-20221003142512-0d265587d3c9
+	github.com/wk8/go-ordered-map/v2 v2.1.8
 	golang.org/x/sys v0.16.0
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.28.0
@@ -58,7 +60,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
 	github.com/tklauser/numcpus v0.7.0 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
-	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/xrash/smetrics v0.0.0-20231213231151-1d8dd44e695e // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	golang.org/x/mod v0.14.0 // indirect

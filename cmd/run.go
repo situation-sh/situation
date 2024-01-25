@@ -70,6 +70,6 @@ func singleRun() error {
 
 	backends.Write(payload)
 
-	store.Clear()
+	// store.Clear()
 	return nil
 }

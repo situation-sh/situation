@@ -27,6 +27,8 @@ func BuildFlag(key string, value interface{}, help string, aliases []string) cli
 	case []string:
 		return altsrc.NewStringSliceFlag(
 			&cli.StringSliceFlag{Name: key, Value: cli.NewStringSlice(v...), Usage: help, Aliases: aliases})
+	case uint:
+		return altsrc.NewUintFlag(&cli.UintFlag{Name: key, Value: v, Usage: help, Aliases: aliases})
 	default:
 		delete(internalFlags, key)
 		// do not append
