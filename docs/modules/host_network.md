@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host Network
 summary: "HostNetworkModule retrieves basic newtork information about the host: interfaces along with their mac, ip and mask (IPv4 and IPv6)"
-date: 2023-07-20
+date: 2024-01-25
 filename: host_network.go
 std_imports:
   - fmt
