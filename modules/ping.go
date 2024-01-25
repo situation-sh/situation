@@ -164,35 +164,36 @@ func (m *PingModule) Run() error {
 	logger := GetLogger(m)
 	errorMsg := ""
 
-	host := store.GetHost()
-	for _, nic := range host.NICS {
+	// host := store.GetHost()
+	// try to ping all networks
+	for _, network := range store.GetAllIPv4Networks() {
 		// network() returns the IPv4 network attached to this nic
-		for _, network := range []*net.IPNet{nic.Network()} {
-			if network == nil {
-				continue
-			}
-
-			switch ones, bits := network.Mask.Size(); {
-			case ones < 20:
-				// ignore to large network (here /20 at most)
-				logger.Warnf("Ignoring %s (network is too wide)", network.String())
-				continue
-			case ones > 24:
-				// if the network is restricted. We try to
-				// send pings in a wider one. It may appear
-				// in VPN cases
-				// this change does not modify the mask inside
-				// the store
-				network.Mask = net.CIDRMask(24, bits)
-			}
-
-			logger.Infof("Pinging %s (%s)", network.String(), nic.Name)
-			if err := pingSubnetwork(network); err != nil {
-				logger.Error(err)
-				errorMsg += fmt.Sprintf("Error(s) occurred while pinging %s:", network.String())
-				errorMsg += strings.ReplaceAll(err.Error(), errorPrefix, "\n\t - ")
-			}
+		// for _, network := range []*net.IPNet{nic.Network()} {
+		if network == nil {
+			continue
 		}
+
+		switch ones, bits := network.Mask.Size(); {
+		case ones < 20:
+			// ignore to large network (here /20 at most)
+			logger.Warnf("Ignoring %s (network is too wide)", network.String())
+			continue
+		case ones > 24:
+			// if the network is restricted. We try to
+			// send pings in a wider one. It may appear
+			// in VPN cases
+			// this change does not modify the mask inside
+			// the store
+			network.Mask = net.CIDRMask(24, bits)
+		}
+
+		logger.Infof("Pinging %s", network.String())
+		if err := pingSubnetwork(network); err != nil {
+			logger.Error(err)
+			errorMsg += fmt.Sprintf("Error(s) occurred while pinging %s:", network.String())
+			errorMsg += strings.ReplaceAll(err.Error(), errorPrefix, "\n\t - ")
+		}
+		// }
 	}
 
 	if len(errorMsg) > 0 {

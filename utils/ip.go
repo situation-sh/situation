@@ -118,3 +118,16 @@ func IsReserved(ip net.IP) bool {
 	}
 	return false
 }
+
+func EnforceMask(nw *net.IPNet) {
+	if ip4 := nw.IP.To4(); ip4 != nil {
+		for i := 0; i < 4; i++ {
+			ip4[i] &= nw.Mask[i]
+		}
+		nw.IP = ip4
+	} else {
+		for i := 0; i < 16; i++ {
+			nw.IP[i] &= nw.Mask[i]
+		}
+	}
+}
