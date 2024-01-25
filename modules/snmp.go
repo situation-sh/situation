@@ -34,8 +34,10 @@ func init() {
 }
 
 // SNMPModule
+// Module to collect data through SNMP protocol.
+//
 // This module need to access the following OID TREE: .1.3.6.1.2.1
-// In case of snmpd, the conf (snmpd.conf) should include something like this:
+// In case of snmpd, the configuration (snmpd.conf) should then include something like this:
 // view systemonly included .1.3.6.1.2.1
 type SNMPModule struct{}
 
@@ -87,6 +89,10 @@ func (m *SNMPModule) Run() error {
 	}()
 
 	for m := range store.IterateMachines() {
+		// ignore host machine
+		if m.IsHost() {
+			continue
+		}
 		for _, nic := range m.NICS {
 			if nic.IP.IsLoopback() || nic.IP.IsMulticast() {
 				continue

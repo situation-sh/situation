@@ -11,6 +11,13 @@ import (
 	"github.com/situation-sh/situation/store"
 )
 
+func checkSNMP(g *gosnmp.GoSNMP) bool {
+	if _, err := g.Get([]string{"0.0"}); err != nil {
+		return false
+	}
+	return true
+}
+
 func RunSingle(g *gosnmp.GoSNMP, m *models.Machine, wg *sync.WaitGroup, cerr chan error, logger *logrus.Entry) {
 	defer wg.Done()
 	if err := g.Connect(); err != nil {
@@ -18,6 +25,11 @@ func RunSingle(g *gosnmp.GoSNMP, m *models.Machine, wg *sync.WaitGroup, cerr cha
 		return
 	}
 	defer g.Conn.Close()
+
+	// ensure we do have a SNMP connection
+	if !checkSNMP(g) {
+		return
+	}
 
 	// retrieve all the network interfaces collected by
 	// snmp
