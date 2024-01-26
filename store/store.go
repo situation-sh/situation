@@ -158,7 +158,6 @@ func GetAllIPv4Networks() []*net.IPNet {
 	}
 
 	// return list of networks
-	fmt.Println(mapper)
 	for _, n := range mapper {
 		out = append(out, n)
 	}
