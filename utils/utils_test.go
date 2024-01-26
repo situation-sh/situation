@@ -392,3 +392,26 @@ func TestFlags(t *testing.T) {
 	}
 
 }
+
+func TestEnforceMask(t *testing.T) {
+	ipnet := net.IPNet{
+		IP:   net.ParseIP("192.168.1.68"),
+		Mask: net.CIDRMask(24, 32),
+	}
+	out := EnforceMask(&ipnet)
+	truth := net.ParseIP("192.168.1.0")
+	if !out.IP.Equal(truth) {
+		t.Errorf("%v != %v", out.IP, truth)
+	}
+
+	ipnet6 := net.IPNet{
+		IP:   net.ParseIP("fe80::b636:f478:575f:59a6"),
+		Mask: net.CIDRMask(64, 128),
+	}
+	out6 := EnforceMask(&ipnet6)
+	truth6 := net.ParseIP("fe80::")
+	if !out6.IP.Equal(truth6) {
+		t.Errorf("%v != %v", out6.IP, truth6)
+	}
+
+}

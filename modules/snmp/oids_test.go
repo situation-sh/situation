@@ -17,3 +17,33 @@ func TestParseIPAddressInOid(t *testing.T) {
 		t.Errorf("bad ip: %v", ip)
 	}
 }
+
+func TestSplitPoint(t *testing.T) {
+	he := "2.16.254"
+	ta := "128.0.0.0.0.0.0.147.108"
+	oid := he + "." + ta
+	head, tail := splitPoint(oid, 3)
+	if head != he {
+		t.Errorf("%s != %s", head, he)
+	}
+	if tail != ta {
+		t.Errorf("%s != %s", tail, ta)
+	}
+
+	if head, tail := splitPoint(oid, 0); head != oid || tail != "" {
+		t.Errorf("%s != %s or %s != %s", head, oid, tail, "")
+	}
+
+	if head, tail := splitPoint(oid, 10000); head != oid || tail != "" {
+		t.Errorf("%s != %s or %s != %s", head, oid, tail, "")
+	}
+}
+
+func TestRemovePrefix(t *testing.T) {
+	he := "2.16.254"
+	ta := "128.0.0.0.0.0.0.147.108"
+	oid := he + "." + ta
+	if out := removePrefix(oid, he); out != ta {
+		t.Errorf("%s != %s", out, ta)
+	}
+}

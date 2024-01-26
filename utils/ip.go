@@ -120,18 +120,9 @@ func IsReserved(ip net.IP) bool {
 }
 
 func EnforceMask(nw *net.IPNet) *net.IPNet {
-	ones, bits := nw.Mask.Size()
 	out := net.IPNet{
-		IP:   net.IPv4(0, 0, 0, 0).To16(),
-		Mask: net.CIDRMask(ones, bits),
-	}
-
-	if ip := nw.IP.To4(); ip != nil {
-		out.IP = out.IP.To4()
-	}
-
-	for i := 0; i < len(out.IP); i++ {
-		out.IP[i] = nw.IP[i] & out.Mask[i]
+		IP:   nw.IP.Mask(nw.Mask),
+		Mask: nw.Mask,
 	}
 	return &out
 }
