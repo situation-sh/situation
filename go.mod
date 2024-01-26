@@ -12,6 +12,7 @@ require (
 	github.com/gosnmp/gosnmp v1.37.0
 	github.com/invopop/jsonschema v0.12.0
 	github.com/jaypipes/ghw v0.12.0
+	github.com/libp2p/go-netroute v0.2.1
 	github.com/prometheus-community/pro-bing v0.3.0
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
 	github.com/shirou/gopsutil/v3 v3.23.12
@@ -44,6 +45,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/google/gopacket v1.1.19 // indirect
 	github.com/jaypipes/pcidb v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/lufia/plan9stats v0.0.0-20231016141302-07b5767bb0ed // indirect
