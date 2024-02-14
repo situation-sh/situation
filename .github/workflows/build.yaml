@@ -12,6 +12,8 @@ on:
     paths:
       - "**.go"
       - ".github/workflows/build.yaml"
+      - go.mod
+      - go.sum
 
 env:
   GO111MODULE: on
@@ -23,12 +25,12 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # Setup Go
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.20.3"
+          go-version: "1.21.6"
           cache: true
       # Run build of the application
       - name: Run build

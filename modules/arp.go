@@ -72,7 +72,7 @@ func (m *ARPModule) Run() error {
 				// check mac address
 				nic := m.GetNetworkInterfaceByIP(entry.IP)
 				// fmt.Printf("%+v [%v]\n", nic, nic.MAC == nil)
-				if nic.MAC == nil {
+				if nic.MAC == nil || len(nic.MAC) == 0 {
 					// assign the new mac
 					nic.MAC = entry.MAC
 					logger.WithField("ip", nic.IP).WithField("mac", nic.MAC).Info("MAC address assigned")

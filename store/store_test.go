@@ -148,3 +148,28 @@ func TestIterateMachines(t *testing.T) {
 
 	Clear()
 }
+
+func TestGetAllIPv4Networks(t *testing.T) {
+	n := 4
+	for i := 0; i < n; i++ {
+		InsertMachine(test.RandomMachine())
+	}
+
+	networks := GetAllIPv4Networks()
+	for m := range IterateMachines() {
+		for _, nic := range m.NICS {
+			ok := false
+			for _, n := range networks {
+				if n.Contains(nic.IP) {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				t.Errorf("NIC with IP %v does not belong to a network: %v", nic.IP, networks)
+			}
+		}
+
+	}
+
+}

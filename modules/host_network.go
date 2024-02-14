@@ -9,8 +9,13 @@ import (
 	"net"
 	"strings"
 
+	netroute "github.com/libp2p/go-netroute"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/store"
+)
+
+var (
+	GOOGLE = net.IPv4(8, 8, 8, 8)
 )
 
 func init() {
@@ -56,6 +61,13 @@ func (m *HostNetworkModule) Run() error {
 			machine.NICS)
 	}
 
+	// retrieve main gateway
+	index := -1
+	piface, gw, err := gateway()
+	if err == nil {
+		index = piface.Index
+	}
+
 	// create nics
 	for _, iface := range ifaces {
 		nic := models.NetworkInterface{}
@@ -65,7 +77,15 @@ func (m *HostNetworkModule) Run() error {
 		nic.MAC = iface.HardwareAddr
 
 		// logging
-		logger.WithField("name", nic.Name).WithField("mac", nic.MAC).Info("Network Interface found on host")
+		entry := logger.WithField("name", nic.Name).WithField("mac", nic.MAC)
+
+		// gateway
+		if index == iface.Index {
+			nic.Gateway = gw
+			entry = entry.WithField("gateway", nic.Gateway)
+		}
+
+		entry.Info("Network Interface found on host")
 
 		// ip(s)
 		addrs, err := iface.Addrs()
@@ -188,6 +208,15 @@ func getInterfaces() ([]net.Interface, error) {
 	// filter
 	ifaces = filterInterfaces(ifaces)
 	return ifaces, nil
+}
+
+func gateway() (*net.Interface, net.IP, error) {
+	r, err := netroute.New()
+	if err != nil {
+		return nil, nil, err
+	}
+	iface, gw, _, err := r.Route(GOOGLE)
+	return iface, gw, err
 }
 
 // func copyHardwareAddr(from net.HardwareAddr) net.HardwareAddr {

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/situation-sh/situation/models"
+	"github.com/situation-sh/situation/utils"
 )
 
 var store []*models.Machine
@@ -137,4 +138,29 @@ func IterateMachines() chan *models.Machine {
 	}()
 
 	return c
+}
+
+func GetAllIPv4Networks() []*net.IPNet {
+	mapper := make(map[string]*net.IPNet)
+	out := make([]*net.IPNet, 0)
+
+	for _, m := range store {
+		for _, nic := range m.NICS {
+			if nic.IP != nil && nic.MaskSize > 0 {
+				nw := nic.Network()
+				network := utils.EnforceMask(nw)
+				cidr := network.String()
+				if _, exists := mapper[cidr]; !exists {
+					mapper[cidr] = network
+				}
+			}
+		}
+	}
+
+	// return list of networks
+	for _, n := range mapper {
+		out = append(out, n)
+	}
+
+	return out
 }

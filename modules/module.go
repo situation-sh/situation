@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -34,7 +33,6 @@ func GetModuleNames() []string {
 
 func isDisabled(m Module) bool {
 	disabled, err := GetConfig[bool](m, DISABLED_KEY)
-	fmt.Println(m.Name(), disabled, err)
 	// if there is an error we prefer disable the module
 	if err != nil {
 		return true

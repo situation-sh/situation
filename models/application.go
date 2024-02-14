@@ -3,8 +3,9 @@ package models
 import (
 	"net"
 
-	"github.com/iancoleman/orderedmap"
+	// "github.com/iancoleman/orderedmap"
 	"github.com/invopop/jsonschema"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 // Package is a wrapper around application that stores distribution
@@ -117,11 +118,11 @@ func (s *Application) AddEndpoint(addr net.IP, port uint16, proto string) (*Appl
 }
 
 func (ApplicationEndpoint) JSONSchema() *jsonschema.Schema {
-	properties := orderedmap.New()
+	properties := orderedmap.New[string, *jsonschema.Schema]()
 	properties.Set("port", &jsonschema.Schema{
 		Type:        "integer",
-		Maximum:     65535,
-		Minimum:     1,
+		Maximum:     "65535",
+		Minimum:     "1",
 		Description: "port",
 		Examples: []interface{}{
 			22,
@@ -164,13 +165,13 @@ func (ApplicationEndpoint) JSONSchema() *jsonschema.Schema {
 }
 
 func (Flow) JSONSchema() *jsonschema.Schema {
-	properties := orderedmap.New()
+	properties := orderedmap.New[string, *jsonschema.Schema]()
 
 	for _, prop := range []string{"local_port", "remote_port"} {
 		properties.Set(prop, &jsonschema.Schema{
 			Type:        "integer",
-			Maximum:     65535,
-			Minimum:     1,
+			Maximum:     "65535",
+			Minimum:     "1",
 			Description: "port",
 			Examples: []interface{}{
 				22,

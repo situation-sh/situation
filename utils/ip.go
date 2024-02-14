@@ -118,3 +118,11 @@ func IsReserved(ip net.IP) bool {
 	}
 	return false
 }
+
+func EnforceMask(nw *net.IPNet) *net.IPNet {
+	out := net.IPNet{
+		IP:   nw.IP.Mask(nw.Mask),
+		Mask: nw.Mask,
+	}
+	return &out
+}

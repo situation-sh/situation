@@ -3,20 +3,21 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: Ping
-summary: "PingModule pings local networks to discover new hosts."
+title: SNMP
+summary: "SNMPModule This module need to access the following OID TREE: .1.3.6.1.2.1 In case of snmpd, the conf (snmpd.conf) should include something like this: view systemonly included .1.3.6.1.2.1"
 date: 2024-01-25
-filename: ping.go
+filename: snmp.go
 std_imports:
+  - context
+  - errors
   - fmt
   - net
-  - os/user
-  - runtime
+  - strconv
   - strings
   - sync
   - time
 imports:
-  - github.com/prometheus-community/pro-bing
+  - github.com/gosnmp/gosnmp
   - github.com/sirupsen/logrus
 ---
 
@@ -24,14 +25,10 @@ imports:
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-PingModule pings local networks to discover new hosts.
+SNMPModule This module need to access the following OID TREE: .1.3.6.1.2.1 In case of snmpd, the conf (snmpd.conf) should include something like this: view systemonly included .1.3.6.1.2.1
 
 ### Details
 
-
-The module relies on [pro-bing](https://github.com/prometheus-community/pro-bing) library.
-
-A single ping attempt is made on every host of the local networks (the host may belong to several networks). Only IPv4 networks with prefix length >=20 are treated. The ping timeout is hardset to 300ms.
 
 ### Dependencies
 

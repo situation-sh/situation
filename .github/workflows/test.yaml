@@ -11,10 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # Setup Go
       - name: Setup Go
         uses: actions/setup-go@v4
+        with:
+          go-version: "1.21.6"
       - name: Cache module testing binary
         id: cache-mtb
         uses: actions/cache@v3
