@@ -68,6 +68,7 @@ func TestMain(m *testing.M) {
 func GenericTestModule(m Module, alreadyRun map[string]bool) error {
 	if alreadyRun == nil {
 		alreadyRun = make(map[string]bool)
+		injectDefaultConfig()
 	}
 	// run dependencies
 	for _, name := range m.Dependencies() {

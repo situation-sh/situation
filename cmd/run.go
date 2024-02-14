@@ -30,6 +30,10 @@ func runRunCmd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	resetPeriod, err := config.Get[int]("reset")
+	if err != nil {
+		return err
+	}
 
 	if err := backends.Init(); err != nil {
 		return err
@@ -40,6 +44,10 @@ func runRunCmd(c *cli.Context) error {
 		// scan
 		if err := singleRun(); err != nil {
 			return err
+		}
+		// reset internal store
+		if n > 0 && n%resetPeriod == 0 {
+			store.Clear()
 		}
 	}
 
@@ -70,6 +78,6 @@ func singleRun() error {
 
 	backends.Write(payload)
 
-	store.Clear()
+	// store.Clear()
 	return nil
 }

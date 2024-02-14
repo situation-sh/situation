@@ -13,6 +13,7 @@ type NetworkInterface struct {
 	MaskSize  int              `json:"mask_size,omitempty" jsonschema:"description=IPv4 subnetwork mask size,example=24,example=16,minimum=0,maximum=32"`
 	IP6       net.IP           `json:"ip6,omitempty" jsonschema:"description=IPv6 address of the interface (single IP assumed),type=string,format=ipv6,example=fe80::14a:7687:d7bd:f461,example=fe80::13d4:43e1:11e0:3906"`
 	Mask6Size int              `json:"mask6_size,omitempty" jsonschema:"description=IPv6 subnetwork mask size,example=64,minimum=0,maximum=128"`
+	Gateway   net.IP           `json:"gateway,omitempty" jsonschema:"description=Gateway IPv4 address (main outgoing endpoint),type=string,format=ipv4,example=192.168.0.1,example=10.0.0.1"`
 }
 
 // MarshalJSON is used to customize the marshalling of the
@@ -71,5 +72,31 @@ func (nic *NetworkInterface) Network6() *net.IPNet {
 	return &net.IPNet{
 		IP:   nic.IP6,
 		Mask: net.CIDRMask(nic.MaskSize, 128),
+	}
+}
+
+// Merge update the base network interface with information from
+// the second given in parameters
+func (nic *NetworkInterface) Merge(nic0 *NetworkInterface) {
+	if nic.Name == "" {
+		nic.Name = nic0.Name
+	}
+	if nic.MAC == nil {
+		nic.MAC = nic0.MAC
+	}
+	if nic.IP == nil {
+		nic.IP = nic0.IP
+	}
+	if nic.IP6 == nil {
+		nic.IP6 = nic0.IP6
+	}
+	if nic.MaskSize <= 0 {
+		nic.MaskSize = nic0.MaskSize
+	}
+	if nic.Mask6Size <= 0 {
+		nic.Mask6Size = nic0.Mask6Size
+	}
+	if nic.Gateway == nil {
+		nic.Gateway = nic0.Gateway
 	}
 }

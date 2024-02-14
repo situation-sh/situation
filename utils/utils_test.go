@@ -246,7 +246,14 @@ func TestKeepLeaves(t *testing.T) {
 			t.Errorf("bad pruning, expect %s, got %s", expect[i], e)
 		}
 	}
+}
 
+func TestKeepLeavesError(t *testing.T) {
+	files := []string{}
+	out := KeepLeaves(files)
+	if len(out) != 0 {
+		t.Errorf("Output must be empty: %v", out)
+	}
 }
 
 func TestIncludes(t *testing.T) {
@@ -338,6 +345,13 @@ func TestGetLines(t *testing.T) {
 
 }
 
+func TestGetLinesError(t *testing.T) {
+	if out, err := GetLines("/file/not/found"); err == nil {
+		t.Errorf("Error must raise, got non nil output: %v", out)
+	}
+
+}
+
 func TestGetCmd(t *testing.T) {
 	args := []string{"-i"}
 	cmd := exec.Command("sh", args...)
@@ -353,6 +367,22 @@ func TestGetCmd(t *testing.T) {
 			t.Errorf("bad command line, expect %s, got %s", args[i], arg)
 		}
 	}
+}
+
+func TestGetCmdErrors(t *testing.T) {
+	args := []string{"-i"}
+	cmd := exec.Command("sh", args...)
+	cmd.Start()
+	defer cmd.Process.Kill()
+
+	if cmdline, err := GetCmd(-5); err == nil {
+		t.Errorf("error must raise, got %v", cmdline)
+	}
+
+	if cmdline, err := GetCmd(1<<32 - 1); err == nil {
+		t.Errorf("error must raise, got %v", cmdline)
+	}
+
 }
 
 func TestFlags(t *testing.T) {
@@ -389,6 +419,29 @@ func TestFlags(t *testing.T) {
 				t.Errorf("bad flags, expected %v, got %v", flags[k], v)
 			}
 		}
+	}
+
+}
+
+func TestEnforceMask(t *testing.T) {
+	ipnet := net.IPNet{
+		IP:   net.ParseIP("192.168.1.68"),
+		Mask: net.CIDRMask(24, 32),
+	}
+	out := EnforceMask(&ipnet)
+	truth := net.ParseIP("192.168.1.0")
+	if !out.IP.Equal(truth) {
+		t.Errorf("%v != %v", out.IP, truth)
+	}
+
+	ipnet6 := net.IPNet{
+		IP:   net.ParseIP("fe80::b636:f478:575f:59a6"),
+		Mask: net.CIDRMask(64, 128),
+	}
+	out6 := EnforceMask(&ipnet6)
+	truth6 := net.ParseIP("fe80::")
+	if !out6.IP.Equal(truth6) {
+		t.Errorf("%v != %v", out6.IP, truth6)
 	}
 
 }

@@ -52,9 +52,10 @@ func rootFlags() []cli.Flag {
 	// utils.BuildFlag is called to centralize the creation of options
 	scans := utils.BuildFlag("scans", 1, "Number of scans to perform", []string{"s"})
 	period := utils.BuildFlag("period", 2*time.Minute, "Waiting time between two scans", []string{"p"})
+	resetStore := utils.BuildFlag("reset", 2, "Number of runs before resetting the internal store", []string{"r"})
 	logLevel := utils.BuildFlag("log-level", 0, "Panic: 0, Fatal: 1, Error: 2, Warn: 3, Info: 4, Debug: 5", []string{"l"})
 	// logFile := utils.BuildFlag("log-to-file", "", "Redirect logs to file instead of stderr", []string{"f"})
-	return []cli.Flag{scans, period, logLevel}
+	return []cli.Flag{scans, period, logLevel, resetStore}
 }
 
 func initLog() error {
