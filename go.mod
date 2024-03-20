@@ -7,7 +7,7 @@ toolchain go1.21.6
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
-	github.com/docker/docker v25.0.1+incompatible
+	github.com/docker/docker v25.0.5+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/gosnmp/gosnmp v1.37.0
 	github.com/invopop/jsonschema v0.12.0
