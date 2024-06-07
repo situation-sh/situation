@@ -76,6 +76,14 @@ func (m *HostNetworkModule) Run() error {
 		// mac
 		nic.MAC = iface.HardwareAddr
 
+		// flags (NEW!)
+		nic.Flags.Up = (iface.Flags & net.FlagUp) > 0
+		nic.Flags.Broadcast = (iface.Flags & net.FlagBroadcast) > 0
+		nic.Flags.Loopback = (iface.Flags & net.FlagLoopback) > 0
+		nic.Flags.PointToPoint = (iface.Flags & net.FlagPointToPoint) > 0
+		nic.Flags.Multicast = (iface.Flags & net.FlagMulticast) > 0
+		nic.Flags.Running = (iface.Flags & net.FlagRunning) > 0
+
 		// logging
 		entry := logger.WithField("name", nic.Name).WithField("mac", nic.MAC)
 

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"net"
 	"time"
 
@@ -205,5 +206,59 @@ func (m *Machine) InsertPackage(pkg *Package) (*Package, bool) {
 	// otherwise we append the package to the machine
 	// or we can do nothing (not to pollute)
 	// m.Packages = append(m.Packages, pkg)
+	return nil, false
+}
+
+func (m *Machine) GetOrCreateHostLoopback(ip net.IP) (*NetworkInterface, bool) {
+	for _, nic := range m.NICS {
+		if nic.IP.IsLoopback() {
+			return nic, false
+		}
+	}
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, false
+	}
+	for _, iface := range ifaces {
+		if (iface.Flags & net.FlagLoopback) > 0 {
+			addrs, err := iface.Addrs()
+			if err != nil {
+				continue
+			}
+			if len(addrs) > 0 {
+				fmt.Printf("%+v\n", iface)
+				nic := NetworkInterface{
+					Name: iface.Name,
+					MAC:  iface.HardwareAddr,
+				}
+
+				for _, addr := range addrs {
+					ipAddress, network, err := net.ParseCIDR(addr.String())
+					if ipAddress == nil || network == nil || err != nil {
+						continue
+					}
+					size, _ := network.Mask.Size()
+
+					if ipAddress.To4() == nil && nic.IP6 == nil {
+						// IPv6
+						nic.IP6 = ipAddress.To16()
+						nic.Mask6Size = size
+					} else if nic.IP == nil {
+						// IPv4
+						nic.IP = ipAddress.To4()
+						nic.MaskSize = size
+					}
+
+				}
+
+				m.NICS = append(m.NICS, &nic)
+				return &nic, true
+
+			}
+
+		}
+
+	}
 	return nil, false
 }
