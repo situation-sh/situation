@@ -99,9 +99,8 @@ func (m *NetstatModule) Run() error {
 						continue
 					}
 
-					// create localhost if needed
+					// (NEW!) create localhost if needed (localhost communication)
 					if entry.LocalAddr.IP.IsLoopback() && entry.RemoteAddr.IP.IsLoopback() {
-						// TODO
 						machine.GetOrCreateHostLoopback(entry.LocalAddr.IP)
 					}
 

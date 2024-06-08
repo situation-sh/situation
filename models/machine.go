@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"net"
 	"time"
 
@@ -210,8 +209,10 @@ func (m *Machine) InsertPackage(pkg *Package) (*Package, bool) {
 }
 
 func (m *Machine) GetOrCreateHostLoopback(ip net.IP) (*NetworkInterface, bool) {
+	// check if the iface already exist
+	// it returns the first iface found
 	for _, nic := range m.NICS {
-		if nic.IP.IsLoopback() {
+		if nic.Flags.Loopback {
 			return nic, false
 		}
 	}
@@ -227,11 +228,12 @@ func (m *Machine) GetOrCreateHostLoopback(ip net.IP) (*NetworkInterface, bool) {
 				continue
 			}
 			if len(addrs) > 0 {
-				fmt.Printf("%+v\n", iface)
 				nic := NetworkInterface{
 					Name: iface.Name,
 					MAC:  iface.HardwareAddr,
 				}
+				// set the iface flags
+				nic.SetFlags(iface.Flags)
 
 				for _, addr := range addrs {
 					ipAddress, network, err := net.ParseCIDR(addr.String())
