@@ -41,7 +41,7 @@ jobs:
           cp bin/situation-*-linux ./situation;
           ./situation schema > schema.json
       # upload binaries and schema
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: situation
           path: |

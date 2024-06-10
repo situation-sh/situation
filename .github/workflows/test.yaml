@@ -30,7 +30,7 @@ jobs:
         name: Build module testing binaries
         run: make build-test
       - name: Upload module testing binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.artifact-basename }}
           path: ${{ env.test-module-binary }}
