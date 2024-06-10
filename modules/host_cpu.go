@@ -27,6 +27,8 @@ func init() {
 // On Linux, it reads `/proc/cpuinfo`.
 // On Windows it performs the `win32_Processor` WMI request
 //
+// On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
+//
 // [gopsutil]: https://github.com/shirou/gopsutil/
 type HostCPUModule struct{}
 
