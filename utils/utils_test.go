@@ -11,6 +11,8 @@ import (
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/shirou/gopsutil/v4/process"
 )
 
 func ksStat(data []int, max int, points int) float64 {
@@ -355,7 +357,7 @@ func TestGetLinesError(t *testing.T) {
 
 func TestGetCmd(t *testing.T) {
 	exe := "/usr/bin/sleep"
-	args := []string{"'30000'"}
+	args := []string{"3000000"}
 	if runtime.GOOS == "windows" {
 		exe = "cmd.exe"
 		args = []string{"/c", "'timeout 30'"}
@@ -367,6 +369,21 @@ func TestGetCmd(t *testing.T) {
 	t.Logf("X: %#+v\n", cmd.Process)
 	b, e := os.ReadFile(fmt.Sprintf("/proc/%d/status", cmd.Process.Pid))
 	t.Logf("ERR: %v, BUFFER: %v\n", e, string(b))
+
+	ok := false
+	for !ok {
+		p, err := process.NewProcess(int32(cmd.Process.Pid))
+		if err != nil {
+			continue
+		}
+		s, err := p.Status()
+		if err != nil || len(s) == 0 {
+			continue
+		}
+		ok = s[0] == "running" || s[0] == "sleep"
+		t.Log(s)
+		time.Sleep(time.Second)
+	}
 	defer cmd.Process.Kill()
 
 	cmdline, err := GetCmd(cmd.Process.Pid)

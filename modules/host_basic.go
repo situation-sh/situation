@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/shirou/gopsutil/v3/host"
+	"github.com/shirou/gopsutil/v4/host"
 	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/store"

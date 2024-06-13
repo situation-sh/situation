@@ -15,7 +15,7 @@ require (
 	github.com/libp2p/go-netroute v0.2.1
 	github.com/prometheus-community/pro-bing v0.4.0
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
-	github.com/shirou/gopsutil/v3 v3.24.5
+	github.com/shirou/gopsutil/v4 v4.24.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.2
 	github.com/vishvananda/netlink v1.1.0
