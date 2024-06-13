@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
@@ -154,7 +155,7 @@ func getOrCreateMachineFromEndpoint(
 func getContainerByID(ctx context.Context, cli *client.Client, id string) (types.Container, error) {
 	filters := filters.NewArgs()
 	filters.Add("id", id)
-	options := types.ContainerListOptions{
+	options := container.ListOptions{
 		Filters: filters,
 	}
 	containers, err := cli.ContainerList(ctx, options)

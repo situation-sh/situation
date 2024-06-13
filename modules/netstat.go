@@ -58,7 +58,7 @@ func flowFilter(state netstat.SkState) bool {
 
 // portFilter returns true when the connection is listening, established or close-wait
 func portFilter(e *netstat.SockTabEntry) bool {
-	if e.LocalAddr.IP.IsLoopback() {
+	if e.LocalAddr.IP.IsLoopback() && !e.RemoteAddr.IP.IsLoopback() {
 		return false
 	}
 	if e.State == netstat.Listen || flowFilter(e.State) {
@@ -97,6 +97,11 @@ func (m *NetstatModule) Run() error {
 					// this process aims at forwarding port
 					if entry.Process.Name == "docker-proxy" {
 						continue
+					}
+
+					// (NEW!) create localhost if needed (localhost communication)
+					if entry.LocalAddr.IP.IsLoopback() && entry.RemoteAddr.IP.IsLoopback() {
+						machine.GetOrCreateHostLoopback(entry.LocalAddr.IP)
 					}
 
 					name := entry.Process.Name

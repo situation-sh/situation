@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.21.6"
       # run gosec scanner
@@ -36,22 +36,46 @@ jobs:
         with:
           # Path to SARIF file relative to the root of the repository
           sarif_file: results.sarif
-  codecov:
+  codecov-linux:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.21.6"
       # run codecov coverage
       - name: Code coverage
         run: make test
       # upload code coverage
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
+          name: situation-linux
+          os: linux
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./.gocoverprofile.txt # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
+  codecov-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21.6"
+      # run codecov coverage
+      - name: Code coverage
+        run: make test
+      # upload code coverage
+      - uses: codecov/codecov-action@v4
+        with:
+          name: situation-windows
+          os: windows
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./.gocoverprofile.txt # optional
           fail_ci_if_error: true # optional (default = false)

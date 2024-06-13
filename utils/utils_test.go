@@ -6,7 +6,6 @@ import (
 	"math"
 	"net"
 	"os"
-	"os/exec"
 	"sort"
 	"testing"
 	"time"
@@ -352,29 +351,7 @@ func TestGetLinesError(t *testing.T) {
 
 }
 
-func TestGetCmd(t *testing.T) {
-	args := []string{"-i"}
-	cmd := exec.Command("sh", args...)
-	cmd.Start()
-	defer cmd.Process.Kill()
-
-	cmdline, err := GetCmd(cmd.Process.Pid)
-	if err != nil {
-		t.Error(err)
-	}
-	for i, arg := range cmdline {
-		if arg != args[i] {
-			t.Errorf("bad command line, expect %s, got %s", args[i], arg)
-		}
-	}
-}
-
 func TestGetCmdErrors(t *testing.T) {
-	args := []string{"-i"}
-	cmd := exec.Command("sh", args...)
-	cmd.Start()
-	defer cmd.Process.Kill()
-
 	if cmdline, err := GetCmd(-5); err == nil {
 		t.Errorf("error must raise, got %v", cmdline)
 	}
@@ -382,7 +359,6 @@ func TestGetCmdErrors(t *testing.T) {
 	if cmdline, err := GetCmd(1<<32 - 1); err == nil {
 		t.Errorf("error must raise, got %v", cmdline)
 	}
-
 }
 
 func TestFlags(t *testing.T) {

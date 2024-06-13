@@ -207,3 +207,60 @@ func (m *Machine) InsertPackage(pkg *Package) (*Package, bool) {
 	// m.Packages = append(m.Packages, pkg)
 	return nil, false
 }
+
+func (m *Machine) GetOrCreateHostLoopback(ip net.IP) (*NetworkInterface, bool) {
+	// check if the iface already exist
+	// it returns the first iface found
+	for _, nic := range m.NICS {
+		if nic.Flags.Loopback {
+			return nic, false
+		}
+	}
+
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, false
+	}
+	for _, iface := range ifaces {
+		if (iface.Flags & net.FlagLoopback) > 0 {
+			addrs, err := iface.Addrs()
+			if err != nil {
+				continue
+			}
+			if len(addrs) > 0 {
+				nic := NetworkInterface{
+					Name: iface.Name,
+					MAC:  iface.HardwareAddr,
+				}
+				// set the iface flags
+				nic.SetFlags(iface.Flags)
+
+				for _, addr := range addrs {
+					ipAddress, network, err := net.ParseCIDR(addr.String())
+					if ipAddress == nil || network == nil || err != nil {
+						continue
+					}
+					size, _ := network.Mask.Size()
+
+					if ipAddress.To4() == nil && nic.IP6 == nil {
+						// IPv6
+						nic.IP6 = ipAddress.To16()
+						nic.Mask6Size = size
+					} else if nic.IP == nil {
+						// IPv4
+						nic.IP = ipAddress.To4()
+						nic.MaskSize = size
+					}
+
+				}
+
+				m.NICS = append(m.NICS, &nic)
+				return &nic, true
+
+			}
+
+		}
+
+	}
+	return nil, false
+}

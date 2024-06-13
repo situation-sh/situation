@@ -42,7 +42,7 @@ func init() {
 //	 ```
 //
 // On Linux, it reads `/sys/block/$DEVICE/**` files.
-//
+// On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
 // [ghw]: https://github.com/jaypipes/ghw/
 type HostDiskModule struct{}
 
