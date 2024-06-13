@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime"
 	"sort"
 	"testing"
 	"time"
@@ -355,12 +356,10 @@ func TestGetLinesError(t *testing.T) {
 func TestGetCmd(t *testing.T) {
 	exe := "/usr/bin/sleep"
 	args := []string{"'30000'"}
-	// if runtime.GOOS == "windows" {
-	// 	exe = "cmd.exe"
-	// 	args = []string{"/c", "'timeout 30'"}
-	// }
-
-	fmt.Println(exe, args)
+	if runtime.GOOS == "windows" {
+		exe = "cmd.exe"
+		args = []string{"/c", "'timeout 30'"}
+	}
 	cmd := exec.Command(exe, args...)
 	if err := cmd.Start(); err != nil {
 		t.Errorf("error while starting command: %v\n", err)
