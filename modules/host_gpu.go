@@ -29,7 +29,7 @@ func init() {
 //	SELECT Caption, CreationClassName, Description, DeviceID, Manufacturer, Name, PNPClass, PNPDeviceID FROM Win32_PnPEntity
 //	```
 //
-// On windows 11, it seems that root privileges are required.
+// On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
 // [ghw]: https://github.com/jaypipes/ghw
 type HostGPUModule struct{}
 
