@@ -36,7 +36,6 @@ func GetCmd(pid int) ([]string, error) {
 		bytes.ReplaceAll(buffer, []byte{0}, spaceByte),
 		spaceByte,
 	)
-	fmt.Println("SLICES:", slices)
 
 	// specify max capacity to len(slices)
 	out := make([]string, 0, len(slices))

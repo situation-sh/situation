@@ -365,6 +365,8 @@ func TestGetCmd(t *testing.T) {
 		t.Errorf("error while starting command: %v\n", err)
 	}
 	t.Logf("X: %#+v\n", cmd.Process)
+	b, e := os.ReadFile(fmt.Sprintf("/proc/%d/status", cmd.Process.Pid))
+	t.Logf("ERR: %v, BUFFER: %v\n", e, string(b))
 	defer cmd.Process.Kill()
 
 	cmdline, err := GetCmd(cmd.Process.Pid)
