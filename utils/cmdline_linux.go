@@ -26,7 +26,9 @@ func GetCmd(pid int) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if len(buffer) == 0 {
+		return nil, fmt.Errorf("cmdline is empty")
+	}
 	// in general arguments are separated by null bytes
 	// so we convert it to spaces first
 	spaceByte := []byte(" ")
@@ -34,6 +36,7 @@ func GetCmd(pid int) ([]string, error) {
 		bytes.ReplaceAll(buffer, []byte{0}, spaceByte),
 		spaceByte,
 	)
+	fmt.Println("SLICES:", slices)
 
 	// specify max capacity to len(slices)
 	out := make([]string, 0, len(slices))

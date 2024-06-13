@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: SNMP
-summary: "SNMPModule This module need to access the following OID TREE: .1.3.6.1.2.1 In case of snmpd, the conf (snmpd.conf) should include something like this: view systemonly included .1.3.6.1.2.1"
-date: 2024-01-25
+summary: "SNMPModule Module to collect data through SNMP protocol."
+date: 2024-06-13
 filename: snmp.go
 std_imports:
   - context
@@ -25,10 +25,12 @@ imports:
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-SNMPModule This module need to access the following OID TREE: .1.3.6.1.2.1 In case of snmpd, the conf (snmpd.conf) should include something like this: view systemonly included .1.3.6.1.2.1
+SNMPModule Module to collect data through SNMP protocol.
 
 ### Details
 
+
+This module need to access the following OID TREE: .1.3.6.1.2.1 In case of snmpd, the configuration (snmpd.conf) should then include something like this: view systemonly included .1.3.6.1.2.1
 
 ### Dependencies
 

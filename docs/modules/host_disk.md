@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host Disk
 summary: "HostDiskModule retrieves basic information about disk: name, model, size, type, controller and partitions."
-date: 2024-01-25
+date: 2024-06-13
 filename: host_disk.go
 std_imports:
   - fmt
@@ -22,7 +22,7 @@ HostDiskModule retrieves basic information about disk: name, model, size, type, 
 ### Details
 
 
-It heavily relies on the [ghw](https://github.com/jaypipes/ghw/) library.
+It heavily relies on the [ghw](/github.com/jaypipes/ghw) library.
 
 On Windows, it uses WMI requests:
 
@@ -42,7 +42,7 @@ On Windows, it uses WMI requests:
   SELECT Antecedent, Dependent FROM Win32_LogicalDiskToPartition
   ```
 
-On Linux, it reads `/sys/block/$DEVICE/**` files.
+On Linux, it reads `/sys/block/$DEVICE/**` files. On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root). [ghw](/github.com/jaypipes/ghw): [https://github.com/jaypipes/ghw/](https://github.com/jaypipes/ghw/)
 
 ### Dependencies
 

@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host CPU
 summary: "HostCPUModule retrieves host CPU info: model, vendor and the number of cores."
-date: 2024-01-25
+date: 2024-06-13
 filename: host_cpu.go
 std_imports:
   - fmt
@@ -26,6 +26,8 @@ HostCPUModule retrieves host CPU info: model, vendor and the number of cores.
 It heavily relies on the [gopsutil](https://github.com/shirou/gopsutil/) library.
 
 On Linux, it reads `/proc/cpuinfo`. On Windows it performs the `win32_Processor` WMI request
+
+On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
 
 ### Dependencies
 

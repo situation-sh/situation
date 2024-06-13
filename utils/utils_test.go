@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"runtime"
 	"sort"
 	"testing"
 	"time"
@@ -354,22 +353,30 @@ func TestGetLinesError(t *testing.T) {
 }
 
 func TestGetCmd(t *testing.T) {
-	exe := "sh"
-	args := []string{"-i"}
-	if runtime.GOOS == "windows" {
-		exe = "cmd"
-		args = []string{"/c"}
-	}
+	exe := "/usr/bin/sleep"
+	args := []string{"'30000'"}
+	// if runtime.GOOS == "windows" {
+	// 	exe = "cmd.exe"
+	// 	args = []string{"/c", "'timeout 30'"}
+	// }
 
+	fmt.Println(exe, args)
 	cmd := exec.Command(exe, args...)
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		t.Errorf("error while starting command: %v\n", err)
+	}
+	t.Logf("X: %#+v\n", cmd.Process)
 	defer cmd.Process.Kill()
 
 	cmdline, err := GetCmd(cmd.Process.Pid)
+	t.Logf("CMDLINE: %v", cmdline)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	for i, arg := range cmdline {
+	if cmdline[0] != exe {
+		t.Errorf("bad exe name: %v != %v", cmdline[0], exe)
+	}
+	for i, arg := range cmdline[1:] {
 		if arg != args[i] {
 			t.Errorf("bad command line, expect %s, got %s", args[i], arg)
 		}
@@ -377,11 +384,6 @@ func TestGetCmd(t *testing.T) {
 }
 
 func TestGetCmdErrors(t *testing.T) {
-	args := []string{"-i"}
-	cmd := exec.Command("sh", args...)
-	cmd.Start()
-	defer cmd.Process.Kill()
-
 	if cmdline, err := GetCmd(-5); err == nil {
 		t.Errorf("error must raise, got %v", cmdline)
 	}
@@ -389,7 +391,6 @@ func TestGetCmdErrors(t *testing.T) {
 	if cmdline, err := GetCmd(1<<32 - 1); err == nil {
 		t.Errorf("error must raise, got %v", cmdline)
 	}
-
 }
 
 func TestFlags(t *testing.T) {
