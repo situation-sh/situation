@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime"
 	"sort"
 	"testing"
 	"time"
@@ -353,8 +354,14 @@ func TestGetLinesError(t *testing.T) {
 }
 
 func TestGetCmd(t *testing.T) {
+	exe := "sh"
 	args := []string{"-i"}
-	cmd := exec.Command("sh", args...)
+	if runtime.GOOS == "windows" {
+		exe = "cmd"
+		args = []string{"/c"}
+	}
+
+	cmd := exec.Command(exe, args...)
 	cmd.Start()
 	defer cmd.Process.Kill()
 
