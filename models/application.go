@@ -105,9 +105,17 @@ func (s *Application) lastEndpoint() *ApplicationEndpoint {
 func (s *Application) AddEndpoint(addr net.IP, port uint16, proto string) (*ApplicationEndpoint, bool) {
 	// check if it exist
 	for _, e := range s.Endpoints {
-		if e.Addr.Equal(addr) && e.Port == port && e.Protocol == proto {
-			// fmt.Println("Already got:", e)
-			return e, false
+		if e.Port == port && e.Protocol == proto {
+			// case where the application already listens to 0.0.0.0 (or ::)
+			if e.Addr.IsUnspecified() {
+				return e, false
+			}
+			// case where the incoming endpoint is unspecified
+			// so it must encompass the first
+			if addr.IsUnspecified() {
+				copy(e.Addr, addr)
+				return e, false
+			}
 		}
 	}
 
