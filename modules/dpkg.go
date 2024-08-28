@@ -42,7 +42,7 @@ func (m *DPKGModule) Dependencies() []string {
 func (m *DPKGModule) Run() error {
 	logger := GetLogger(m)
 	machine := store.GetHost()
-	if !utils.Includes([]string{"debian", "ubuntu", "linuxmint"}, machine.Distribution) {
+	if !utils.Includes([]string{"debian", "ubuntu", "linuxmint", "raspbian"}, machine.Distribution) {
 		msg := fmt.Sprintf("The distribution %s is not supported", machine.Distribution)
 		logger.Warnf(msg)
 		return &notApplicableError{msg: msg}
