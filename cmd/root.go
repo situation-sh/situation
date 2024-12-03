@@ -62,14 +62,12 @@ func initLog() error {
 	// Log as JSON instead of the default ASCII formatter.
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
 
-	logLevel, err := config.Get[int]("log-level")
+	logLevel, err := config.Get[uint]("log-level")
 	if err != nil {
 		return err
 	}
 	// ensure log level is between 0 and 5
-	if logLevel < 0 {
-		logLevel = 0
-	} else if logLevel > 5 {
+	if logLevel > 5 {
 		logLevel = 5
 	}
 
