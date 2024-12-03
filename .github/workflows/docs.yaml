@@ -2,6 +2,7 @@
 name: docs
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -9,6 +10,7 @@ on:
       - "docs/**"
       - ".github/workflows/docs.yaml"
       - "mkdocs.yml"
+      - "Makefile"
 
 jobs:
   deploy:

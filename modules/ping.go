@@ -7,8 +7,6 @@ package modules
 import (
 	"fmt"
 	"net"
-	"os/user"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -16,28 +14,10 @@ import (
 	ping "github.com/prometheus-community/pro-bing"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/models"
+	"github.com/situation-sh/situation/modules/pingconfig"
 	"github.com/situation-sh/situation/store"
 	"github.com/situation-sh/situation/utils"
 )
-
-var useICMP bool = func() bool {
-	// According to the authors of go-ping
-	// the pinger must be privileged on windows
-	// even if we do not run the agent as admin/root
-	if runtime.GOOS == "windows" {
-		return true
-	}
-	u, err := user.Current()
-	if err != nil {
-		return false
-	}
-	// On alpine VM with root account, we notice that
-	// the ping privilege must be set to true
-	if runtime.GOOS == "linux" && u.Uid == "0" {
-		return false
-	}
-	return false
-}()
 
 const errorPrefix = "[ERROR_PREFIX]"
 
@@ -72,10 +52,10 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 		return
 	}
 	pinger.Count = 1
-	pinger.SetPrivileged(useICMP)
+	pinger.SetPrivileged(pingconfig.UseICMP())
 	pinger.Timeout = 300 * time.Millisecond
 	// see https://github.com/go-ping/ping/issues/168
-	pinger.Size = 548
+	pinger.Size = 2048
 
 	// callback when a target responds
 	pinger.OnRecv = func(p *ping.Packet) {
@@ -108,6 +88,11 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 		logger.Info("New machine added")
 		store.InsertMachine(m)
 	}
+
+	pinger.OnSendError = func(p *ping.Packet, err error) {
+
+	}
+	// run
 	if err := pinger.Run(); err != nil {
 		logrus.Debugf("Error: %v", err)
 		cerr <- fmt.Errorf("error while pinging %v: %v", ip, err)

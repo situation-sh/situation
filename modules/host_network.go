@@ -169,9 +169,9 @@ func filterInterfaces(interfaces []net.Interface) []net.Interface {
 	filtered := make([]net.Interface, 0)
 	for _, iface := range interfaces {
 		// ignore loopback
-		if (iface.Flags & net.FlagLoopback) != 0 {
-			continue
-		}
+		// if (iface.Flags & net.FlagLoopback) != 0 {
+		// 	continue
+		// }
 		// ignore non up
 		if (iface.Flags & net.FlagUp) == 0 {
 			continue
