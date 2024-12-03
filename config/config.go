@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/urfave/cli/v2"
 )
@@ -26,6 +27,8 @@ func Get[T any](key string) (T, error) {
 		value = interface{}(context.IntSlice(key))
 	case []int64:
 		value = interface{}(context.Int64Slice(key))
+	case time.Duration:
+		value = interface{}(context.Duration(key))
 	default:
 		value = context.Value(key)
 	}
