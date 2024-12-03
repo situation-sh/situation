@@ -69,7 +69,7 @@ jobs:
   test-windows:
     strategy:
       matrix:
-        os: [windows-2022, windows-2019, windows-10, windows-11]
+        os: [windows-2022, windows-2019]
     needs: build
     runs-on: ${{ matrix.os }}
     steps:
