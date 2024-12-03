@@ -7,5 +7,5 @@ package pingconfig
 // the pinger must be privileged on windows
 // even if we do not run the agent as admin/root
 func UseICMP() bool {
-	return false
+	return true
 }
