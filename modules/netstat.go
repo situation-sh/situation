@@ -102,14 +102,7 @@ func (m *NetstatModule) Run() error {
 						continue
 					}
 
-					// (NEW!) create localhost if needed (localhost communication)
-					// if entry.LocalAddr.IP.IsLoopback() && entry.RemoteAddr.IP.IsLoopback() {
-					// 	machine.GetOrCreateHostLoopback(entry.LocalAddr.IP)
-					// }
-
 					name := entry.Process.Name
-					// fmt.Println("NAME:", name)
-					// fmt.Println("STATE:", entry.State.String())
 					args, err := utils.GetCmd(entry.Process.Pid)
 					if err == nil && len(args) > 0 {
 						name = args[0]
