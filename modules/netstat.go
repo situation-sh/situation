@@ -37,7 +37,7 @@ func (m *NetstatModule) Name() string {
 }
 
 func (m *NetstatModule) Dependencies() []string {
-	return []string{"host-basic"}
+	return []string{"host-basic", "host-network"}
 }
 
 func flowFilter(state netstat.SkState) bool {
@@ -58,12 +58,15 @@ func flowFilter(state netstat.SkState) bool {
 
 // portFilter returns true when the connection is listening, established or close-wait
 func portFilter(e *netstat.SockTabEntry) bool {
-	if e.LocalAddr.IP.IsLoopback() && !e.RemoteAddr.IP.IsLoopback() {
-		return false
-	}
+	// accept everything
 	if e.State == netstat.Listen || flowFilter(e.State) {
 		return true
 	}
+	// fmt.Println(e.LocalAddr.IP, ":", e.LocalAddr.Port, " -> ", e.RemoteAddr.IP, ":", e.RemoteAddr.Port)
+	// if e.LocalAddr.IP.IsLoopback() && !e.RemoteAddr.IP.IsLoopback() {
+	// 	return false
+	// }
+
 	return false
 }
 
@@ -100,11 +103,13 @@ func (m *NetstatModule) Run() error {
 					}
 
 					// (NEW!) create localhost if needed (localhost communication)
-					if entry.LocalAddr.IP.IsLoopback() && entry.RemoteAddr.IP.IsLoopback() {
-						machine.GetOrCreateHostLoopback(entry.LocalAddr.IP)
-					}
+					// if entry.LocalAddr.IP.IsLoopback() && entry.RemoteAddr.IP.IsLoopback() {
+					// 	machine.GetOrCreateHostLoopback(entry.LocalAddr.IP)
+					// }
 
 					name := entry.Process.Name
+					// fmt.Println("NAME:", name)
+					// fmt.Println("STATE:", entry.State.String())
 					args, err := utils.GetCmd(entry.Process.Pid)
 					if err == nil && len(args) > 0 {
 						name = args[0]
@@ -146,21 +151,23 @@ func (m *NetstatModule) Run() error {
 						soft.Args = args
 					}
 
-					endpoint, created := soft.AddEndpoint(
-						entry.LocalAddr.IP,
-						entry.LocalAddr.Port,
-						protocols[k])
-					// fmt.Printf("%+v\n", soft)
-					// fmt.Printf("len: %v, cap: %v, %v\n",
-					// len(soft.Endpoints), cap(soft.Endpoints), soft.Endpoints)
-					if created {
-						// fmt.Println(len(soft.Endpoints))
-						// logging
-						l := logger.WithField("app", soft.Name)
-						l = l.WithField("ip", endpoint.Addr)
-						l = l.WithField("port", endpoint.Port)
-						l = l.WithField("proto", endpoint.Protocol)
-						l.Info("Endpoint found")
+					if entry.State == netstat.Listen {
+						endpoint, created := soft.AddEndpoint(
+							entry.LocalAddr.IP,
+							entry.LocalAddr.Port,
+							protocols[k])
+						// fmt.Printf("%+v\n", soft)
+						// fmt.Printf("len: %v, cap: %v, %v\n",
+						// len(soft.Endpoints), cap(soft.Endpoints), soft.Endpoints)
+						if created {
+							// fmt.Println(len(soft.Endpoints))
+							// logging
+							l := logger.WithField("app", soft.Name)
+							l = l.WithField("ip", endpoint.Addr)
+							l = l.WithField("port", endpoint.Port)
+							l = l.WithField("proto", endpoint.Protocol)
+							l.Info("Endpoint found")
+						}
 					}
 				}
 			}
