@@ -36,7 +36,7 @@ func Iterate(n *net.IPNet) chan net.IP {
 	// get the mask
 	frozen, total := n.Mask.Size()
 	// number of IP (2^(n-k))
-	nIP := 1 << uint(total-frozen)
+	nIP := 1 << (total - frozen)
 	// run
 	go func() {
 		c <- CopyIP(base)
