@@ -12,6 +12,7 @@ require (
 	github.com/gosnmp/gosnmp v1.38.0
 	github.com/invopop/jsonschema v0.12.0
 	github.com/jaypipes/ghw v0.13.0
+	github.com/knqyf263/go-rpmdb v0.1.1
 	github.com/libp2p/go-netroute v0.2.2
 	github.com/lorenzosaino/go-sysctl v0.3.1
 	github.com/prometheus-community/pro-bing v0.5.0
@@ -42,7 +43,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.8.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -66,7 +66,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.9.0 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
@@ -86,8 +85,8 @@ require (
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 	honnef.co/go/tools v0.5.1 // indirect
 	howett.net/plist v1.0.1 // indirect
