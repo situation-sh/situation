@@ -53,6 +53,11 @@ func (m *RPMModule) Run() error {
 
 	file, err := rpm.FindDBFile()
 	if err != nil {
+		if utils.Includes([]string{"opensuse-leap", "opensuse-tumbleweed"}, machine.Distribution) {
+			msg := fmt.Sprintf("No RPM DB file found on this %s distro: %v (skipping)", machine.Distribution, err)
+			logger.Warnf(msg)
+			return nil
+		}
 		return err
 	}
 

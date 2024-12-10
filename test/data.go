@@ -28,7 +28,7 @@ func RandomExtraInfo() *models.ExtraInfo {
 	return &models.ExtraInfo{
 		Agent:     u,
 		Version:   gofakeit.AppVersion(),
-		Duration:  time.Duration(gofakeit.Uint64()),
+		Duration:  time.Duration(gofakeit.Int64()),
 		Timestamp: gofakeit.Date(),
 		Errors:    []*models.ModuleError{RandomModuleError(), RandomModuleError()},
 		Perfs:     RandomPerformance(),
@@ -136,7 +136,7 @@ func RandomMachine() *models.Machine {
 			RandomPackage(),
 			RandomPackage(),
 			RandomPackage()},
-		Uptime: time.Duration(gofakeit.Uint64()),
+		Uptime: time.Duration(gofakeit.Int64()),
 	}
 }
 

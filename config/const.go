@@ -1,7 +1,5 @@
 package config
 
-import "time"
-
 // Version of the agent (it is set during compilation)
 var Version = "X.X.X"
 
@@ -16,10 +14,10 @@ var ID = [...]byte{
 	202, 254, 202, 254, 202, 254, 202, 254,
 }
 
-var LogLevel = 5
+// var LogLevel uint = 5
 
-var LogFile string
+// var LogFile string
 
-var Scans = 1
+// var Scans = 1
 
-var Period = 2 * time.Minute
+// var Period = 2 * time.Minute
