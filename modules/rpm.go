@@ -10,6 +10,7 @@ package modules
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -53,6 +54,11 @@ func (m *RPMModule) Run() error {
 
 	file, err := rpm.FindDBFile()
 	if err != nil {
+		if strings.Contains(machine.Distribution, "opensuse") {
+			msg := fmt.Sprintf("No RPM DB file found on this %s distro: %v (skipping)", machine.Distribution, err)
+			logger.Warnf(msg)
+			return nil
+		}
 		return err
 	}
 
