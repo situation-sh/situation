@@ -2,6 +2,7 @@ package backends
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"sync"
@@ -10,6 +11,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/models"
+	"github.com/situation-sh/situation/test"
 	"github.com/urfave/cli/v2"
 )
 
@@ -88,4 +90,39 @@ func TestPrepare(t *testing.T) {
 	}
 	Write(&models.Payload{})
 	Close()
+}
+
+func TestNetworkInterfaceUnmarshal(t *testing.T) {
+	nic := test.RandomNIC()
+	raw, err := json.Marshal(nic)
+	if err != nil {
+		t.Fatalf("error while marshalling NIC: %v", err)
+	}
+
+	var otherNic models.NetworkInterface
+	err = json.Unmarshal(raw, &otherNic)
+	if err != nil {
+		t.Fatalf("error while unmarshalling NIC: %v", err)
+	}
+
+	if nic.Name != otherNic.Name {
+		t.Errorf("bad name %s != %s", nic.Name, otherNic.Name)
+	}
+	if nic.MAC.String() != otherNic.MAC.String() {
+		t.Errorf("bad mac %v != %v", nic.MAC, otherNic.MAC)
+	}
+	if !nic.IP.Equal(otherNic.IP) {
+		t.Errorf("bad ip %v != %v", nic.IP, otherNic.IP)
+	}
+	if !nic.IP6.Equal(otherNic.IP6) {
+		t.Errorf("bad ip6 %v != %v", nic.IP6, otherNic.IP6)
+	}
+	if !nic.Gateway.Equal(otherNic.Gateway) {
+		t.Errorf("bad gateway %v != %v", nic.Gateway, otherNic.Gateway)
+	}
+	if *nic.Flags != *otherNic.Flags {
+		t.Errorf("bad flags %+v != %+v", nic.Flags, otherNic.Flags)
+	}
+
+	t.Logf("\n%+v\n", otherNic)
 }

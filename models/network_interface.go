@@ -40,6 +40,20 @@ type NetworkInterface struct {
 	Flags     *NetworkInterfaceFlags `json:"flags,omitempty" jsonschema:"description=Network interface flags"`
 }
 
+// networkInterfaceUnmarshallingAlias is a mirror of NetworkInterface
+// for unmarshalling purpose. Golang does not allows to easily unmarshal
+// net.IP or net.HardwareAddr
+type networkInterfaceUnmarshallingAlias struct {
+	Name      string                 `json:"name,omitempty" jsonschema:"description=name of the network interface,example=Ethernet,example=eno1,example=eth0"`
+	MAC       string                 `json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d2,example=93:83:e4:15:39:b2"`
+	IP        string                 `json:"ip,omitempty" jsonschema:"description=IPv4 address of the interface (single IP assumed),type=string,format=ipv4,example=192.168.8.1,example=10.0.0.17"`
+	MaskSize  int                    `json:"mask_size,omitempty" jsonschema:"description=IPv4 subnetwork mask size,example=24,example=16,minimum=0,maximum=32"`
+	IP6       string                 `json:"ip6,omitempty" jsonschema:"description=IPv6 address of the interface (single IP assumed),type=string,format=ipv6,example=fe80::14a:7687:d7bd:f461,example=fe80::13d4:43e1:11e0:3906"`
+	Mask6Size int                    `json:"mask6_size,omitempty" jsonschema:"description=IPv6 subnetwork mask size,example=64,minimum=0,maximum=128"`
+	Gateway   string                 `json:"gateway,omitempty" jsonschema:"description=Gateway IPv4 address (main outgoing endpoint),type=string,format=ipv4,example=192.168.0.1,example=10.0.0.1"`
+	Flags     *NetworkInterfaceFlags `json:"flags,omitempty" jsonschema:"description=Network interface flags"`
+}
+
 // MarshalJSON is used to customize the marshalling of the
 // NetworkInterface, especially for the MAC attribute
 func (nic *NetworkInterface) MarshalJSON() ([]byte, error) {
@@ -57,6 +71,33 @@ func (nic *NetworkInterface) MarshalJSON() ([]byte, error) {
 		MAC:   mac,
 		Alias: (*Alias)(nic),
 	})
+}
+
+// UnmarshalJSON is an helper for the golang ecosystem (we can reuse the models
+// in other golang apps)
+func (nic *NetworkInterface) UnmarshalJSON(data []byte) error {
+	var err error
+
+	var alias networkInterfaceUnmarshallingAlias
+	if err = json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+
+	nic.Name = alias.Name
+	nic.IP = net.ParseIP(alias.IP)
+	nic.MaskSize = alias.MaskSize
+	nic.IP6 = net.ParseIP(alias.IP6)
+	nic.Mask6Size = alias.Mask6Size
+	nic.Gateway = net.ParseIP(alias.Gateway)
+	nic.Flags = alias.Flags
+
+	// ignore parsing error (return nil)
+	nic.MAC, err = net.ParseMAC(alias.MAC)
+	if err != nil {
+		nic.MAC = net.HardwareAddr{0, 0, 0, 0, 0, 0, 0, 0}
+	}
+
+	return nil
 }
 
 // Match check if the network interface matches both the IP and MAC address
