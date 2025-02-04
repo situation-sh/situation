@@ -62,6 +62,17 @@ func RandomPackage() *models.Package {
 	}
 }
 
+func RandomNICFlags() *models.NetworkInterfaceFlags {
+	return &models.NetworkInterfaceFlags{
+		Up:           gofakeit.Bool(),
+		Broadcast:    gofakeit.Bool(),
+		Loopback:     gofakeit.Bool(),
+		PointToPoint: gofakeit.Bool(),
+		Multicast:    gofakeit.Bool(),
+		Running:      gofakeit.Bool(),
+	}
+}
+
 func RandomNIC() *models.NetworkInterface {
 	mac, _ := net.ParseMAC(gofakeit.MacAddress())
 	return &models.NetworkInterface{
@@ -71,6 +82,8 @@ func RandomNIC() *models.NetworkInterface {
 		MaskSize:  24,
 		IP6:       net.ParseIP(gofakeit.IPv6Address()),
 		Mask6Size: 64,
+		Gateway:   net.ParseIP(gofakeit.IPv4Address()),
+		Flags:     RandomNICFlags(),
 	}
 }
 
