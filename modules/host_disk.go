@@ -100,7 +100,7 @@ func (m *HostDiskModule) Run() error {
 		return fmt.Errorf("cannot retrieve host machine")
 	}
 
-	block, err := ghw.Block()
+	block, err := ghw.Block(ghw.WithDisableWarnings())
 	if err != nil {
 		return fmt.Errorf("error while retrieving disk information: %v", err)
 	}
