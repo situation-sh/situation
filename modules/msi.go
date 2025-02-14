@@ -130,6 +130,10 @@ func getInstalledApps(root registry.Key, subKey string) ([]*models.Package, erro
 		if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
 			installLocation := os.DirFS(value)
 			fs.WalkDir(installLocation, ".", func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					// continue
+					return nil
+				}
 				if !d.IsDir() && strings.HasSuffix(d.Name(), ".exe") {
 					pkg.Files = append(pkg.Files, filepath.Join(value, path))
 				}
