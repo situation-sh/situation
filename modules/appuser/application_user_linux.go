@@ -31,11 +31,10 @@ func PopulateApplication(app *models.Application) error {
 
 func getLinuxUser(pid uint) (*models.LinuxUser, error) {
 	path := fmt.Sprintf("/proc/%d/status", pid)
-	file, err := os.Open(path)
+	file, err := os.Open(path) // #nosec G304 -- input is controlled
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
 	var uids, gids []uint
 	scanner := bufio.NewScanner(file)
@@ -66,7 +65,7 @@ func getLinuxUser(pid uint) (*models.LinuxUser, error) {
 		EGID:  getLinuxID(gids[1], false),
 		SGID:  getLinuxID(gids[2], false),
 		FSGID: getLinuxID(gids[3], false),
-	}, nil
+	}, file.Close()
 }
 
 func parseIDs(fields []string) []uint {
