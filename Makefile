@@ -123,11 +123,11 @@ remote-module-testing-%: module-testing
 	$(DOCKER) exec -it "$$ID" sh -c '/tmp/situation -module=$(TEST_MODULE) -test.v' \
 	$(DOCKER) rm -f "$$ID"
 
-
 security: .gosec.json .govulncheck.json
+	@cat $<
 
 .gosec.json:
-	@gosec -fmt json -exclude-dir dev ./... | jq > $@
+	@gosec -fmt json -exclude-dir dev -quiet ./... | jq > $@
 
 .govulncheck.json:
 	@govulncheck --json ./... | jq > $@
@@ -137,26 +137,8 @@ analysis: .goweight.json
 .goweight.json:
 	@goweight --json . | jq > $@
 
-
 modules-doc: $(MODULE_FILES)
 	$(GO) run dev/doc/*.go -d modules -o docs/modules/
-
-docs-module-status:
-	@outfile=docs/modules/index.md; 																														\
-	rm -f $$outfile; 																															\
-	header=$$(cat docs/modules/arp.md|grep -m 20 -e '^|'|sed -e 's,-,,g' -e 's, *| *,|,g'|tail -n +3|awk -F '|' '{print $$2}'|tr '\n' '|');		\
-	echo '<div id="modules" markdown>' >> $$outfile;																							\
-	echo "|Name|$$header" >> $$outfile;																											\
-	bar=$$(echo "$$header"|sed -e 's,[a-zA-Z\ ]*|,---|,g'); 																					\
-	echo "|---|$$bar" >> $$outfile;																												\
-	for file in docs/modules/*.md; do 																											\
-		link=$$(basename $$file);																												\
-		name=$$(basename -s .md $$file|sed -e 's,_,-,g');																						\
-		if [[ "$$name" == "index" ]]; then continue; fi;																						\
-		csv=$$(cat $$file|grep -m 20 -e '^|'|sed -e 's,-,,g' -e 's, *| *,|,g'|tail -n +3|awk -F '|' '{print $$3}'|tr '\n' '|'); 				\
-		echo "|[$$name]($$link)|$$csv" >> $$outfile; 																							\
-	done;      																																	\
-	echo '</div>' >> $$outfile;		 
 
 test: .gocoverprofile.html
 

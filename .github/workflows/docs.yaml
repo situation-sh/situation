@@ -18,6 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+
+      - name: Update module docs
+        run: make modules-doc
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
