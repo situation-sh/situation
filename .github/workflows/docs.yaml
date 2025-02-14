@@ -17,10 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-      - run: make update-docs
-      - uses: actions/setup-python@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - run: pip install mkdocs-material mkdocs-section-index mkdocs-markdownextradata-plugin mkdocs-macros-plugin
-      - run: mkdocs gh-deploy --force
+          python-version-file: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+      - name: Deploy
+        run: uv run mkdocs gh-deploy --force
