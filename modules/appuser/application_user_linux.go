@@ -71,7 +71,7 @@ func getLinuxUser(pid uint) (*models.LinuxUser, error) {
 func parseIDs(fields []string) []uint {
 	var ids []uint
 	for _, field := range fields {
-		if id, err := strconv.Atoi(field); err == nil {
+		if id, err := strconv.ParseUint(field, 10, 32); err == nil {
 			ids = append(ids, uint(id))
 		}
 	}
@@ -81,12 +81,13 @@ func parseIDs(fields []string) []uint {
 func getLinuxID(id uint, isUser bool) *models.LinuxID {
 	var name string
 	if isUser {
-		usr, err := user.LookupId(strconv.Itoa(int(id)))
+
+		usr, err := user.LookupId(fmt.Sprintf("%d", id))
 		if err == nil {
 			name = usr.Username
 		}
 	} else {
-		grp, err := user.LookupGroupId(strconv.Itoa(int(id)))
+		grp, err := user.LookupGroupId(fmt.Sprintf("%d", id))
 		if err == nil {
 			name = grp.Name
 		}
