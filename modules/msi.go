@@ -85,6 +85,32 @@ func (m *MSIModule) Run() error {
 	return nil
 }
 
+// findExecutables ignore root directory
+func findExecutables(root string) ([]string, error) {
+	files := make([]string, 0)
+	absPath, err := filepath.Abs(root)
+	if err != nil {
+		return files, err
+	}
+	if absPath == "/" || absPath == filepath.VolumeName(absPath)+`\` {
+		return files, fmt.Errorf("root directory is not walked")
+	}
+
+	installLocation := os.DirFS(absPath)
+	fs.WalkDir(installLocation, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			// continue
+			return nil
+		}
+		if !d.IsDir() && strings.HasSuffix(d.Name(), ".exe") {
+			files = append(files, filepath.Join(absPath, path))
+		}
+		return nil
+	})
+
+	return files, nil
+}
+
 // Get installed applications from Windows Registry
 func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([]*models.Package, error) {
 	pkgs := make([]*models.Package, 0)
@@ -131,17 +157,9 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 		}
 		if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
 			logger.Debugf("InstallLocation: %v", value)
-			installLocation := os.DirFS(value)
-			fs.WalkDir(installLocation, ".", func(path string, d fs.DirEntry, err error) error {
-				if err != nil {
-					// continue
-					return nil
-				}
-				if !d.IsDir() && strings.HasSuffix(d.Name(), ".exe") {
-					pkg.Files = append(pkg.Files, filepath.Join(value, path))
-				}
-				return nil
-			})
+			if files, err := findExecutables(value); err == nil {
+				pkg.Files = append(pkg.Files, files...)
+			}
 		}
 
 		// check if system component
