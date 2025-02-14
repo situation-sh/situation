@@ -49,15 +49,15 @@ func (m *MSIModule) Run() error {
 	if host == nil {
 		return fmt.Errorf("host not found")
 	}
-	systemApps, err := getInstalledApps(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`)
+	systemApps, err := getInstalledApps(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`, logger)
 	if err != nil {
 		logger.Errorf("error fetching system-wide apps: %v", err)
 	}
-	systemApps32, err := getInstalledApps(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`)
+	systemApps32, err := getInstalledApps(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall`, logger)
 	if err != nil {
 		logger.Errorf("error fetching 32-bit system-wide apps: %v", err)
 	}
-	userApps, err := getInstalledApps(registry.CURRENT_USER, `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`)
+	userApps, err := getInstalledApps(registry.CURRENT_USER, `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall`, logger)
 	if err != nil {
 		logger.Errorf("error fetching user-specific apps: %v", err)
 	}
