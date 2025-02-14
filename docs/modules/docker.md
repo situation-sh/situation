@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: Docker
 summary: "DockerModule retrieves information about docker containers."
-date: 2024-06-13
+date: 2025-02-14
 filename: docker.go
 std_imports:
   - context

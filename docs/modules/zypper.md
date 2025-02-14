@@ -3,32 +3,29 @@ linux: true
 windows: false
 macos: false
 root: false
-title: DPKG
-summary: "DPKGModule reads package information from the dpkg package manager."
+title: Zypper
+summary: "ZypperModule reads package information from the zypper package manager."
 date: 2025-02-14
-filename: dpkg.go
+filename: zypper.go
 std_imports:
-  - bufio
   - fmt
-  - os
-  - path/filepath
-  - strings
   - time
-imports: []
+imports:
+  - github.com/knqyf263/go-rpmdb/pkg
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-DPKGModule reads package information from the dpkg package manager.
+ZypperModule reads package information from the zypper package manager.
 
 ### Details
 
 
-This module is relevant for distros that use dpkg, like debian, ubuntu and their derivatives. It only uses the standard library.
+This module is relevant for distros that use zypper, like suse and their derivatives. It uses github.com/knqyf263/go-rpmdb/pkg.
 
-It reads `/var/log/dpkg.log` and also files from `/var/lib/dpkg/info/`.
+It reads `/var/lib/rpm/Packages.db`.
 
 ### Dependencies
 
