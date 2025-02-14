@@ -48,7 +48,7 @@ func (m *HostGPUModule) Run() error {
 		return fmt.Errorf("cannot retrieve host machine")
 	}
 
-	gpu, err := ghw.GPU()
+	gpu, err := ghw.GPU(ghw.WithDisableWarnings())
 	if err != nil {
 		return fmt.Errorf("error while retrieving GPU information: %v", err)
 	}

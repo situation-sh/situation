@@ -24,7 +24,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.6"
+          go-version: "1.23.3"
       # run gosec scanner
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
@@ -45,7 +45,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.6"
+          go-version: "1.23.3"
       # run codecov coverage
       - name: Code coverage
         run: make test
@@ -67,7 +67,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.6"
+          go-version: "1.23.3"
       # run codecov coverage
       - name: Code coverage
         run: make test
