@@ -65,7 +65,7 @@ jobs:
       - name: Run the binary
         run: |
           chmod +x ${{ env.SITUATION }}
-          ${{ env.SITUATION }}
+          ${{ env.SITUATION }} -test.v
 
   test-windows:
     strategy:
@@ -85,7 +85,7 @@ jobs:
           Get-Content $env:GITHUB_ENV
       - name: Run the binary
         run: |
-          & $env:SITUATION
+          & $env:SITUATION -test.v
 
   docs:
     runs-on: ubuntu-latest

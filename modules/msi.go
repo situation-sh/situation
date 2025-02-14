@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/store"
 	"golang.org/x/sys/windows/registry"
@@ -85,7 +86,7 @@ func (m *MSIModule) Run() error {
 }
 
 // Get installed applications from Windows Registry
-func getInstalledApps(root registry.Key, subKey string) ([]*models.Package, error) {
+func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([]*models.Package, error) {
 	pkgs := make([]*models.Package, 0)
 
 	// Open registry key
@@ -103,6 +104,7 @@ func getInstalledApps(root registry.Key, subKey string) ([]*models.Package, erro
 
 	for _, name := range names {
 		subKeyPath := subKey + `\` + name
+		logger.Debugf("Looking for registry key: %v", subKeyPath)
 		subKey, err := registry.OpenKey(root, subKeyPath, registry.READ)
 		if err != nil {
 			continue
@@ -128,6 +130,7 @@ func getInstalledApps(root registry.Key, subKey string) ([]*models.Package, erro
 
 		}
 		if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
+			logger.Debugf("InstallLocation: %v", value)
 			installLocation := os.DirFS(value)
 			fs.WalkDir(installLocation, ".", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
