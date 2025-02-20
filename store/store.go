@@ -93,8 +93,9 @@ func GetMachineByHostID(id string) *models.Machine {
 // GetMachinesByOpenTCPPort returns the list of machines that have
 // an application listening on this TCP port. In addition it also
 // returns the list of the related app endpoints.
-func GetMachinesByOpenTCPPort(port uint16) ([]*models.Machine, []*models.ApplicationEndpoint) {
+func GetMachinesByOpenTCPPort(port uint16) ([]*models.Machine, []*models.Application, []*models.ApplicationEndpoint) {
 	outMachines := make([]*models.Machine, 0)
+	outApps := make([]*models.Application, 0)
 	outEndpoints := make([]*models.ApplicationEndpoint, 0)
 
 	for _, machine := range store {
@@ -102,12 +103,13 @@ func GetMachinesByOpenTCPPort(port uint16) ([]*models.Machine, []*models.Applica
 			for _, endpoint := range app.Endpoints {
 				if endpoint.Protocol == "tcp" && endpoint.Port == port {
 					outMachines = append(outMachines, machine)
+					outApps = append(outApps, app)
 					outEndpoints = append(outEndpoints, endpoint)
 				}
 			}
 		}
 	}
-	return outMachines, outEndpoints
+	return outMachines, outApps, outEndpoints
 }
 
 func InitPayload() *models.Payload {

@@ -99,8 +99,8 @@ func TestGetMachinesByOpenTCPPort(t *testing.T) {
 	InsertMachine(m0)
 
 	for _, p := range ports {
-		machines, apps := GetMachinesByOpenTCPPort(p)
-		if len(machines) > 0 && len(apps) > 0 {
+		machines, apps, endpoints := GetMachinesByOpenTCPPort(p)
+		if len(machines) > 0 && len(apps) > 0 && len(endpoints) > 0 {
 			continue
 		}
 		t.Errorf("no machines/apps seems to match (machines: %+v, apps: %+v",
