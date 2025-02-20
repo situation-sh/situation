@@ -15,6 +15,7 @@ require (
 	github.com/knqyf263/go-rpmdb v0.1.1
 	github.com/libp2p/go-netroute v0.2.2
 	github.com/lorenzosaino/go-sysctl v0.3.1
+	github.com/praetorian-inc/fingerprintx v1.1.14
 	github.com/prometheus-community/pro-bing v0.6.1
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
 	github.com/shirou/gopsutil/v4 v4.25.1
@@ -34,6 +35,7 @@ require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -74,6 +76,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
+	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067 // indirect
