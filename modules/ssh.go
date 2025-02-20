@@ -223,8 +223,8 @@ func parseOpenSSHBanner(banner string) *SSHBanner {
 	}
 
 	// Regular expressions to identify OpenSSH versions
-	longVersionRegex := regexp.MustCompile(`OpenSSH[-_](\d+\.\d+\.\d+p\d+)`)
-	shortVersionRegex := regexp.MustCompile(`OpenSSH[-_](\d+\.\d+p\d+)`)
+	longVersionRegex := regexp.MustCompile(`OpenSSH[-_](\d+\.\d+\.\d+(p\d+)?)`)
+	shortVersionRegex := regexp.MustCompile(`OpenSSH[-_](\d+\.\d+(p\d+)?)`)
 
 	// Identify the OpenSSH version (long format first, then fallback to short format)
 	if longVersionRegex.MatchString(banner) {
