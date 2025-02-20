@@ -86,7 +86,7 @@ func (m *MSIModule) Run() error {
 }
 
 // findExecutables ignore root directory
-func findExecutables(root string) ([]string, error) {
+func findExecutables(root string, maxDepth int) ([]string, error) {
 	files := make([]string, 0)
 	absPath, err := filepath.Abs(root)
 	if err != nil {
@@ -98,8 +98,26 @@ func findExecutables(root string) ([]string, error) {
 
 	installLocation := os.DirFS(absPath)
 	fs.WalkDir(installLocation, ".", func(path string, d fs.DirEntry, err error) error {
+		// The err argument reports an error related to path,
+		// signaling that WalkDir will not walk into that
+		// directory.
+		// The function can decide how to handle that error;
+		// as described earlier, returning the error will cause
+		// WalkDir to stop walking the entire tree.
 		if err != nil {
 			// continue
+			return nil
+		}
+		// Calculate depth relative to root
+		relPath, _ := filepath.Rel(root, path)
+		depth := len(filepath.SplitList(relPath))
+
+		if depth > maxDepth {
+			// Skip deeper directories
+			if d.IsDir() {
+				return fs.SkipDir
+			}
+			// pass
 			return nil
 		}
 		if !d.IsDir() && strings.HasSuffix(d.Name(), ".exe") {
@@ -157,7 +175,7 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 		}
 		if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
 			logger.Debugf("InstallLocation: %v", value)
-			if files, err := findExecutables(value); err == nil {
+			if files, err := findExecutables(value, 5); err == nil {
 				pkg.Files = append(pkg.Files, files...)
 			}
 		}
