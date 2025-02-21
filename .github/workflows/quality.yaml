@@ -60,6 +60,7 @@ jobs:
           verbose: true # optional (default = false)
   codecov-windows:
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
