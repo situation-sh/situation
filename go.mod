@@ -1,13 +1,11 @@
 module github.com/situation-sh/situation
 
-go 1.23
-
-toolchain go1.23.3
+go 1.24
 
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
-	github.com/docker/docker v27.5.1+incompatible
+	github.com/docker/docker v28.0.0+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/gosnmp/gosnmp v1.38.0
 	github.com/invopop/jsonschema v0.13.0
@@ -26,7 +24,7 @@ require (
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	golang.org/x/sys v0.30.0
 	gopkg.in/yaml.v3 v3.0.1
-	modernc.org/sqlite v1.34.5
+	modernc.org/sqlite v1.35.0
 )
 
 require (
@@ -77,8 +75,8 @@ require (
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	golang.org/x/crypto v0.33.0 // indirect
-	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
-	golang.org/x/exp/typeparams v0.0.0-20250210185358-939b2ce775ac // indirect
+	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
+	golang.org/x/exp/typeparams v0.0.0-20250218142911-aa4b98e5adaa // indirect
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067 // indirect
 	golang.org/x/mod v0.23.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
