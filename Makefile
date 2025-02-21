@@ -143,7 +143,7 @@ modules-doc: $(MODULE_FILES)
 test: .gocoverprofile.html
 
 .gocoverprofile.txt: $(shell find . -path "*_test.go")
-	$(GO) test -coverprofile=$@ -covermode=atomic ./...
+	$(GO) test -coverprofile=$@ -covermode=atomic $$(go list -v ./...| grep -v modules)
 
 .gocoverprofile.html: .gocoverprofile.txt
 	$(GO) tool cover -html=$^ -o $@
