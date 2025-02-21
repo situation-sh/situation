@@ -87,6 +87,7 @@ func (m *MSIModule) Run() error {
 
 // findExecutables ignore root directory
 func findExecutables(root string, maxDepth int) ([]string, error) {
+	fmt.Println("ROOT:", root)
 	files := make([]string, 0)
 	absPath, err := filepath.Abs(root)
 	if err != nil {
@@ -175,7 +176,7 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 		}
 		if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
 			logger.Debugf("InstallLocation: %v", value)
-			if files, err := findExecutables(value, 5); err == nil {
+			if files, err := findExecutables(value, 3); err == nil {
 				pkg.Files = append(pkg.Files, files...)
 			}
 		}
