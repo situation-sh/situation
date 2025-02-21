@@ -8,13 +8,12 @@ import (
 // NetworkInterfaceFlags give details about a network interface
 // see https://pkg.go.dev/net#Flags
 type NetworkInterfaceFlags struct {
-	Up           bool // interface is administratively up
-	Broadcast    bool // interface supports broadcast access capability
-	Loopback     bool // interface is a loopback interface
-	PointToPoint bool // interface belongs to a point-to-point link
-	Multicast    bool // interface supports multicast access capability
-	Running      bool // interface is in running state
-
+	Up           bool `json:"up" jsonschema:"description=interface is administratively up"`
+	Broadcast    bool `json:"broadcast,omitempty" jsonschema:"description=interface supports broadcast access capability"`
+	Loopback     bool `json:"loopback,omitempty" jsonschema:"description=interface is a loopback interface"`
+	PointToPoint bool `json:"point_to_point,omitempty" jsonschema:"description=interface belongs to a point-to-point link"`
+	Multicast    bool `json:"multicast,omitempty" jsonschema:"description=interface supports multicast access capability"`
+	Running      bool `json:"running,omitempty" jsonschema:"description=interface is in running state"`
 }
 
 func NewNetworkInterfaceFlags(flags net.Flags) *NetworkInterfaceFlags {
