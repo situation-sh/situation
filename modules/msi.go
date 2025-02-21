@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -87,7 +88,6 @@ func (m *MSIModule) Run() error {
 
 // findExecutables ignore root directory
 func findExecutables(root string, maxDepth int) ([]string, error) {
-	fmt.Println("ROOT:", root)
 	files := make([]string, 0)
 	absPath, err := filepath.Abs(root)
 	if err != nil {
@@ -132,6 +132,7 @@ func findExecutables(root string, maxDepth int) ([]string, error) {
 
 // Get installed applications from Windows Registry
 func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([]*models.Package, error) {
+	var err error = nil
 	pkgs := make([]*models.Package, 0)
 
 	// Open registry key
@@ -147,53 +148,93 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 		return nil, err
 	}
 
-	for _, name := range names {
-		subKeyPath := subKey + `\` + name
-		logger.Debugf("Looking for registry key: %v", subKeyPath)
-		subKey, err := registry.OpenKey(root, subKeyPath, registry.READ)
-		if err != nil {
-			continue
-		}
+	var wg sync.WaitGroup
+	out := make(chan *models.Package)
+	errs := make(chan error)
 
-		pkg := models.NewPackage()
-		pkg.Manager = "msi"
-
-		// Read string values
-		if value, _, err := subKey.GetStringValue("DisplayName"); err == nil {
-			pkg.Name = value
-		}
-		if value, _, err := subKey.GetStringValue("DisplayVersion"); err == nil {
-			pkg.Version = value
-		}
-		if value, _, err := subKey.GetStringValue("Publisher"); err == nil {
-			pkg.Vendor = value
-		}
-		if value, _, err := subKey.GetStringValue("InstallDate"); err == nil {
-			if t, err := time.Parse("20060201", value); err == nil {
-				pkg.InstallTimeUnix = t.Unix()
-			}
-
-		}
-		if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
-			logger.Debugf("InstallLocation: %v", value)
-			if files, err := findExecutables(value, 3); err == nil {
-				pkg.Files = append(pkg.Files, files...)
-			}
-		}
-
-		// check if system component
-		isSystem := false
-		if value, _, err := subKey.GetIntegerValue("SystemComponent"); err == nil {
-			isSystem = value == 1
-		}
-
-		subKey.Close()
-
-		// Ignore system components if found
-		if !isSystem && pkg.Name != "" {
+	// reader
+	go func() {
+		for pkg := range out {
 			pkgs = append(pkgs, pkg)
 		}
+	}()
+
+	// error reader
+	go func() {
+		for e := range errs {
+			err = e
+			return
+		}
+	}()
+
+	for _, name := range names {
+		xxx := subKey + `\` + name
+		logger.Debugf("Looking for registry key: %v", xxx)
+
+		wg.Add(1)
+		// writer
+		go func(subKeyPath string) {
+			defer wg.Done()
+
+			subKey, err := registry.OpenKey(root, subKeyPath, registry.READ)
+			if err != nil {
+				errs <- err
+				return
+			}
+
+			pkg := models.NewPackage()
+			pkg.Manager = "msi"
+
+			// Read string values
+			if value, _, err := subKey.GetStringValue("DisplayName"); err == nil {
+				pkg.Name = value
+			}
+			if value, _, err := subKey.GetStringValue("DisplayVersion"); err == nil {
+				pkg.Version = value
+			}
+			if value, _, err := subKey.GetStringValue("Publisher"); err == nil {
+				pkg.Vendor = value
+			}
+			if value, _, err := subKey.GetStringValue("InstallDate"); err == nil {
+				if t, err := time.Parse("20060201", value); err == nil {
+					pkg.InstallTimeUnix = t.Unix()
+				}
+
+			}
+			if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
+				logger.Debugf("InstallLocation: %v", value)
+				if files, err := findExecutables(value, 3); err == nil {
+					pkg.Files = append(pkg.Files, files...)
+				}
+			}
+
+			// check if system component
+			isSystem := false
+			if value, _, err := subKey.GetIntegerValue("SystemComponent"); err == nil {
+				isSystem = value == 1
+			}
+
+			subKey.Close()
+
+			// Ignore system components if found
+			if !isSystem && pkg.Name != "" {
+				// pkgs = append(pkgs, pkg)
+				out <- pkg
+			}
+		}(xxx)
 	}
 
-	return pkgs, nil
+	wg.Wait()
+	// Closing a channel indicates that no more values will be sent on it
+	close(out)
+	close(errs)
+
+	// get the first error
+	// err = <-errs
+
+	// for pkg := range out {
+	// 	pkgs = append(pkgs, pkg)
+	// }
+
+	return pkgs, err
 }
