@@ -44,7 +44,7 @@ func (m *DPKGModule) Run() error {
 	machine := store.GetHost()
 	if !utils.Includes([]string{"debian", "ubuntu", "linuxmint", "raspbian"}, machine.Distribution) {
 		msg := fmt.Sprintf("The distribution %s is not supported", machine.Distribution)
-		logger.Warnf(msg)
+		logger.Warn(msg)
 		return &notApplicableError{msg: msg}
 	}
 	packages, err := dpkg.GetInstalledPackages()

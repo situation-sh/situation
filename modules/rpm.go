@@ -47,15 +47,14 @@ func (m *RPMModule) Run() error {
 	machine := store.GetHost()
 	if !utils.Includes([]string{"fedora", "rocky", "centos", "redhat", "almalinux", "opensuse-leap", "opensuse-tumbleweed"}, machine.Distribution) {
 		msg := fmt.Sprintf("The distribution %s is not supported", machine.Distribution)
-		logger.Warnf(msg)
+		logger.Warn(msg)
 		return &notApplicableError{msg: msg}
 	}
 
 	file, err := rpm.FindDBFile()
 	if err != nil {
 		if utils.Includes([]string{"opensuse-leap", "opensuse-tumbleweed"}, machine.Distribution) {
-			msg := fmt.Sprintf("No RPM DB file found on this %s distro: %v (skipping)", machine.Distribution, err)
-			logger.Warnf(msg)
+			logger.Warnf("No RPM DB file found on this %s distro: %v (skipping)", machine.Distribution, err)
 			return nil
 		}
 		return err

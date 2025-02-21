@@ -182,7 +182,7 @@ func (m *PingModule) Run() error {
 	}
 
 	if len(errorMsg) > 0 {
-		return fmt.Errorf(errorMsg)
+		return fmt.Errorf("%s", errorMsg)
 	}
 	return nil
 }
