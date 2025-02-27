@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host Basic
 summary: "HostBasicModule retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime"
-date: 2025-02-14
+date: 2025-02-27
 filename: host_basic.go
 std_imports:
   - os

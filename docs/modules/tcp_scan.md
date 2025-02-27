@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: TCP Scan
 summary: "TCPScanModule tries to connect to neighbor TCP ports."
-date: 2025-02-14
+date: 2025-02-27
 filename: tcp_scan.go
 std_imports:
   - fmt

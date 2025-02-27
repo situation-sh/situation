@@ -5,7 +5,7 @@ macos: false
 root: false
 title: RPM
 summary: "RPMModule reads package information from the rpm package manager."
-date: 2025-02-14
+date: 2025-02-27
 filename: rpm.go
 std_imports:
   - bytes

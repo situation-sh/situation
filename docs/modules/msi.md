@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: MSI
 summary: "MSIModule creates models.Packages instance from the windows registry"
-date: 2025-02-14
+date: 2025-02-27
 filename: msi.go
 std_imports:
   - fmt
@@ -13,8 +13,10 @@ std_imports:
   - os
   - path/filepath
   - strings
+  - sync
   - time
 imports:
+  - github.com/sirupsen/logrus
   - golang.org/x/sys/windows/registry
 ---
 

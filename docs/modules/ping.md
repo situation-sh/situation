@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Ping
 summary: "PingModule pings local networks to discover new hosts."
-date: 2025-02-14
+date: 2025-02-27
 filename: ping.go
 std_imports:
   - fmt
