@@ -42,7 +42,7 @@ func (m *SSHModule) Run() error {
 	machines, apps, endpoints := store.GetMachinesByOpenTCPPort(22)
 	for k, endpoint := range endpoints {
 		if ipv4 := endpoint.Addr.To4(); ipv4 != nil {
-			address := fmt.Sprintf("%s:%d", endpoint.Addr, endpoint.Port)
+			address := net.JoinHostPort(endpoint.Addr.String(), fmt.Sprintf("%d", endpoint.Port))
 			conn, err := net.Dial("tcp", address)
 			if err != nil {
 				logger.Errorf("fail to dial %s: %v", address, err)
@@ -106,6 +106,12 @@ func (m *SSHModule) Run() error {
 					apps[k].Version = banner.Version
 					if banner.Version != "" {
 						msg = msg.WithField("version", banner.Version)
+					}
+				}
+				if apps[k].CPE == "" {
+					apps[k].CPE = banner.CPE
+					if banner.CPE != "" {
+						msg = msg.WithField("cpe", banner.CPE)
 					}
 				}
 
@@ -199,6 +205,7 @@ var windowsVersions = map[string]string{
 type SSHBanner struct {
 	Product             string
 	Version             string
+	CPE                 string
 	Platform            string
 	Distribution        string
 	DistributionVersion string
@@ -235,6 +242,14 @@ func parseOpenSSHBanner(banner string) *SSHBanner {
 		out.Version = matches[1]
 	} else {
 		return &out
+	}
+
+	// split version along p
+	chunks := strings.Split(out.Version, "p")
+	if len(chunks) == 1 {
+		out.CPE = fmt.Sprintf("cpe:2.3:a:openbsd:openssh:%s:-:*:*:*:*:*:*", chunks[0])
+	} else {
+		out.CPE = fmt.Sprintf("cpe:2.3:a:openbsd:openssh:%s:p%s:*:*:*:*:*:*", chunks[0], chunks[1])
 	}
 
 	fullVersion := ""
