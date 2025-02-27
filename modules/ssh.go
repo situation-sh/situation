@@ -211,6 +211,18 @@ type SSHBanner struct {
 	DistributionVersion string
 }
 
+func versionToCPE(version string) string {
+	if version == "" {
+		return ""
+	}
+	chunks := strings.Split(version, "p")
+	if len(chunks) == 1 {
+		return fmt.Sprintf("cpe:2.3:a:openbsd:openssh:%s:-:*:*:*:*:*:*", chunks[0])
+	} else {
+		return fmt.Sprintf("cpe:2.3:a:openbsd:openssh:%s:p%s:*:*:*:*:*:*", chunks[0], chunks[1])
+	}
+}
+
 // Extracts OpenSSH version and build from banner
 func parseOpenSSHBanner(banner string) *SSHBanner {
 	out := SSHBanner{Product: "OpenSSH"}
@@ -224,6 +236,8 @@ func parseOpenSSHBanner(banner string) *SSHBanner {
 		if version, exist := windowsVersions[out.Version]; exist {
 			out.Distribution = version
 		}
+		// populate CPE
+		out.CPE = versionToCPE(out.Version)
 		return &out
 	} else {
 		out.Platform = "linux"
@@ -244,13 +258,8 @@ func parseOpenSSHBanner(banner string) *SSHBanner {
 		return &out
 	}
 
-	// split version along p
-	chunks := strings.Split(out.Version, "p")
-	if len(chunks) == 1 {
-		out.CPE = fmt.Sprintf("cpe:2.3:a:openbsd:openssh:%s:-:*:*:*:*:*:*", chunks[0])
-	} else {
-		out.CPE = fmt.Sprintf("cpe:2.3:a:openbsd:openssh:%s:p%s:*:*:*:*:*:*", chunks[0], chunks[1])
-	}
+	// populate CPE
+	out.CPE = versionToCPE(out.Version)
 
 	fullVersion := ""
 	// Calculate start offset to find the build number
