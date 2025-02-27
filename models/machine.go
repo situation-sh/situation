@@ -28,6 +28,7 @@ type Machine struct {
 	Packages            []*Package          `json:"packages" jsonschema:"description=list of packages"`
 	Disks               []*Disk             `json:"disks" jsonschema:"description=list of disks"`
 	GPUS                []*GPU              `json:"gpus" jsonschema:"description=list of GPU"`
+	CPE                 string              `json:"cpe,omitempty" jsonschema:"description=OS CPE uri,example=cpe:2.3:o:microsoft:windows_server_2022:-:*:*:*:datacenter:*:x64:*"`
 }
 
 // NewMachine inits a new Machine structure
