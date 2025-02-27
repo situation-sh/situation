@@ -96,6 +96,7 @@ type Application struct {
 	Version   string                 `json:"version,omitempty"  jsonschema:"description=application version,example=9.8,example=1.2.3"`
 	Protocol  string                 `json:"protocol,omitempty" jsonschema:"description=protocol used to talk to the application,example=ssh,example=http"`
 	Config    map[string]interface{} `json:"config,omitempty" jsonschema:"description=application configuration or metadata"`
+	CPE       string                 `json:"cpe,omitempty" jsonschema:"description=application CPE uri,example=cpe:2.3:a:f5:nginx:*:*:*:*:*:*:*:*"`
 }
 
 func NewApplication() *Application {
