@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host CPU
 summary: "HostCPUModule retrieves host CPU info: model, vendor and the number of cores."
-date: 2025-02-27
+date: 2025-02-28
 filename: host_cpu.go
 std_imports:
   - fmt

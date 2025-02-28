@@ -25,6 +25,7 @@ nav:
       - modules/index.md
       - modules/appuser.md
       - modules/arp.md
+      - modules/chassis.md
       - modules/docker.md
       - modules/dpkg.md
       - modules/host_basic.md
@@ -35,7 +36,9 @@ nav:
       - modules/msi.md
       - modules/netstat.md
       - modules/ping.md
+      - modules/reverse_lookup.md
       - modules/rpm.md
+      - modules/ssh.md
       - modules/tcp_scan.md
   - "backends.md"
   - Developer:

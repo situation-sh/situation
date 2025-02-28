@@ -5,7 +5,7 @@ macos: unknown
 root: unknown
 title: App User
 summary: "AppUserModule fills user information from the PID of an application"
-date: 2025-02-27
+date: 2025-02-28
 filename: appuser.go
 std_imports:
   - bufio

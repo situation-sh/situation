@@ -2,16 +2,14 @@
 linux: true
 windows: true
 macos: unknown
-root: false
-title: TCP Scan
-summary: "TCPScanModule tries to connect to neighbor TCP ports."
+root: unknown
+title: Reverse Lookup
+summary: "ReverseLookupModule tries to get a hostname attached to a local IP address"
 date: 2025-02-28
-filename: tcp_scan.go
+filename: reverse_lookup.go
 std_imports:
-  - fmt
   - net
-  - sync
-  - time
+  - strings
 imports: []
 ---
 
@@ -19,14 +17,10 @@ imports: []
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-TCPScanModule tries to connect to neighbor TCP ports.
+ReverseLookupModule tries to get a hostname attached to a local IP address
 
 ### Details
 
-
-The module only uses the Go standard library.
-
-A TCP connect is performed on the [NMAP top 1000 ports](https://nullsec.us/top-1-000-tcp-and-udp-ports-nmap-default/). These connection attempts are made concurrently against the hosts previously found. The connections have a 500ms timeout.
 
 ### Dependencies
 

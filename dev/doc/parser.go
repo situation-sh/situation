@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -232,6 +233,10 @@ func buildIndex(modules []*ModuleDoc) []byte {
 	for _, m := range modules {
 		links[m.Name] = fmt.Sprintf("[%s](%s)", m.Name, strings.Replace(m.SrcFile, ".go", ".md", 1))
 	}
+	// sort modules by name
+	sort.Slice(modules, func(i, j int) bool {
+		return modules[i].Name < modules[j].Name
+	})
 	for _, m := range modules {
 		// deps with links
 		deps := make([]string, len(m.Dependencies))

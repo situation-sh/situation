@@ -24,7 +24,11 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
-// SSHModule aims to ...
+// SSHModule aims to retrieve info from remote ssh services.
+//
+// It mainly tries to connect to open tcp/22 ports, gathering everything it can like
+// the `host_key` and the algorithms available. In the OpenSSH case it also tries to parse
+// the banner to get product and OS infos (versions notably)
 type SSHModule struct{}
 
 func (m *SSHModule) Name() string {
@@ -32,6 +36,7 @@ func (m *SSHModule) Name() string {
 }
 
 func (m *SSHModule) Dependencies() []string {
+	// need port 22
 	return []string{"tcp-scan"}
 }
 
