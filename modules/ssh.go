@@ -197,9 +197,9 @@ var freebsdVersions = map[string]string{
 
 // windows versions mapped to OpenSSH builds
 var windowsVersions = map[string]string{
-	"7.7": "Microsoft Windows Server 2016",
-	"8.1": "Microsoft Windows Server 2019",
-	"9.8": "Microsoft Windows Server 2022",
+	"7.7": "Microsoft Windows Server 2019",
+	"8.1": "Microsoft Windows Server 2022",
+	// "9.8": "Microsoft Windows Server 2022",
 }
 
 type SSHBanner struct {
