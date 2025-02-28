@@ -8,6 +8,8 @@
 package modules
 
 import (
+	"os"
+
 	"github.com/godbus/dbus/v5"
 	"github.com/situation-sh/situation/store"
 )
@@ -36,6 +38,11 @@ func (m *ChassisModule) Dependencies() []string {
 func (m *ChassisModule) Run() error {
 	logger := GetLogger(m)
 
+	if !isSocketAvailable() {
+		logger.Warn("dbus system bus is not available, skipping")
+		return &notApplicableError{"dbus system bus is not available"}
+	}
+
 	host := store.GetHost()
 
 	// Connect to the system bus
@@ -56,4 +63,9 @@ func (m *ChassisModule) Run() error {
 	logger.WithField("chassis", host.Chassis).Info("chassis found through dbus")
 
 	return nil
+}
+
+func isSocketAvailable() bool {
+	_, err := os.Stat("/var/run/dbus/system_bus_socket")
+	return !os.IsNotExist(err)
 }
