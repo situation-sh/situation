@@ -29,8 +29,8 @@ COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
 GO        := $(shell which go)
-GOARCH    ?= $(shell go env|grep GOARCH|awk -F '=' '{print $$2}'|sed -e 's/"//g')
-GOOS      ?= $(shell go env|grep GOOS  |awk -F '=' '{print $$2}'|sed -e 's/"//g')
+GOARCH    ?= $(shell go env|grep GOARCH|awk -F '=' '{print $$2}'|sed -e "s/[']//g")
+GOOS      ?= $(shell go env|grep GOOS  |awk -F '=' '{print $$2}'|sed -e "s/[']//g")
 
 # files
 SRC_FILES    := $(shell find . -path "*.go" -not -path "./.*")
