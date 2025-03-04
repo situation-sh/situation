@@ -30,7 +30,7 @@ jobs:
       # generate schema
       - name: Generate schema
         run: |
-          cp bin/situation-*-linux /tmp/situation;
+          cp dist/situation-*-linux /tmp/situation;
           /tmp/situation schema > dist/schema.json
       # upload binaries and schema
       - uses: actions/upload-artifact@v4
