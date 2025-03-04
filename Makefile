@@ -102,7 +102,7 @@ go.mod:
 	$(GO) mod init $(MODULE)
 	$(GO) mod tidy
 
-all: $(BIN_PREFIX)-amd64-linux $(BIN_PREFIX)-amd64-windows.exe
+all: $(BIN_PREFIX)-$(GOARCH)-linux $(BIN_PREFIX)-$(GOARCH)-windows.exe
 
 build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testing-amd64-windows.exe
 
