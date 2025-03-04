@@ -132,7 +132,7 @@ func findExecutables(root string, maxDepth int) ([]string, error) {
 
 // Get installed applications from Windows Registry
 func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([]*models.Package, error) {
-	var err error = nil
+	var err error
 	pkgs := make([]*models.Package, 0)
 
 	// Open registry key
@@ -149,8 +149,8 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 	}
 
 	var wg sync.WaitGroup
-	out := make(chan *models.Package)
-	errs := make(chan error)
+	out := make(chan *models.Package, len(names))
+	errs := make(chan error, len(names))
 
 	// reader
 	go func() {
@@ -162,14 +162,15 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 	// error reader
 	go func() {
 		for e := range errs {
-			err = e
-			return
+			if err == nil {
+				err = e
+			}
 		}
 	}()
 
 	for _, name := range names {
-		xxx := subKey + `\` + name
-		logger.Debugf("Looking for registry key: %v", xxx)
+		subKeyPath := subKey + `\` + name
+		logger.Debugf("Looking for registry key: %v", subKeyPath)
 
 		wg.Add(1)
 		// writer
@@ -181,6 +182,7 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 				errs <- err
 				return
 			}
+			defer subKey.Close()
 
 			pkg := models.NewPackage()
 			pkg.Manager = "msi"
@@ -199,7 +201,6 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 				if t, err := time.Parse("20060201", value); err == nil {
 					pkg.InstallTimeUnix = t.Unix()
 				}
-
 			}
 			if value, _, err := subKey.GetStringValue("InstallLocation"); err == nil {
 				logger.Debugf("InstallLocation: %v", value)
@@ -214,27 +215,16 @@ func getInstalledApps(root registry.Key, subKey string, logger *logrus.Entry) ([
 				isSystem = value == 1
 			}
 
-			subKey.Close()
-
 			// Ignore system components if found
 			if !isSystem && pkg.Name != "" {
-				// pkgs = append(pkgs, pkg)
 				out <- pkg
 			}
-		}(xxx)
+		}(subKeyPath)
 	}
 
 	wg.Wait()
-	// Closing a channel indicates that no more values will be sent on it
 	close(out)
 	close(errs)
-
-	// get the first error
-	// err = <-errs
-
-	// for pkg := range out {
-	// 	pkgs = append(pkgs, pkg)
-	// }
 
 	return pkgs, err
 }
