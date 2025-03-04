@@ -14,6 +14,7 @@ require (
 	github.com/knqyf263/go-rpmdb v0.1.1
 	github.com/libp2p/go-netroute v0.2.2
 	github.com/lorenzosaino/go-sysctl v0.3.1
+	github.com/minio/selfupdate v0.6.0
 	github.com/praetorian-inc/fingerprintx v1.1.14
 	github.com/prometheus-community/pro-bing v0.6.1
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
@@ -29,6 +30,7 @@ require (
 )
 
 require (
+	aead.dev/minisign v0.2.0 // indirect
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
