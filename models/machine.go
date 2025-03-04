@@ -28,6 +28,8 @@ type Machine struct {
 	Packages            []*Package          `json:"packages" jsonschema:"description=list of packages"`
 	Disks               []*Disk             `json:"disks" jsonschema:"description=list of disks"`
 	GPUS                []*GPU              `json:"gpus" jsonschema:"description=list of GPU"`
+	CPE                 string              `json:"cpe,omitempty" jsonschema:"description=OS CPE uri,example=cpe:2.3:o:microsoft:windows_server_2022:-:*:*:*:datacenter:*:x64:*"`
+	Chassis             string              `json:"chassis,omitempty" jsonschema:"description=machine kind,example=vm,example=laptop"`
 }
 
 // NewMachine inits a new Machine structure
@@ -95,8 +97,11 @@ func (m *Machine) HasIP(ip net.IP) bool {
 
 // GetOrCreateApplicationByName returns the app running on this machine
 // given its name. It creates it if it does exists (a boolean is returned
-// to tells if the app has been created or not)
+// to tells if the app has been created or not). It also looks at the package
+// files if the app has not been found.
 func (m *Machine) GetOrCreateApplicationByName(name string) (*Application, bool) {
+	var pkg *Package = nil
+
 	for _, p := range m.Packages {
 		for _, s := range p.Applications {
 			if s.Name == name {
@@ -104,14 +109,26 @@ func (m *Machine) GetOrCreateApplicationByName(name string) (*Application, bool)
 			}
 		}
 	}
+
 	app := NewApplication()
 	app.Name = name
 
-	pkg := NewPackage()
+	// NEW: look into the package file (kind of fallback)
+	for _, p := range m.Packages {
+		for _, file := range p.Files {
+			if file == name {
+				pkg = p
+				break
+			}
+		}
+	}
+
+	if pkg == nil {
+		pkg = NewPackage()
+		m.Packages = append(m.Packages, pkg)
+	}
+
 	pkg.Applications = append(pkg.Applications, app)
-	// pkg := Package{Applications: []*Application{app}}
-	m.Packages = append(m.Packages, pkg)
-	// m.Applications = append(m.Applications, &Application{Name: name})
 	return app, true
 }
 

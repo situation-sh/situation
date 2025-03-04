@@ -35,7 +35,7 @@ func (p *Platform) Ping(ctx context.Context) error {
 	return err
 }
 
-func createNetworkInterface(ipam network.IPAM, endpoint types.EndpointResource) *models.NetworkInterface {
+func createNetworkInterface(ipam network.IPAM, endpoint network.EndpointResource) *models.NetworkInterface {
 	hw, err := net.ParseMAC(endpoint.MacAddress)
 	if err != nil {
 		fmt.Println(err)
@@ -73,8 +73,8 @@ func splitImageName(image string) (string, string) {
 }
 
 func getOrCreateMachineFromEndpoint(
-	endpoint types.EndpointResource,
-	container types.ContainerJSON,
+	endpoint network.EndpointResource,
+	container container.InspectResponse,
 	ipam network.IPAM,
 	parent *models.Machine,
 	logger *logrus.Entry) *models.Machine {
@@ -167,7 +167,7 @@ func getContainerByID(ctx context.Context, cli *client.Client, id string) (types
 
 func RunBasic(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 	// find all the networks
-	networks, err := p.client.NetworkList(ctx, types.NetworkListOptions{})
+	networks, err := p.client.NetworkList(ctx, network.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func RunBasic(ctx context.Context, p *Platform, logger *logrus.Entry) error {
 	// loop over the networks
 	for _, n := range networks {
 
-		network, err := p.client.NetworkInspect(ctx, n.ID, types.NetworkInspectOptions{})
+		network, err := p.client.NetworkInspect(ctx, n.ID, network.InspectOptions{})
 		// fmt.Println(network.Name, network.Containers)
 		// keep only the used networks
 		if err != nil || len(network.Containers) == 0 || len(network.IPAM.Config) == 0 {

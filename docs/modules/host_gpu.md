@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host GPU
 summary: "HostGPUModule retrieves basic information about GPU: index, vendor and product name."
-date: 2024-06-13
+date: 2025-02-28
 filename: host_gpu.go
 std_imports:
   - fmt

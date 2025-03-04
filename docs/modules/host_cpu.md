@@ -5,13 +5,13 @@ macos: unknown
 root: false
 title: Host CPU
 summary: "HostCPUModule retrieves host CPU info: model, vendor and the number of cores."
-date: 2024-06-13
+date: 2025-02-28
 filename: host_cpu.go
 std_imports:
   - fmt
   - strconv
 imports:
-  - github.com/shirou/gopsutil/v3/cpu
+  - github.com/shirou/gopsutil/v4/cpu
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}

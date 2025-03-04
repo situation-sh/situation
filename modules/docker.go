@@ -87,7 +87,7 @@ func (m *DockerModule) findDockerInstances() []*docker.Platform {
 	}
 
 	// try from network
-	machines, endpoints := store.GetMachinesByOpenTCPPort(defaultDockerPort)
+	machines, _, endpoints := store.GetMachinesByOpenTCPPort(defaultDockerPort)
 	for k, machine := range machines {
 		if machine == hostMachine {
 			// ignore the candidate that could be the current

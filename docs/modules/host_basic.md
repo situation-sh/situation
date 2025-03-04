@@ -5,14 +5,14 @@ macos: unknown
 root: false
 title: Host Basic
 summary: "HostBasicModule retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime"
-date: 2024-06-13
+date: 2025-02-28
 filename: host_basic.go
 std_imports:
   - os
   - time
 imports:
   - github.com/google/uuid
-  - github.com/shirou/gopsutil/v3/host
+  - github.com/shirou/gopsutil/v4/host
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}

@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: Netstat
 summary: "NetstatModule aims to retrieve infos like the netstat command does It must be run as root to retrieve PID/process information."
-date: 2024-06-13
+date: 2025-02-28
 filename: netstat.go
 std_imports:
   - os/user

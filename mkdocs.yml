@@ -10,7 +10,8 @@ theme:
   palette:
     scheme: nord
   font:
-    text: "Inter"
+    text: "Geist"
+    code: "Geist Mono"
   features:
     - content.code.copy
 
@@ -22,7 +23,9 @@ nav:
   - "quick_start.md"
   - Modules:
       - modules/index.md
+      - modules/appuser.md
       - modules/arp.md
+      - modules/chassis.md
       - modules/docker.md
       - modules/dpkg.md
       - modules/host_basic.md
@@ -30,9 +33,12 @@ nav:
       - modules/host_disk.md
       - modules/host_gpu.md
       - modules/host_network.md
+      - modules/msi.md
       - modules/netstat.md
       - modules/ping.md
+      - modules/reverse_lookup.md
       - modules/rpm.md
+      - modules/ssh.md
       - modules/tcp_scan.md
   - "backends.md"
   - Developer:
@@ -49,8 +55,8 @@ markdown_extensions:
   - pymdownx.keys
   - md_in_html
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:

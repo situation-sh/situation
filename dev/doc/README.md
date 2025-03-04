@@ -9,5 +9,5 @@ We cannot select a single module: the tool treats all the modules at once and al
 From the root directory you can run this tool through:
 
 ```shell
-make update-docs
+make modules-doc
 ```

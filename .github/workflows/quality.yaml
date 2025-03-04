@@ -24,7 +24,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.6"
+          go-version: "1.24.0"
       # run gosec scanner
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
@@ -45,7 +45,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.6"
+          go-version: "1.24.0"
       # run codecov coverage
       - name: Code coverage
         run: make test
@@ -60,6 +60,7 @@ jobs:
           verbose: true # optional (default = false)
   codecov-windows:
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -67,7 +68,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.6"
+          go-version: "1.24.0"
       # run codecov coverage
       - name: Code coverage
         run: make test

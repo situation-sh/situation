@@ -38,6 +38,12 @@ func TestMain(m *testing.M) {
 	moduleFlag := flag.String("module", "", "name of the module to run")
 	flag.Parse()
 
+	// set logrus in debug level if the verbose flag has been activated
+	if f := flag.Lookup("test.v"); f != nil && f.Value.String() == "true" {
+		// logrus
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+
 	// empty the store
 	store.Clear()
 	if *moduleFlag == "" {
@@ -48,11 +54,7 @@ func TestMain(m *testing.M) {
 
 		// print banner
 		fmt.Printf("%s", banner)
-		// set logrus in debug level if the verbose flag has been activated
-		if f := flag.Lookup("test.v"); f != nil && f.Value.String() == "true" {
-			// logrus
-			logrus.SetLevel(logrus.DebugLevel)
-		}
+
 		// test a single module
 		if err := testSingleModule(*moduleFlag); err != nil {
 			logrus.Error(err)

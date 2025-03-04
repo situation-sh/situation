@@ -1,0 +1,78 @@
+name: run
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.0"
+      # build the binary
+      - name: Build all binaries
+        run: make all
+      - name: Upload linux binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: situation-linux
+          path: bin/situation-*-linux
+          retention-days: 1
+      - name: Upload windows binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: situation-windows
+          path: bin/situation-*-windows.exe
+          retention-days: 1
+
+  test-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download module testing binary
+        uses: actions/download-artifact@v4
+        with:
+          name: situation-linux
+          path: bin
+      - name: Export binary name
+        run: |
+          echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+      - name: Run the binary
+        run: |
+          chmod +x ${{ env.SITUATION }}
+          ${{ env.SITUATION }} > linux.json
+      - name: Upload linux results
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-results
+          path: linux.json
+          retention-days: 1
+
+  test-windows:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Download module testing binary
+        uses: actions/download-artifact@v4
+        with:
+          name: situation-windows
+          path: bin
+      - name: Export binary name
+        run: |
+          echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
+          Get-Content $env:GITHUB_ENV
+      - name: Run the binary
+        run: |
+          & $env:SITUATION > windows.json
+      - name: Upload windows results
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-results
+          path: windows.json
+          retention-days: 1

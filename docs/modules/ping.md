@@ -5,17 +5,19 @@ macos: unknown
 root: false
 title: Ping
 summary: "PingModule pings local networks to discover new hosts."
-date: 2024-06-13
+date: 2025-02-28
 filename: ping.go
 std_imports:
   - fmt
   - net
   - os/user
-  - runtime
+  - regexp
+  - strconv
   - strings
   - sync
   - time
 imports:
+  - github.com/lorenzosaino/go-sysctl
   - github.com/prometheus-community/pro-bing
   - github.com/sirupsen/logrus
 ---

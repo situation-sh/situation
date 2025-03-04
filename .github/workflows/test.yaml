@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.6"
+          go-version: "1.24.0"
       - name: Cache module testing binary
         id: cache-mtb
         uses: actions/cache@v4
@@ -65,7 +65,7 @@ jobs:
       - name: Run the binary
         run: |
           chmod +x ${{ env.SITUATION }}
-          ${{ env.SITUATION }}
+          ${{ env.SITUATION }} -test.v
 
   test-windows:
     strategy:
@@ -85,16 +85,27 @@ jobs:
           Get-Content $env:GITHUB_ENV
       - name: Run the binary
         run: |
-          & $env:SITUATION
+          & $env:SITUATION "-test.v"
 
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
-      - run: make update-docs
-      - uses: actions/setup-python@v4
+
+      - name: Update module docs
+        run: make modules-doc
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-      - run: pip install mkdocs-material mkdocs-section-index mkdocs-markdownextradata-plugin mkdocs-macros-plugin
-      - run: mkdocs build -c
+          python-version-file: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+      - name: Deploy
+        run: uv run mkdocs build
