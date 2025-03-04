@@ -17,13 +17,12 @@ const MIBIpNetRow2Size = 88
 // the _SOCKADDR_INET structure
 const SockAddrSize = 28
 
-//
-// struct sockaddr_in {
-// 		short   sin_family; 	// 2 bytes
-// 		u_short sin_port;   	// 2 bytes
-// 		struct  in_addr sin_addr; // 4 bytes
-// 		char    sin_zero[8]; 	// 8 bytes
-// };
+//	struct sockaddr_in {
+//			short   sin_family; 	// 2 bytes
+//			u_short sin_port;   	// 2 bytes
+//			struct  in_addr sin_addr; // 4 bytes
+//			char    sin_zero[8]; 	// 8 bytes
+//	};
 type SockAddrIn struct {
 	sinFamily uint16
 	sinPort   uint16
@@ -51,14 +50,13 @@ func (s SockAddrIn) Addr() net.IP {
 	return s.sinAddr.To4()
 }
 
-//
-// struct sockaddr_in6 {
-// 		short   sin6_family; 	// 2 bytes
-// 		u_short sin6_port; 		// 2 bytes
-// 		u_long  sin6_flowinfo; 	// 4 bytes
-// 		struct  in6_addr sin6_addr; // 16 bytes
-// 		u_long  sin6_scope_id;	// 4 bytes
-// }; 44 bytes
+//	struct sockaddr_in6 {
+//			short   sin6_family; 	// 2 bytes
+//			u_short sin6_port; 		// 2 bytes
+//			u_long  sin6_flowinfo; 	// 4 bytes
+//			struct  in6_addr sin6_addr; // 16 bytes
+//			u_long  sin6_scope_id;	// 4 bytes
+//	}; 44 bytes
 type SockAddrIn6 struct {
 	sin6Family   uint16
 	sin6Port     uint16
@@ -87,13 +85,11 @@ func (s SockAddrIn6) Addr() net.IP {
 	return s.sin6Addr.To16()
 }
 
-//
-// typedef union _SOCKADDR_INET {
-// 		SOCKADDR_IN    Ipv4; // 16 bytes
-// 		SOCKADDR_IN6   Ipv6; // 28 bytes
-// 		ADDRESS_FAMILY si_family; // 2 bytes (u_short)
-// } SOCKADDR_INET, *PSOCKADDR_INET; // 28 bytes
-//
+//	typedef union _SOCKADDR_INET {
+//			SOCKADDR_IN    Ipv4; // 16 bytes
+//			SOCKADDR_IN6   Ipv6; // 28 bytes
+//			ADDRESS_FAMILY si_family; // 2 bytes (u_short)
+//	} SOCKADDR_INET, *PSOCKADDR_INET; // 28 bytes
 type SockAddr interface {
 	Family() uint16
 	Addr() net.IP
@@ -158,28 +154,27 @@ func (r MIBIpNetRow2) ToARPEntry() ARPEntry {
 // rawMIBIpNetRow2 mirrors the MIB_IPNET_ROW2 structure detailed at
 // https://docs.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_ipnet_row2
 //
-// typedef struct _MIB_IPNET_ROW2 {
-// 		SOCKADDR_INET     Address; // 28 bytes
-// 		NET_IFINDEX       InterfaceIndex; // 4 bytes (ulong)
-// 		NET_LUID          InterfaceLuid; // 8 bytes ?
-// 		UCHAR             PhysicalAddress[IF_MAX_PHYS_ADDRESS_LENGTH]; // 32 bytes
-// 		ULONG             PhysicalAddressLength; // 4 bytes
-// 		NL_NEIGHBOR_STATE State; // 4 bytes (enum)
-// 		union {
-// 	  		struct {
-// 				BOOLEAN IsRouter : 1;
-// 				BOOLEAN IsUnreachable : 1;
-// 	  		};
-// 	  		UCHAR Flags;
-// 		}; // 4 bytes (it looks like 1 byte but there are 4 in practice)
-// 		union {
-// 	  		ULONG LastReachable;
-// 	  		ULONG LastUnreachable;
-// 		} ReachabilityTime; // 4 bytes
-// } MIB_IPNET_ROW2, *PMIB_IPNET_ROW2;
+//	typedef struct _MIB_IPNET_ROW2 {
+//			SOCKADDR_INET     Address; // 28 bytes
+//			NET_IFINDEX       InterfaceIndex; // 4 bytes (ulong)
+//			NET_LUID          InterfaceLuid; // 8 bytes ?
+//			UCHAR             PhysicalAddress[IF_MAX_PHYS_ADDRESS_LENGTH]; // 32 bytes
+//			ULONG             PhysicalAddressLength; // 4 bytes
+//			NL_NEIGHBOR_STATE State; // 4 bytes (enum)
+//			union {
+//		  		struct {
+//					BOOLEAN IsRouter : 1;
+//					BOOLEAN IsUnreachable : 1;
+//		  		};
+//		  		UCHAR Flags;
+//			}; // 4 bytes (it looks like 1 byte but there are 4 in practice)
+//			union {
+//		  		ULONG LastReachable;
+//		  		ULONG LastUnreachable;
+//			} ReachabilityTime; // 4 bytes
+//	} MIB_IPNET_ROW2, *PMIB_IPNET_ROW2;
 //
 // 88 bytes actually
-//
 type rawMIBIpNetRow2 struct {
 	address               [28]byte
 	interfaceIndex        uint32 // The local index value for the network interface associated with this IP address. This index value may change when a network adapter is disabled and then enabled, or under other circumstances, and should not be considered persistent.

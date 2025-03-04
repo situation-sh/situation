@@ -25,8 +25,9 @@ type MIBIpNetTable2 []MIBIpNetRow2
 // between the MIB_IPNET_ROW2 array entries. Any access to a MIB_IPNET_ROW2
 // array entry should assume padding may exist.
 type rawMIBIpNetTable2 struct {
-	numEntries uint32
-	padding    uint32 // set empirically to 4 bytes
+	// numEntries uint32
+	// padding    uint32 // set empirically to 4 bytes
+	numEntries uint64
 	table      [anySize]rawMIBIpNetRow2
 }
 

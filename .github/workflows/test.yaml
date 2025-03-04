@@ -36,7 +36,7 @@ jobs:
           path: ${{ env.test-module-binary }}
           retention-days: 1
 
-  test-linux:
+  linux:
     needs: build
     runs-on: ubuntu-latest
     strategy:
@@ -67,7 +67,7 @@ jobs:
           chmod +x ${{ env.SITUATION }}
           ${{ env.SITUATION }} -test.v
 
-  test-windows:
+  windows:
     strategy:
       matrix:
         os: [windows-2022, windows-2019]
@@ -107,5 +107,5 @@ jobs:
 
       - name: Install the project
         run: uv sync --all-extras --dev
-      - name: Deploy
+      - name: Build docs
         run: uv run mkdocs build

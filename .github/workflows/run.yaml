@@ -33,7 +33,7 @@ jobs:
           path: bin/situation-*-windows.exe
           retention-days: 1
 
-  test-linux:
+  linux:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -57,7 +57,7 @@ jobs:
           path: linux.json
           retention-days: 1
 
-  test-windows:
+  windows:
     needs: build
     runs-on: windows-latest
     steps:
