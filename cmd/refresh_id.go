@@ -62,7 +62,9 @@ func runRefreshIDCmd(c *cli.Context) error {
 	// set a new random ID
 	toWrite := bytes.Replace(raw, config.ID[:16], newBytes[:16], 1)
 	// turn toWrite into is.Reader
-	selfupdate.Apply(bytes.NewReader(toWrite), selfupdate.Options{})
+	if err := selfupdate.Apply(bytes.NewReader(toWrite), selfupdate.Options{}); err != nil {
+		return err
+	}
 
 	// update the context
 	// this context is sent to the AfterFunc
