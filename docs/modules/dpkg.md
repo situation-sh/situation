@@ -5,7 +5,7 @@ macos: false
 root: false
 title: DPKG
 summary: "DPKGModule reads package information from the dpkg package manager."
-date: 2025-02-28
+date: 2025-03-05
 filename: dpkg.go
 std_imports:
   - bufio

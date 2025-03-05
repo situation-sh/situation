@@ -5,9 +5,10 @@ macos: unknown
 root: unknown
 title: Chassis
 summary: "ChassisModule fills host chassis information"
-date: 2025-02-28
+date: 2025-03-05
 filename: chassis.go
-std_imports: []
+std_imports:
+  - os
 imports:
   - github.com/godbus/dbus/v5
 ---
@@ -21,7 +22,7 @@ ChassisModule fills host chassis information
 ### Details
 
 
-Currently it only works under linux. It uses DBUS and the "org.freedesktop.hostname1" service to get the type of the chassis (like laptop, vm, desktop etc.) In the future it may rather rely on [ghw](/github.com/jaypipes/ghw)([https://github.com/jaypipes/ghw](https://github.com/jaypipes/ghw)) but at that time it does not fully get the info on windows.
+Currently it only works under linux. It uses DBUS and the "org.freedesktop.hostname1" service to get the type of the chassis (like laptop, vm, desktop etc.) In the future it may rather rely on [ghw](https://github.com/jaypipes/ghw/) but at that time it does not fully get the info on windows.
 
 ### Dependencies
 

@@ -5,7 +5,7 @@ macos:
 root: true
 title: SSH
 summary: "SSHModule aims to retrieve info from remote ssh services."
-date: 2025-02-28
+date: 2025-03-05
 filename: ssh.go
 std_imports:
   - encoding/json

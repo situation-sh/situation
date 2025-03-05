@@ -24,9 +24,11 @@ const (
 // ZypperModule reads package information from the zypper package manager.
 //
 // This module is relevant for distros that use zypper, like suse and their
-// derivatives. It uses github.com/knqyf263/go-rpmdb/pkg.
+// derivatives. It uses [go-rpmdb].
 //
 // It reads `/var/lib/rpm/Packages.db`.
+//
+// [go-rpmdb]: https://github.com/knqyf263/go-rpmdb/
 type ZypperModule struct{}
 
 func init() {

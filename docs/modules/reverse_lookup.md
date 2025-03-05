@@ -5,7 +5,7 @@ macos: unknown
 root: unknown
 title: Reverse Lookup
 summary: "ReverseLookupModule tries to get a hostname attached to a local IP address"
-date: 2025-02-28
+date: 2025-03-05
 filename: reverse_lookup.go
 std_imports:
   - net

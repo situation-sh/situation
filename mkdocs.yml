@@ -21,6 +21,7 @@ nav:
       - "Pre-built binaries": "installation/pre_built_binaries.md"
       - "From sources": "installation/from_sources.md"
   - "quick_start.md"
+  - "configuration.md"
   - Modules:
       - modules/index.md
       - modules/appuser.md
@@ -38,8 +39,10 @@ nav:
       - modules/ping.md
       - modules/reverse_lookup.md
       - modules/rpm.md
+      - modules/snmp.md
       - modules/ssh.md
       - modules/tcp_scan.md
+      - modules/zypper.md
   - "backends.md"
   - Developer:
       - "developer/index.md"
@@ -54,6 +57,7 @@ markdown_extensions:
   - attr_list
   - pymdownx.keys
   - md_in_html
+  - pymdownx.snippets
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg

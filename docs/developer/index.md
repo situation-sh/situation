@@ -1,10 +1,10 @@
 # Developers
 
-The Situation project aims to be enriched by the community, and [modules](../modules) are definitely a good starting point for developers to contribute.
+The Situation project aims to be enriched by the community, and [modules](../modules/index.md) are definitely a good starting point for developers to contribute.
 
 Before detailing the internals of Situation, it is paramount to understand the overall spirit of the project.
 
-**No user interaction**: it means that the agent must run without configuration, without integration, without dependency. In some cases, we obvioulsy need some extra information. In this project, the developer should code enough logic to guess what is missing. For instance, if you want to detect a database, you need to guess what could be its listening port.
+**No user interaction**: it means that the agent must run without configuration, without integration, without dependency. In some cases, we obviously need some extra information. In this project, the developer should code enough logic to guess what is missing. For instance, if you want to detect a database, you need to guess what could be its listening port.
 
 Fortunately, modules also provide data that could be useful for the next ones through the [store](store.md). So developers should well define their dependencies to ease the workflow their module. Basically, we should avoid to do twice the same thing.
 

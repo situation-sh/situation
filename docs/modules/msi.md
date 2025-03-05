@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: MSI
 summary: "MSIModule creates models.Packages instance from the windows registry"
-date: 2025-02-28
+date: 2025-03-05
 filename: msi.go
 std_imports:
   - fmt
