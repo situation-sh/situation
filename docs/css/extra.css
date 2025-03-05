@@ -1,3 +1,8 @@
+html,
+body {
+  scroll-behavior: smooth;
+}
+
 article > p {
   text-align: justify;
 }
@@ -30,4 +35,9 @@ article > p {
   color: var(--md-primary-fg-color--dark);
   font-size: 3em;
   margin-bottom: 0.5em;
+}
+
+.scrollable pre code {
+  max-height: 50vh;
+  overflow-y: auto;
 }

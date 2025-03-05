@@ -22,8 +22,10 @@ func init() {
 //
 // Currently it only works under linux. It uses DBUS and the "org.freedesktop.hostname1"
 // service to get the type of the chassis (like laptop, vm, desktop etc.)
-// In the future it may rather rely on [ghw](https://github.com/jaypipes/ghw) but at that time
+// In the future it may rather rely on [ghw] but at that time
 // it does not fully get the info on windows.
+//
+// [ghw]: https://github.com/jaypipes/ghw/
 type ChassisModule struct{}
 
 func (m *ChassisModule) Name() string {

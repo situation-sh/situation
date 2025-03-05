@@ -5,7 +5,7 @@ macos: false
 root: false
 title: Zypper
 summary: "ZypperModule reads package information from the zypper package manager."
-date: 2025-02-28
+date: 2025-03-05
 filename: zypper.go
 std_imports:
   - fmt
@@ -23,7 +23,7 @@ ZypperModule reads package information from the zypper package manager.
 ### Details
 
 
-This module is relevant for distros that use zypper, like suse and their derivatives. It uses github.com/knqyf263/go-rpmdb/pkg.
+This module is relevant for distros that use zypper, like suse and their derivatives. It uses [go-rpmdb](https://github.com/knqyf263/go-rpmdb/).
 
 It reads `/var/lib/rpm/Packages.db`.
 

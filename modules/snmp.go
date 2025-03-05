@@ -36,9 +36,12 @@ func init() {
 // SNMPModule
 // Module to collect data through SNMP protocol.
 //
-// This module need to access the following OID TREE: .1.3.6.1.2.1
+// This module need to access the following OID TREE: `.1.3.6.1.2.1`
 // In case of snmpd, the configuration (snmpd.conf) should then include something like this:
-// view systemonly included .1.3.6.1.2.1
+//
+//	```conf
+//	view systemonly included .1.3.6.1.2.1
+//	```
 type SNMPModule struct{}
 
 func (m *SNMPModule) Name() string {

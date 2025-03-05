@@ -1,16 +1,12 @@
-//go:build linux
-// +build linux
-
 package cmd
 
 import (
 	"bytes"
-	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/minio/selfupdate"
 	"github.com/situation-sh/situation/config"
 	"github.com/urfave/cli/v2"
 )
@@ -27,21 +23,6 @@ var refreshIDCmd = cli.Command{
 		},
 	},
 	Action: runRefreshIDCmd,
-	After:  moveFile,
-}
-
-func moveFile(c *cli.Context) error {
-	tmpFile, ok := c.Context.Value(contextConfigKey("tmpFile")).(string)
-	if !ok {
-		return fmt.Errorf("bad value format for 'tmpFile': %v (%T)",
-			tmpFile, tmpFile)
-	}
-	binaryFile, ok := c.Context.Value(contextConfigKey("binaryFile")).(string)
-	if !ok {
-		return fmt.Errorf("bad value format for 'binaryFile': %v (%T)",
-			tmpFile, tmpFile)
-	}
-	return os.Rename(tmpFile, binaryFile)
 }
 
 func runRefreshIDCmd(c *cli.Context) error {
@@ -68,8 +49,8 @@ func runRefreshIDCmd(c *cli.Context) error {
 		return err
 	}
 
-	info, err := os.Stat(binaryFile)
-	if err != nil {
+	// file exist
+	if _, err := os.Stat(binaryFile); err != nil {
 		return err
 	}
 
@@ -80,36 +61,15 @@ func runRefreshIDCmd(c *cli.Context) error {
 
 	// set a new random ID
 	toWrite := bytes.Replace(raw, config.ID[:16], newBytes[:16], 1)
-
-	// create a second file
-	// file, err := ioutil.TempFile(os.TempDir(), "situation")
-	bak := filepath.Clean(binaryFile + ".bak")
-	file, err := os.OpenFile(bak, os.O_CREATE|os.O_RDWR, info.Mode())
-	if err != nil {
-		return err
-	}
-
-	if err := os.Chmod(file.Name(), info.Mode()); err != nil {
-		return err
-	}
-
-	tmpFile := file.Name()
-	defer func() {
-		if err := file.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-
-	// write the modified content
-	_, err = file.Write(toWrite)
-	if err != nil {
+	// turn toWrite into is.Reader
+	if err := selfupdate.Apply(bytes.NewReader(toWrite), selfupdate.Options{}); err != nil {
 		return err
 	}
 
 	// update the context
 	// this context is sent to the AfterFunc
-	c.Context = context.WithValue(c.Context, contextConfigKey("binaryFile"), binaryFile)
-	c.Context = context.WithValue(c.Context, contextConfigKey("tmpFile"), tmpFile)
+	// c.Context = context.WithValue(c.Context, contextConfigKey("binaryFile"), binaryFile)
+	// c.Context = context.WithValue(c.Context, contextConfigKey("tmpFile"), tmpFile)
 
 	return nil
 }

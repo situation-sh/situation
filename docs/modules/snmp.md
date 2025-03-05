@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: SNMP
 summary: "SNMPModule Module to collect data through SNMP protocol."
-date: 2025-02-28
+date: 2025-03-05
 filename: snmp.go
 std_imports:
   - context
@@ -30,7 +30,11 @@ SNMPModule Module to collect data through SNMP protocol.
 ### Details
 
 
-This module need to access the following OID TREE: .1.3.6.1.2.1 In case of snmpd, the configuration (snmpd.conf) should then include something like this: view systemonly included .1.3.6.1.2.1
+This module need to access the following OID TREE: `.1.3.6.1.2.1` In case of snmpd, the configuration (snmpd.conf) should then include something like this:
+
+ ```conf
+ view systemonly included .1.3.6.1.2.1
+ ```
 
 ### Dependencies
 

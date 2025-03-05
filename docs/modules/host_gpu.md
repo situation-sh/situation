@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host GPU
 summary: "HostGPUModule retrieves basic information about GPU: index, vendor and product name."
-date: 2025-02-28
+date: 2025-03-05
 filename: host_gpu.go
 std_imports:
   - fmt
@@ -22,13 +22,13 @@ HostGPUModule retrieves basic information about GPU: index, vendor and product n
 ### Details
 
 
-It heavily relies on [ghw](/github.com/jaypipes/ghw). On Linux it reads `/sys/class/drm/` folder. On Windows, it performs the following WMI query:
+It heavily relies on [ghw](https://github.com/jaypipes/ghw). On Linux it reads `/sys/class/drm/` folder. On Windows, it performs the following WMI query:
 
  ```ps1
  SELECT Caption, CreationClassName, Description, DeviceID, Manufacturer, Name, PNPClass, PNPDeviceID FROM Win32_PnPEntity
  ```
 
-On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root). [ghw](/github.com/jaypipes/ghw): [https://github.com/jaypipes/ghw](https://github.com/jaypipes/ghw)
+On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
 
 ### Dependencies
 

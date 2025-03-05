@@ -2,7 +2,7 @@
 
 ## Run
 
-You guess it
+You guess it. To run the agent, you don't need to provide any extra configuration.
 
 === "Linux"
 
@@ -15,6 +15,25 @@ You guess it
     ```ps1
     situation.exe
     ```
+
+By default, the json output is printed to stdout (you can find the json schema in the [latest release](https://github.com/situation-sh/situation/releases/latest)).
+
+=== "Linux"
+
+    ```json { .scrollable }
+    --8<-- "docs/data/linux.json"
+    ```
+
+
+=== "Windows"
+
+    ```json { .scrollable }
+    --8<-- "docs/data/windows.json"
+    ```
+
+So what you should do next, is to **pipe that json to another tool** (like `jq` see [below](#one-liners)).
+
+## Other commands
 
 You can get the output json schema with the `schema` subcommand.
 
@@ -55,8 +74,9 @@ and refreshed with `refresh-id` subcommand.
 
 === "Windows"
 
-    !!! warning
-        Does not work currently
+    ```ps1
+    situation.exe refresh-id
+    ```
 
 ## One-liners
 
@@ -104,13 +124,13 @@ You can even put the results in a csv file:
 === "Linux"
 
     ```bash
-    situation | jq -r '(.machines[] | .applications[] | .endpoints[] | [.addr,(.port|tostring)+"/"+.protocol])|@tsv'
+    situation | jq -r '(.machines[] | .packages[] | .applications[] | .endpoints[] | [.addr,(.port|tostring)+"/"+.protocol])|@tsv'
     ```
 
 === "Windows"
 
     ```ps1
-    situation.exe | jq -r '(.machines[] | .applications[] | .endpoints[] | [.addr,(.port|tostring)+\"/\"+.protocol])|@tsv'
+    situation.exe | jq -r '(.machines[] | .packages[] | .applications[] | .endpoints[] | [.addr,(.port|tostring)+\"/\"+.protocol])|@tsv'
     ```
 
 ```console
@@ -132,13 +152,13 @@ You can even put the results in a csv file:
 === "Linux"
 
     ```bash
-    situation | jq -r '(["Service","Address","Port"]|(., map(length*"-"))), (.machines[]|select(.hosted_agent)|.applications[]|.name as $n|.endpoints[]|[$n,.addr,(.port|tostring)+"/"+.protocol])|@tsv' | column -ts $'\t'
+    situation | jq -r '(["Service","Address","Port"]|(., map(length*"-"))), (.machines[]|select(.hosted_agent)|.packages[]|.applications[]|.name as $n|.endpoints[]|[$n,.addr,(.port|tostring)+"/"+.protocol])|@tsv' | column -ts $'\t'
     ```
 
 === "Windows"
 
     ```ps1
-    situation.exe | jq -r '([\"Service\",\"Address\",\"Port\"]), (.machines[]|select(.hosted_agent)|.applications[]|.name as $n|.endpoints[]|[$n,.addr,(.port|tostring)+\"/\"+.protocol])|@csv' | ConvertFrom-Csv
+    situation.exe | jq -r '([\"Service\",\"Address\",\"Port\"]), (.machines[]|select(.hosted_agent)|.packages[]|.applications[]|.name as $n|.endpoints[]|[$n,.addr,(.port|tostring)+\"/\"+.protocol])|@csv' | ConvertFrom-Csv
     ```
 
 ```console
