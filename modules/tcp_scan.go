@@ -79,7 +79,7 @@ func (m *TCPScanModule) Run() error {
 // TODO: maybe we can improve this function to guess the service behind
 func scanPort(ip net.IP, port uint16, channel chan uint16, timeout time.Duration, wg *sync.WaitGroup) {
 	defer wg.Done()
-	_, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
+	_, err := net.DialTimeout("tcp", fmt.Sprintf("%v:%d", ip, port), timeout)
 	if err == nil {
 		channel <- port
 	}

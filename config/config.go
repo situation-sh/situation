@@ -33,7 +33,6 @@ func Get[T any](key string) (T, error) {
 		value = context.Value(key)
 	}
 
-	// fmt.Printf("[%s] %v (%T)\n", key, value, value)
 	typedValue, ok := (value).(T)
 	if ok {
 		return typedValue, nil
