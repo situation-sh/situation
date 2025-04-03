@@ -9,6 +9,7 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/google/uuid v1.6.0
 	github.com/gosnmp/gosnmp v1.39.0
+	github.com/hashicorp/go-envparse v0.1.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jaypipes/ghw v0.16.0
 	github.com/knqyf263/go-rpmdb v0.1.1
