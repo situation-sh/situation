@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
+	envparse "github.com/hashicorp/go-envparse"
 	"github.com/situation-sh/situation/models"
 )
 
@@ -81,6 +83,24 @@ func getDefaultURL() string {
 	return t
 }
 
+// parseExtraHeaders reads string flags assuming they store extra headers
+// with env variable format: --option="KEY0=Value0,Key1=Value1"
+func parseExtraHeaders(args []string) map[string][]string {
+	out := make(map[string][]string)
+	for _, a := range args {
+		// create a reader from a string
+		reader := strings.NewReader(a)
+		m, err := envparse.Parse(reader)
+		if err != nil {
+			continue
+		}
+		for k, v := range m {
+			out[k] = append(out[k], v)
+		}
+	}
+	return out
+}
+
 func init() {
 	b := &HttpBackend{}
 	RegisterBackend(b)
@@ -89,6 +109,7 @@ func init() {
 	SetDefault(b, "method", defaultHttpBackend.method, "http method to send data (POST or PUT)")
 	SetDefault(b, "header.content-type", defaultHttpBackend.header["Content-Type"], "Content-Type header")
 	SetDefault(b, "header.authorization", defaultHttpBackend.header["Authorization"], "Authorization header")
+	SetDefault(b, "header.extra", []string{}, "Extra http header with KEY=VALUE format")
 }
 
 func (h *HttpBackend) Name() string {
@@ -131,6 +152,22 @@ func (h *HttpBackend) Init() error {
 	if h.header == nil {
 		h.header = make(http.Header)
 	}
+	// start with extra headers (lower priority)
+	extraHeaders, err := GetConfig[[]string](h, "header.extra")
+	// fallback to string config
+	if len(extraHeaders) == 0 {
+		singleExtraHeader, err := GetConfig[string](h, "header.extra")
+		if err == nil {
+			extraHeaders = []string{singleExtraHeader}
+		}
+	}
+	if err == nil {
+		for key, value := range parseExtraHeaders(extraHeaders) {
+			canonicalKey := http.CanonicalHeaderKey(key)
+			h.header[canonicalKey] = value
+		}
+	}
+
 	for _, key := range []string{"content-type", "authorization"} {
 		canonicalKey := http.CanonicalHeaderKey(key)
 		value, err := GetConfig[[]string](h, fmt.Sprintf("header.%s", key))
@@ -143,12 +180,6 @@ func (h *HttpBackend) Init() error {
 		}
 	}
 
-	// url reachable?
-	// if _, err := http.Head(h.url); err != nil {
-	// 	return fmt.Errorf("cannot reach '%s': %v", h.url, err)
-	// }
-
-	// ready to go
 	return nil
 }
 

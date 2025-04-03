@@ -7,14 +7,18 @@ import (
 	"time"
 )
 
+const ADDR = "127.0.0.1:38081"
+const ROUTE = "/api/discovery/situation/"
+
 func postPayload(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Headers: %v\n", r.Header)
 	w.WriteHeader(201)
 }
 
 func runServer(wg *sync.WaitGroup) *http.Server {
-	srv := &http.Server{Addr: "127.0.0.1:38080", ReadHeaderTimeout: 3 * time.Second}
+	srv := &http.Server{Addr: ADDR, ReadHeaderTimeout: 3 * time.Second}
 
-	http.HandleFunc("/api/discovery/situation/", postPayload)
+	http.HandleFunc(ROUTE, postPayload)
 
 	go func() {
 		defer wg.Done() // let main know we are done cleaning up

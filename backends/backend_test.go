@@ -8,7 +8,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/brianvoe/gofakeit/v6"
 	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/test"
@@ -17,14 +16,27 @@ import (
 
 // GenericTestBackend is a basic function to test a backend
 func GenericTestBackend(b Backend, payload *models.Payload) error {
+
 	// fake an http server
 	if b.Name() == "http" {
-		defaultHttpBackend.url = "http://127.0.0.1:38080/api/discovery/situation/"
+		fs := flag.NewFlagSet("test", flag.ExitOnError)
+		fs.Bool("backends.http.enabled", true, "")
+		fs.String("backends.http.header.extra", "X-WTF-ID=89", "")
+		// fs.("backends.http.header.extra", []string{"X-WTF-ID=89"}, "")
+		ctx := cli.NewContext(nil, fs, nil)
+
+		config.InjectContext(ctx)
+
+		if !isEnabled(b) {
+			return fmt.Errorf("backend %s is not enabled", b.Name())
+		}
+
+		defaultHttpBackend.url = fmt.Sprintf("http://%s%s", ADDR, ROUTE)
 		wg := sync.WaitGroup{}
 		wg.Add(1)
 		srv := runServer(&wg)
 		defer func() {
-			if err := srv.Shutdown(context.TODO()); err != nil {
+			if err := srv.Shutdown(context.Background()); err != nil {
 				fmt.Println(err)
 			}
 			wg.Wait()
@@ -40,15 +52,10 @@ func GenericTestBackend(b Backend, payload *models.Payload) error {
 }
 
 func TestBackends(t *testing.T) {
-	p := models.Payload{}
-	if err := gofakeit.Struct(&p); err != nil {
-		t.Error(err)
-	}
-	// p := test.RandomPayload()
-	// p := randomPayload()
+	p := test.RandomPayload()
 	for name, b := range backends {
 		fmt.Printf("--- BACKEND: %s\n", name)
-		if err := GenericTestBackend(b, &p); err != nil {
+		if err := GenericTestBackend(b, p); err != nil {
 			t.Errorf("error with backend %s: %v", name, err)
 		}
 	}
