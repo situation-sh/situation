@@ -32,7 +32,6 @@ func TestGetHost(t *testing.T) {
 }
 
 func TestGetMachineByNetwork(t *testing.T) {
-
 	m0 := test.RandomMachine()
 	// try with nil store
 	m00 := GetMachineByNetwork(m0.NICS[0].IP, m0.NICS[0].MAC)

@@ -3,7 +3,6 @@ package models
 import (
 	"net"
 
-	// "github.com/iancoleman/orderedmap"
 	"github.com/invopop/jsonschema"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )

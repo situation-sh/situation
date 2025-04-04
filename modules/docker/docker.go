@@ -27,6 +27,7 @@ type Platform struct {
 }
 
 func NewPlatform(m *models.Machine, c *client.Client) *Platform {
+	c.NegotiateAPIVersion(context.Background())
 	return &Platform{machine: m, client: c}
 }
 
