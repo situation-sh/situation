@@ -15,22 +15,28 @@ import (
 	"github.com/situation-sh/situation/store"
 )
 
-const (
-	defaultSNMPVersion   = uint(gosnmp.Version2c)
-	defaultSNMPCommunity = "public"
-	defaultSNMPTimeout   = 1 * time.Second
-	defaultSNMPTransport = "udp"
-	defaultSNMPPort      = uint(161)
-)
+// const (
+// 	defaultSNMPVersion   = uint(gosnmp.Version2c)
+// 	defaultSNMPCommunity = "public"
+// 	defaultSNMPTimeout   = 1 * time.Second
+// 	defaultSNMPTransport = "udp"
+// 	defaultSNMPPort      = uint(161)
+// )
 
 func init() {
-	m := &SNMPModule{}
+	m := &SNMPModule{
+		Version:   uint8(gosnmp.Version2c),
+		Community: "public",
+		Timeout:   1 * time.Second,
+		Transport: "udp",
+		Port:      161,
+	}
 	RegisterModule(m)
-	SetDefault(m, "version", defaultSNMPVersion, "SNMP version to use")
-	SetDefault(m, "community", defaultSNMPCommunity, "SNMP community to query")
-	SetDefault(m, "timeout", defaultSNMPTimeout, "SNMP query timeout")
-	SetDefault(m, "transport", defaultSNMPTransport, "TCP or UDP transport protocol")
-	SetDefault(m, "port", defaultSNMPPort, "Port to connect")
+	SetDefault(m, "version", &m.Version, "SNMP version to use")
+	SetDefault(m, "community", &m.Community, "SNMP community to query")
+	SetDefault(m, "timeout", &m.Timeout, "SNMP query timeout")
+	SetDefault(m, "transport", &m.Transport, "TCP or UDP transport protocol")
+	SetDefault(m, "port", &m.Port, "Port to connect")
 }
 
 // SNMPModule
@@ -42,7 +48,13 @@ func init() {
 //	```conf
 //	view systemonly included .1.3.6.1.2.1
 //	```
-type SNMPModule struct{}
+type SNMPModule struct {
+	Version   uint8
+	Community string
+	Timeout   time.Duration
+	Transport string
+	Port      uint16
+}
 
 func (m *SNMPModule) Name() string {
 	return "snmp"
@@ -57,27 +69,6 @@ func (m *SNMPModule) Dependencies() []string {
 func (m *SNMPModule) Run() error {
 	logger := GetLogger(m)
 	errs := make([]error, 0)
-	// logger := GetLogger(m)
-	version, err := GetConfig[uint](m, "version")
-	if err != nil {
-		return err
-	}
-	transport, err := GetConfig[string](m, "transport")
-	if err != nil {
-		return err
-	}
-	port, err := GetConfig[uint](m, "port")
-	if err != nil {
-		return err
-	}
-	timeout, err := GetConfig[time.Duration](m, "timeout")
-	if err != nil {
-		return err
-	}
-	community, err := GetConfig[string](m, "community")
-	if err != nil {
-		return err
-	}
 
 	var wg sync.WaitGroup
 	cerr := make(chan error)
@@ -91,29 +82,29 @@ func (m *SNMPModule) Run() error {
 		done <- true
 	}()
 
-	for m := range store.IterateMachines() {
+	for machine := range store.IterateMachines() {
 		// ignore host machine
-		if m.IsHost() {
+		if machine.IsHost() {
 			continue
 		}
-		for _, nic := range m.NICS {
+		for _, nic := range machine.NICS {
 			if nic.IP.IsLoopback() || nic.IP.IsMulticast() {
 				continue
 			}
 
 			g := gosnmp.GoSNMP{
 				Target:    nic.IP.String(),
-				Version:   gosnmp.SnmpVersion(version),
+				Version:   gosnmp.SnmpVersion(m.Version),
 				Context:   context.Background(),
 				Retries:   2,
-				Transport: transport,
-				Port:      uint16(port),
-				Timeout:   timeout,
-				Community: community,
+				Transport: m.Transport,
+				Port:      m.Port,
+				Timeout:   m.Timeout,
+				Community: m.Community,
 			}
 
 			wg.Add(1)
-			go snmp.RunSingle(&g, m, &wg, cerr, logger)
+			go snmp.RunSingle(&g, machine, &wg, cerr, logger)
 		}
 	}
 

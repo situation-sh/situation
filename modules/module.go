@@ -1,11 +1,11 @@
 package modules
 
 import (
+	"fmt"
 	"sort"
-)
 
-// DISABLED_KEY provides the option key to disable a module
-const DISABLED_KEY = "disabled"
+	"github.com/situation-sh/situation/config"
+)
 
 // internal map of modules
 var modules = make(map[string]Module)
@@ -32,7 +32,7 @@ func GetModuleNames() []string {
 }
 
 func isDisabled(m Module) bool {
-	disabled, err := GetConfig[bool](m, DISABLED_KEY)
+	disabled, err := config.Get[bool](fmt.Sprintf("no.module.%s", m.Name()))
 	// if there is an error we prefer disable the module
 	if err != nil {
 		return true

@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/cmd"
 )
 
 func main() {
-	if err := cmd.Execute(); err != nil {
+	ctx := context.Background()
+	if err := cmd.Execute(ctx, os.Args); err != nil {
 		logrus.Fatal(err)
 	}
 }

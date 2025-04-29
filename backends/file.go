@@ -9,24 +9,21 @@ import (
 )
 
 type FileBackend struct {
-	format string
-	path   string
+	Format string
+	Path   string
 	file   *os.File
 }
 
-// default config
-var defaultFileBackend = FileBackend{
-	format: jsonFormat,
-	path:   "./situation-output.json",
-	file:   nil,
-}
-
 func init() {
-	b := &FileBackend{format: defaultFileBackend.format}
+	b := &FileBackend{
+		Format: jsonFormat,
+		Path:   "situation.json",
+		file:   nil,
+	}
 	RegisterBackend(b)
-	SetDefault(b, "enabled", false, "enable the backend")
-	SetDefault(b, "format", defaultFileBackend.format, "output format")
-	SetDefault(b, "path", defaultFileBackend.path, "output file")
+	// SetDefault(b, "enabled", false, "enable the backend")
+	SetDefault(b, "format", &b.Format, "output format")
+	SetDefault(b, "path", &b.Path, "output file")
 }
 
 func (f *FileBackend) Name() string {
@@ -35,28 +32,8 @@ func (f *FileBackend) Name() string {
 
 func (f *FileBackend) Init() error {
 	logger := GetLogger(f)
-
-	format, err := GetConfig[string](f, "format")
-	if err != nil {
-		format = defaultFileBackend.format
-	}
-	switch format {
-	case jsonFormat, yamlFormat:
-		f.format = format
-	default:
-		f.format = jsonFormat
-		// warn only (fallback to json)
-		logger.Warnf(
-			"Bad output format '%s'. Falling back to 'json'", format)
-	}
-
-	p, err := GetConfig[string](f, "path")
-	if err != nil {
-		p = defaultFileBackend.path
-	}
-	f.path = p
-
-	file, err := os.Create(f.path)
+	logger.Infof("Opening file %s", f.Path)
+	file, err := os.Create(f.Path)
 	if err != nil {
 		return err
 	} else {
@@ -78,7 +55,7 @@ func (f *FileBackend) Write(p *models.Payload) {
 	var bytes []byte
 	var err error
 
-	switch f.format {
+	switch f.Format {
 	case yamlFormat:
 		bytes, err = yaml.Marshal(p)
 	default:

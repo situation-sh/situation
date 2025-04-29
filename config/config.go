@@ -2,40 +2,51 @@ package config
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/urfave/cli/v2"
+	"github.com/asiffer/puzzle"
+	"github.com/asiffer/puzzle/jsonfile"
+	"github.com/asiffer/puzzle/urfave3"
+	"github.com/urfave/cli/v3"
 )
 
-var context *cli.Context
+var k = puzzle.NewConfig()
 
-// InjectContext receives the urfave/cli
-// context to manage configuration
-func InjectContext(c *cli.Context) {
-	context = c
+func Define[T any](key string, defaultValue T, options ...puzzle.MetadataOption) error {
+	return puzzle.Define(k, key, defaultValue, options...)
+}
+
+func DefineVar[T any](key string, boundVariable *T, options ...puzzle.MetadataOption) error {
+	return puzzle.DefineVar(k, key, boundVariable, options...)
+}
+
+func DefineVarWithUsage[T any](key string, boundVariable *T, usage string) error {
+	return puzzle.DefineVar(k, key, boundVariable, puzzle.WithDescription(usage))
 }
 
 func Get[T any](key string) (T, error) {
-	var test T
-	ok := false
-	var value interface{}
+	return puzzle.Get[T](k, key)
+}
 
-	switch any(test).(type) {
-	case []string:
-		value = interface{}(context.StringSlice(key))
-	case []int:
-		value = interface{}(context.IntSlice(key))
-	case []int64:
-		value = interface{}(context.Int64Slice(key))
-	case time.Duration:
-		value = interface{}(context.Duration(key))
-	default:
-		value = context.Value(key)
+func Set(key string, value string) error {
+	entry, exists := k.GetEntry(key)
+	if !exists {
+		return fmt.Errorf("key '%s' not found", key)
 	}
+	return entry.Set(value)
+}
 
-	typedValue, ok := (value).(T)
-	if ok {
-		return typedValue, nil
+func Flags() []cli.Flag {
+	flags, err := urfave3.Build(k)
+	if err != nil {
+		panic(err)
 	}
-	return typedValue, fmt.Errorf("type casting has failed for key '%s' (%T)", key, value)
+	return flags
+}
+
+func JSON() []byte {
+	bytes, err := jsonfile.ToJSON(k)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
 }

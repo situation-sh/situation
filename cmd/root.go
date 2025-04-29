@@ -2,70 +2,75 @@
 package cmd
 
 import (
+	"context"
+	"net/mail"
 	"os"
 	"runtime"
-	"time"
+	"sort"
 
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
-	"github.com/situation-sh/situation/backends"
 	"github.com/situation-sh/situation/config"
-	"github.com/situation-sh/situation/modules"
-	"github.com/situation-sh/situation/utils"
-	"github.com/urfave/cli/v2"
-	"github.com/urfave/cli/v2/altsrc"
+
+	// "github.com/urfave/cli/altsrc"
+	"github.com/urfave/cli/v3"
+	// "github.com/urfave/cli/v2/altsrc"
 )
 
 // contextConfigKey is a type for config keys
 // stored in context
-type contextConfigKey string
+// type contextConfigKey string
 
-var flags = []cli.Flag{
-	&cli.PathFlag{
-		Name:    "config",
-		Aliases: []string{"c"},
-		Usage:   "Path to configuration file",
+// var flags = []cli.Flag{
+// 	&cli.PathFlag{
+// 		Name:    "config",
+// 		Aliases: []string{"c"},
+// 		Usage:   "Path to configuration file",
+// 	},
+// }
+
+//	var app = &cli.App{
+//		Name:                 "situation",
+//		Usage:                "Just run it",
+//		Version:              config.Version,
+//		Authors:              []*cli.Author{{Name: "Alban Siffer", Email: "alban@situation.sh"}},
+//		Action:               runRunCmd,
+//		Before:               before,
+//		Flags:                make([]cli.Flag, 0),
+//		EnableBashCompletion: true,
+//	}
+
+var logLevel uint = 0
+
+var app = &cli.Command{
+	Name:    "situation",
+	Usage:   "Just run it",
+	Version: config.Version,
+	Authors: []any{mail.Address{Name: "Alban Siffer", Address: "alban@situation.sh"}},
+	Action:  runAction,
+	Flags:   make([]cli.Flag, 0),
+	Commands: []*cli.Command{
+		&refreshIDCmd,
+		&defaultsCmd,
+		&idCmd,
+		&schemaCmd,
 	},
 }
 
-var app = &cli.App{
-	Name:                 "situation",
-	Usage:                "Just run it",
-	Version:              config.Version,
-	Authors:              []*cli.Author{{Name: "Alban Siffer", Email: "alban@situation.sh"}},
-	Action:               runRunCmd,
-	Before:               before,
-	Flags:                make([]cli.Flag, 0),
-	EnableBashCompletion: true,
-}
-
 func init() {
-	// as 'cmd' calls 'modules' and 'backends' the latters
-	// are initialized first so DefaultFlags are well filled
-	flags = append(flags, rootFlags()...)
-	flags = append(flags, modules.DefaultFlags...)
-	flags = append(flags, backends.DefaultFlags...)
-	app.Flags = append(app.Flags, flags...)
-}
-
-func rootFlags() []cli.Flag {
-	// utils.BuildFlag is called to centralize the creation of options
-	scans := utils.BuildFlag("scans", 1, "Number of scans to perform", []string{"s"})
-	period := utils.BuildFlag("period", 2*time.Minute, "Waiting time between two scans", []string{"p"})
-	resetStore := utils.BuildFlag("reset", 2, "Number of runs before resetting the internal store", []string{"r"})
-	logLevel := utils.BuildFlag("log-level", uint(0), "Panic: 0, Fatal: 1, Error: 2, Warn: 3, Info: 4, Debug: 5", []string{"l"})
-	// logFile := utils.BuildFlag("log-to-file", "", "Redirect logs to file instead of stderr", []string{"f"})
-	return []cli.Flag{scans, period, logLevel, resetStore}
+	config.DefineVarWithUsage(
+		"log-level",
+		&logLevel,
+		"Log level (0: Panic, 1: Fatal, 2: Error, 3: Warn, 4: Info, 5: Debug)",
+	)
+	app.Flags = append(app.Flags, config.Flags()...)
+	// sort app.Flags
+	sort.Sort(cli.FlagsByName(app.Flags))
 }
 
 func initLog() error {
 	// Log as JSON instead of the default ASCII formatter.
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
-
-	logLevel, err := config.Get[uint]("log-level")
-	if err != nil {
-		return err
-	}
 	// ensure log level is between 0 and 5
 	if logLevel > 5 {
 		logLevel = 5
@@ -85,23 +90,10 @@ func initLog() error {
 	return nil
 }
 
-func before(c *cli.Context) error {
-	fun := altsrc.InitInputSourceWithContext(flags, altsrc.NewYamlSourceFromFlagFunc("config"))
-
-	if err := fun(c); err != nil {
-		return err
-	}
-
-	// prepare the config for the modules and the backends
-	config.InjectContext(c)
-
+// Execute executes the root command.
+func Execute(ctx context.Context, args []string) error {
 	if err := initLog(); err != nil {
 		return err
 	}
-	return nil
-}
-
-// Execute executes the root command.
-func Execute() error {
-	return app.Run(os.Args)
+	return app.Run(ctx, args)
 }

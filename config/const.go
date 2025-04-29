@@ -13,11 +13,3 @@ var ID = [...]byte{
 	202, 254, 202, 254, 202, 254, 202, 254,
 	202, 254, 202, 254, 202, 254, 202, 254,
 }
-
-// var LogLevel uint = 5
-
-// var LogFile string
-
-// var Scans = 1
-
-// var Period = 2 * time.Minute

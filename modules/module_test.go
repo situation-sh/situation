@@ -7,9 +7,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/store"
-	"github.com/urfave/cli/v2"
 )
 
 const banner = `
@@ -70,7 +68,7 @@ func TestMain(m *testing.M) {
 func GenericTestModule(m Module, alreadyRun map[string]bool) error {
 	if alreadyRun == nil {
 		alreadyRun = make(map[string]bool)
-		injectDefaultConfig()
+		// injectDefaultConfig()
 	}
 	// run dependencies
 	for _, name := range m.Dependencies() {
@@ -162,17 +160,17 @@ func TestGetModuleNames(t *testing.T) {
 // injectDefaultConfig creates a new cli.Context
 // from DefaultFlags (normally this thing is done
 // by the cmd but here we are testing locally)
-func injectDefaultConfig() {
-	fs := flag.NewFlagSet("test", flag.ExitOnError)
-	for _, fl := range DefaultFlags {
-		fl.Apply(fs)
-	}
-	c := cli.NewContext(nil, fs, nil)
-	config.InjectContext(c)
-}
+// func injectDefaultConfig() {
+// 	fs := flag.NewFlagSet("test", flag.ExitOnError)
+// 	for _, fl := range DefaultFlags {
+// 		fl.Apply(fs)
+// 	}
+// 	c := cli.NewContext(nil, fs, nil)
+// 	config.InjectContext(c)
+// }
 
 func TestGetEnabledModules(t *testing.T) {
-	injectDefaultConfig()
+	// injectDefaultConfig()
 	em := GetEnabledModules()
 	if len(em) != len(modules) {
 		t.Errorf("bad number of modules, expect %d, got %d",
@@ -182,10 +180,10 @@ func TestGetEnabledModules(t *testing.T) {
 
 func TestGetEnabledModules2(t *testing.T) {
 	name := "tcp-scan"
-	overrideFlag(modules[name], DISABLED_KEY, true, "")
-	defer overrideFlag(modules[name], DISABLED_KEY, false, "")
+	// overrideFlag(modules[name], DISABLED_KEY, true, "")
+	// defer overrideFlag(modules[name], DISABLED_KEY, false, "")
 
-	injectDefaultConfig()
+	// injectDefaultConfig()
 
 	for _, m := range GetEnabledModules() {
 		if m.Name() == name {

@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.18.2
+VERSION    := 0.19.0
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -91,7 +91,7 @@ dash-split = $(word $2,$(subst -, ,$1))
 	@echo '            GOOS    target OS'
 	@echo '          GOARCH    target architecture'
 
-.PHONY: version all security analysis test build-test clean clear
+.PHONY: version all security analysis test build-test clean clear container
 
 version:
 	@echo "$(VERSION)"
@@ -155,3 +155,6 @@ clear:
 	rm -f .go*.html
 
 clean: clear
+
+container:
+	ko build --local --tarball $@ --tags $(VERSION) --tag-only --base-import-paths
