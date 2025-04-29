@@ -2,6 +2,11 @@ name: test
 
 on:
   pull_request:
+    # only go files and this file
+    paths:
+      - "**/*.go"
+      - ".github/workflows/test.yaml"
+      - "Makefile"
 env:
   test-module-binary: bin/situation-*module-testing-*
   artifact-basename: situation-module-testing
