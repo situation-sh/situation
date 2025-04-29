@@ -123,18 +123,18 @@ remote-module-testing-%: module-testing
 	$(DOCKER) exec -it "$$ID" sh -c '/tmp/situation -module=$(TEST_MODULE) -test.v' \
 	$(DOCKER) rm -f "$$ID"
 
-security: .gosec.json .govulncheck.json
+security: gosec.json govulncheck.json
 	@cat $<
 
-.gosec.json:
+gosec.json:
 	@gosec -fmt json -exclude-dir dev -quiet ./... | jq > $@
 
-.govulncheck.json:
+govulncheck.json:
 	@govulncheck --json ./... | jq > $@
 
 analysis: .goweight.json
 
-.goweight.json:
+goweight.json:
 	@goweight --json . | jq > $@
 
 modules-doc: $(MODULE_FILES)
