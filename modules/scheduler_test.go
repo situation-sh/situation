@@ -26,9 +26,12 @@ func TestMissingDependencies(t *testing.T) {
 }
 
 func TestMissingDependencies2(t *testing.T) {
-	if err := config.Set("no.module.host-network", "true"); err != nil {
+	m := &HostBasicModule{}
+	if err := config.Set(disableModuleKey(m), "true"); err != nil {
 		t.Error(err)
 	}
+	defer config.Set(disableModuleKey(m), "false")
+
 	s := NewScheduler(GetEnabledModules())
 	if err := s.checkMissingDependencies(); err == nil {
 		t.Errorf("Deps must be missing")

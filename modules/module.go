@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/situation-sh/situation/config"
@@ -32,7 +31,7 @@ func GetModuleNames() []string {
 }
 
 func isDisabled(m Module) bool {
-	disabled, err := config.Get[bool](fmt.Sprintf("no.module.%s", m.Name()))
+	disabled, err := config.Get[bool](disableModuleKey(m))
 	// if there is an error we prefer disable the module
 	if err != nil {
 		return true

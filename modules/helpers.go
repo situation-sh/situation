@@ -8,6 +8,10 @@ import (
 	"github.com/situation-sh/situation/config"
 )
 
+func disableModuleKey(m Module) string {
+	return fmt.Sprintf("disable-module-%s", m.Name())
+}
+
 // GetLogger is a helper function that returns a logger specific
 // to the input module
 func GetLogger(m Module) *logrus.Entry {
@@ -42,7 +46,7 @@ func RegisterModule(module Module) {
 	}
 	modules[name] = module
 	config.Define(
-		fmt.Sprintf("disable-module-%s", name),
+		disableModuleKey(module),
 		false,
 		puzzle.WithDescription(fmt.Sprintf("Disable module %s", name)),
 		puzzle.WithFlagName(fmt.Sprintf("no-module-%s", name)),

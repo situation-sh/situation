@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
+	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/store"
 )
 
@@ -179,15 +180,20 @@ func TestGetEnabledModules(t *testing.T) {
 }
 
 func TestGetEnabledModules2(t *testing.T) {
-	name := "tcp-scan"
+	mod := &TCPScanModule{}
+	if err := config.Set(disableModuleKey(mod), "true"); err != nil {
+		t.Error(err)
+	}
+	defer config.Set(disableModuleKey(mod), "false")
+
 	// overrideFlag(modules[name], DISABLED_KEY, true, "")
 	// defer overrideFlag(modules[name], DISABLED_KEY, false, "")
 
 	// injectDefaultConfig()
 
 	for _, m := range GetEnabledModules() {
-		if m.Name() == name {
-			t.Errorf("Module %s should not be enabled", name)
+		if m.Name() == mod.Name() {
+			t.Errorf("Module %s should not be enabled", mod.Name())
 		}
 	}
 }
