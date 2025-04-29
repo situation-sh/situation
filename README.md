@@ -1,6 +1,5 @@
 # Situation
 
-[![build](https://github.com/situation-sh/situation/actions/workflows/build.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/build.yaml)
 [![test](https://github.com/situation-sh/situation/actions/workflows/test.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/test.yaml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/situation-sh/situation)](https://goreportcard.com/report/github.com/situation-sh/situation)
 

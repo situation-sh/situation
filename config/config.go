@@ -11,16 +11,22 @@ import (
 
 var k = puzzle.NewConfig()
 
-func Define[T any](key string, defaultValue T, options ...puzzle.MetadataOption) error {
-	return puzzle.Define(k, key, defaultValue, options...)
+func Define[T any](key string, defaultValue T, options ...puzzle.MetadataOption) {
+	if err := puzzle.Define(k, key, defaultValue, options...); err != nil {
+		panic(err)
+	}
 }
 
-func DefineVar[T any](key string, boundVariable *T, options ...puzzle.MetadataOption) error {
-	return puzzle.DefineVar(k, key, boundVariable, options...)
+func DefineVar[T any](key string, boundVariable *T, options ...puzzle.MetadataOption) {
+	if err := puzzle.DefineVar(k, key, boundVariable, options...); err != nil {
+		panic(err)
+	}
 }
 
-func DefineVarWithUsage[T any](key string, boundVariable *T, usage string) error {
-	return puzzle.DefineVar(k, key, boundVariable, puzzle.WithDescription(usage))
+func DefineVarWithUsage[T any](key string, boundVariable *T, usage string) {
+	if err := puzzle.DefineVar(k, key, boundVariable, puzzle.WithDescription(usage)); err != nil {
+		panic(err)
+	}
 }
 
 func Get[T any](key string) (T, error) {

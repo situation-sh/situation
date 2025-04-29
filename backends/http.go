@@ -80,7 +80,10 @@ func (h *HttpBackend) Write(p *models.Payload) {
 	}
 
 	// provide headers based on config
-	h.populateHeaders(&req.Header)
+	if err := h.populateHeaders(&req.Header); err != nil {
+		logger.Error(err)
+		return
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
