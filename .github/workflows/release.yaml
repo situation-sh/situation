@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     # Pattern matched against refs/tags
+    branches:
+      - main
     tags:
       - "*" # Push events to every tag not containing /
 
