@@ -2,6 +2,11 @@ name: test
 
 on:
   pull_request:
+    # only go files and this file
+    paths:
+      - "**/*.go"
+      - ".github/workflows/test.yaml"
+      - "Makefile"
 env:
   test-module-binary: bin/situation-*module-testing-*
   artifact-basename: situation-module-testing
@@ -16,7 +21,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
+          go-version-file: go.mod
+          cache: true
       - name: Cache module testing binary
         id: cache-mtb
         uses: actions/cache@v4
@@ -92,7 +98,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
 
       - name: Update module docs
         run: make modules-doc

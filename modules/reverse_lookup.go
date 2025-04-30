@@ -38,7 +38,7 @@ outer:
 				for _, ip := range []net.IP{nic.IP, nic.IP6} {
 					if ip != nil && ip.IsPrivate() {
 						// run first lookup
-						net.LookupAddr(nic.IP.String())
+						net.LookupAddr(nic.IP.String()) // #nosec G104 -- we don't care about the errors here
 						names, err := net.LookupAddr(nic.IP.String())
 
 						if err != nil {

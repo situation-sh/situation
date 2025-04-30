@@ -9,17 +9,13 @@ import (
 )
 
 type StdoutBackend struct {
-	format string
+	Format string
 }
 
-// default config
-var defaultStdoutBackend = StdoutBackend{format: jsonFormat}
-
 func init() {
-	b := &StdoutBackend{format: defaultStdoutBackend.format}
+	b := &StdoutBackend{Format: jsonFormat}
 	RegisterBackend(b)
-	SetDefault(b, "enabled", true, "enable the backend")
-	SetDefault(b, "format", defaultStdoutBackend.format, "output format")
+	SetDefault(b, "format", &b.Format, "output format")
 }
 
 func (s *StdoutBackend) Name() string {
@@ -27,22 +23,6 @@ func (s *StdoutBackend) Name() string {
 }
 
 func (s *StdoutBackend) Init() error {
-	logger := GetLogger(s)
-
-	format, err := GetConfig[string](s, "format")
-	if err != nil {
-		format = defaultStdoutBackend.format
-	}
-
-	switch format {
-	case jsonFormat, yamlFormat:
-		s.format = format
-	default:
-		s.format = jsonFormat
-		// warn only (fallback to json)
-		logger.Warnf(
-			"Bad output format '%s'. Falling back to 'json'", format)
-	}
 	return nil
 }
 
@@ -53,7 +33,7 @@ func (s *StdoutBackend) Write(p *models.Payload) {
 	var bytes []byte
 	var err error
 
-	switch s.format {
+	switch s.Format {
 	case yamlFormat:
 		bytes, err = yaml.Marshal(p)
 	default:

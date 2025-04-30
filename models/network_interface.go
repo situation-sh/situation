@@ -64,7 +64,7 @@ func (nic *NetworkInterface) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
-		MAC string `json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d2,example=93:83:e4:15:39:b2,pattern=^([A-F0-9]{2}:){5}[A-F0-9]{2}$"`
+		MAC string `json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d2,example=93:83:e4:15:39:b2,pattern=^([A-F0-9]{2}:){5,7}[A-F0-9]{2}$"`
 		*Alias
 	}{
 		MAC:   mac,

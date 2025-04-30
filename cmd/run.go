@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"context"
+	"sort"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	"github.com/asiffer/puzzle"
+	"github.com/urfave/cli/v3"
 
 	"github.com/situation-sh/situation/backends"
 	"github.com/situation-sh/situation/config"
@@ -13,7 +16,27 @@ import (
 	"github.com/situation-sh/situation/store"
 )
 
-func loopCondition(n int, scans int, period time.Duration) bool {
+var (
+	scans       uint          = 1
+	period      time.Duration = time.Minute
+	resetPeriod uint          = 2
+)
+
+func init() {
+	config.DefineVar("scans", &scans, puzzle.WithDescription("Number of scans to perform"))
+	config.DefineVar("period", &period, puzzle.WithDescription("Waiting time between two scans"))
+	config.DefineVar("reset", &resetPeriod, puzzle.WithDescription("Number of runs before resetting the internal store"))
+	runCmd.Flags = config.Flags()
+	sort.Sort(cli.FlagsByName(runCmd.Flags))
+}
+
+var runCmd = cli.Command{
+	Name:   "run",
+	Usage:  "Run the agent (default)",
+	Action: runAction,
+}
+
+func loopCondition(n uint, scans uint, period time.Duration) bool {
 	if n == scans {
 		return false
 	}
@@ -21,26 +44,13 @@ func loopCondition(n int, scans int, period time.Duration) bool {
 	return true
 }
 
-func runRunCmd(c *cli.Context) error {
-	scans, err := config.Get[int]("scans")
-	if err != nil {
-		return err
-	}
-	period, err := config.Get[time.Duration]("period")
-	if err != nil {
-		return err
-	}
-	resetPeriod, err := config.Get[int]("reset")
-	if err != nil {
-		return err
-	}
-
+func runAction(ctx context.Context, cmd *cli.Command) error {
 	if err := backends.Init(); err != nil {
 		return err
 	}
 	defer backends.Close()
 
-	for n, run := 0, true; run; n, run = n+1, loopCondition(n+1, scans, period) {
+	for n, run := uint(0), true; run; n, run = n+1, loopCondition(n+1, scans, period) {
 		// scan
 		if err := singleRun(); err != nil {
 			return err

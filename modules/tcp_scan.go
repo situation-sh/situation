@@ -13,12 +13,10 @@ import (
 	"github.com/situation-sh/situation/store"
 )
 
-const defaultTCPConnTimeout = 500 * time.Millisecond
-
 func init() {
-	m := &TCPScanModule{}
+	m := &TCPScanModule{Timeout: 500 * time.Millisecond}
 	RegisterModule(m)
-	SetDefault(m, "timeout", defaultTCPConnTimeout, "TCP connection attempt duration")
+	SetDefault(m, "timeout", &m.Timeout, "TCP connection attempt duration")
 }
 
 // TCPScanModule tries to connect to neighbor TCP ports.
@@ -30,7 +28,9 @@ func init() {
 // The connections have a 500ms timeout.
 //
 // [NMAP top 1000 ports]: https://nullsec.us/top-1-000-tcp-and-udp-ports-nmap-default/
-type TCPScanModule struct{}
+type TCPScanModule struct {
+	Timeout time.Duration
+}
 
 func (m *TCPScanModule) Name() string {
 	return "tcp-scan"
@@ -45,22 +45,22 @@ func (m *TCPScanModule) Run() error {
 	// conf := GetConfig(m)
 
 	// timeout := conf.Duration("timeout")
-	timeout, err := GetConfig[time.Duration](m, "timeout")
-	if err != nil {
-		timeout = defaultTCPConnTimeout
-	}
-	logger.Infof("Scanning with the following timeout: %v", timeout)
+	// timeout, err := GetConfig[time.Duration](m, "timeout")
+	// if err != nil {
+	// 	timeout = defaultTCPConnTimeout
+	// }
+	// logger.Infof("Scanning with the following timeout: %v", timeout)
 
-	for m := range store.IterateMachines() {
+	for machine := range store.IterateMachines() {
 
-		if m.IsHost() {
+		if machine.IsHost() {
 			continue
 		}
 
-		for _, nic := range m.NICS {
-			ops := scan(nic.IP, top1000, timeout)
+		for _, nic := range machine.NICS {
+			ops := scan(nic.IP, top1000, m.Timeout)
 			for _, port := range ops {
-				soft, created := m.GetOrCreateApplicationByEndpoint(port, "tcp", nic.IP)
+				soft, created := machine.GetOrCreateApplicationByEndpoint(port, "tcp", nic.IP)
 				if created {
 					endpoint := soft.Endpoints[0]
 					// logging

@@ -1,5 +1,7 @@
 package config
 
+import "encoding/hex"
+
 // Version of the agent (it is set during compilation)
 var Version = "X.X.X"
 
@@ -14,10 +16,12 @@ var ID = [...]byte{
 	202, 254, 202, 254, 202, 254, 202, 254,
 }
 
-// var LogLevel uint = 5
+const defaultIDHexString = "cafecafecafecafecafecafecafecafe"
 
-// var LogFile string
-
-// var Scans = 1
-
-// var Period = 2 * time.Minute
+func GetDefaultID() []byte {
+	id, err := hex.DecodeString(defaultIDHexString)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}

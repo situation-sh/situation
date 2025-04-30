@@ -1,19 +1,20 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
 
 	"github.com/invopop/jsonschema"
 	"github.com/situation-sh/situation/models"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 var schemaCmd = cli.Command{
 	Name:   "schema",
 	Usage:  "Print the JSON schema of the data exported by this agent",
-	Action: runSchemaCmd,
+	Action: schemaAction,
 }
 
 // mapper is a custom jsonschema mapper
@@ -44,8 +45,8 @@ func mapper(t reflect.Type) *jsonschema.Schema {
 	}
 }
 
-func isTesting(c *cli.Context) bool {
-	switch b := c.Context.Value("testing").(type) {
+func isTesting(ctx context.Context) bool {
+	switch b := ctx.Value("testing").(type) {
 	case bool:
 		return b
 	default:
@@ -53,10 +54,10 @@ func isTesting(c *cli.Context) bool {
 	}
 }
 
-func runSchemaCmd(c *cli.Context) error {
+func schemaAction(ctx context.Context, cmd *cli.Command) error {
 	reflector := jsonschema.Reflector{Mapper: mapper}
 
-	if !isTesting(c) {
+	if !isTesting(ctx) {
 		if err := reflector.AddGoComments("github.com/situation-sh/situation/models", "models"); err != nil {
 
 			return err
@@ -73,8 +74,4 @@ func runSchemaCmd(c *cli.Context) error {
 	// data = data[0:]
 	fmt.Println(string(data))
 	return nil
-}
-
-func init() {
-	app.Commands = append(app.Commands, &schemaCmd)
 }

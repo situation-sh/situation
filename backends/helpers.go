@@ -3,15 +3,10 @@ package backends
 import (
 	"fmt"
 
+	"github.com/asiffer/puzzle"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/config"
-	"github.com/situation-sh/situation/utils"
-	"github.com/urfave/cli/v2"
 )
-
-// DefaultFlags is the list of flags that may be used to tunes the
-// backends
-var DefaultFlags = make([]cli.Flag, 0)
 
 // GetLogger is a helper function that returns a logger specific
 // to the input backend
@@ -31,13 +26,10 @@ func GetConfig[T any](backend Backend, key string) (T, error) {
 // :warning: There is a bug within the lib that manages the commands and the flags
 // If you define a default value as zero (false for bool, "" for string, 0 for int...)
 // the value is not updated with the config file. See https://github.com/urfave/cli/issues/1395
-func SetDefault(backend Backend, key string, value interface{}, usage string) {
+func SetDefault[T any](backend Backend, key string, value *T, usage string) {
 	name := fmt.Sprintf("backends.%s.%s", backend.Name(), key)
-	if flag := utils.BuildFlag(name, value, usage, nil); flag != nil {
-		DefaultFlags = append(DefaultFlags, flag)
-	} else {
-		panic(fmt.Errorf("cannot set default flags: %s=%v", name, value))
-	}
+	flagName := fmt.Sprintf("%s-%s", backend.Name(), key)
+	config.DefineVar(name, value, puzzle.WithDescription(usage), puzzle.WithFlagName(flagName))
 }
 
 // RegisterBackend is the function to call to register a backend
@@ -48,4 +40,10 @@ func RegisterBackend(backend Backend) {
 		panic(fmt.Errorf("two backends have the same name: %s", name))
 	}
 	backends[name] = backend
+	config.Define(
+		fmt.Sprintf("enable-backend-%s", backend.Name()),
+		false,
+		puzzle.WithDescription(fmt.Sprintf("Enable the %s backend", backend.Name())),
+		puzzle.WithFlagName(fmt.Sprintf("%s", backend.Name())),
+	)
 }

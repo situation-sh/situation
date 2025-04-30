@@ -361,43 +361,43 @@ func TestGetCmdErrors(t *testing.T) {
 	}
 }
 
-func TestFlags(t *testing.T) {
-	type unknown struct{}
+// func TestFlags(t *testing.T) {
+// 	type unknown struct{}
 
-	flags := map[string]interface{}{
-		"bool":        true,
-		"int":         int(0),
-		"int64":       int64(0),
-		"string":      "s",
-		"stringslice": []string{"a", "b"},
-		"duration":    time.Second,
-		"other":       unknown{},
-	}
+// 	flags := map[string]interface{}{
+// 		"bool":        true,
+// 		"int":         int(0),
+// 		"int64":       int64(0),
+// 		"string":      "s",
+// 		"stringslice": []string{"a", "b"},
+// 		"duration":    time.Second,
+// 		"other":       unknown{},
+// 	}
 
-	for k, v := range flags {
-		BuildFlag(k, v, "", nil)
-	}
+// 	for k, v := range flags {
+// 		BuildFlag(k, v, "", nil)
+// 	}
 
-	for k, v := range BuiltFlags() {
-		switch value := v.(type) {
-		case []string:
-			f, ok := flags[k].([]string)
-			if !ok {
-				t.Errorf("bad flag type: %v", flags[k])
-			}
-			for i, e := range value {
-				if f[i] != e {
-					t.Errorf("bad flags, expected %v, got %v", flags[k], v)
-				}
-			}
-		default:
-			if flags[k] != v {
-				t.Errorf("bad flags, expected %v, got %v", flags[k], v)
-			}
-		}
-	}
+// 	for k, v := range BuiltFlags() {
+// 		switch value := v.(type) {
+// 		case []string:
+// 			f, ok := flags[k].([]string)
+// 			if !ok {
+// 				t.Errorf("bad flag type: %v", flags[k])
+// 			}
+// 			for i, e := range value {
+// 				if f[i] != e {
+// 					t.Errorf("bad flags, expected %v, got %v", flags[k], v)
+// 				}
+// 			}
+// 		default:
+// 			if flags[k] != v {
+// 				t.Errorf("bad flags, expected %v, got %v", flags[k], v)
+// 			}
+// 		}
+// 	}
 
-}
+// }
 
 func TestEnforceMask(t *testing.T) {
 	ipnet := net.IPNet{

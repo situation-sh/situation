@@ -1,9 +1,13 @@
 package modules
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/situation-sh/situation/config"
+)
 
 func TestNewScheduler(t *testing.T) {
-	injectDefaultConfig()
+	// injectDefaultConfig()
 	s := NewScheduler(GetEnabledModules())
 
 	for n, m := range modules {
@@ -14,7 +18,7 @@ func TestNewScheduler(t *testing.T) {
 }
 
 func TestMissingDependencies(t *testing.T) {
-	injectDefaultConfig()
+	// injectDefaultConfig()
 	s := NewScheduler(GetEnabledModules())
 	if err := s.checkMissingDependencies(); err != nil {
 		t.Error(err)
@@ -22,10 +26,12 @@ func TestMissingDependencies(t *testing.T) {
 }
 
 func TestMissingDependencies2(t *testing.T) {
-	overrideFlag(modules["host-network"], DISABLED_KEY, true, "")
-	defer overrideFlag(modules["host-network"], DISABLED_KEY, false, "")
+	m := &HostBasicModule{}
+	if err := config.Set(disableModuleKey(m), "true"); err != nil {
+		t.Error(err)
+	}
+	defer config.Set(disableModuleKey(m), "false")
 
-	injectDefaultConfig()
 	s := NewScheduler(GetEnabledModules())
 	if err := s.checkMissingDependencies(); err == nil {
 		t.Errorf("Deps must be missing")
@@ -33,7 +39,7 @@ func TestMissingDependencies2(t *testing.T) {
 }
 
 func TestSingleRun(t *testing.T) {
-	injectDefaultConfig()
+	// injectDefaultConfig()
 	s := NewScheduler([]Module{modules["host-basic"]})
 	if err := s.Run(); err != nil {
 		t.Error(err)

@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.18.2
+VERSION    := 0.19.0
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -91,7 +91,7 @@ dash-split = $(word $2,$(subst -, ,$1))
 	@echo '            GOOS    target OS'
 	@echo '          GOARCH    target architecture'
 
-.PHONY: version all security analysis test build-test clean clear
+.PHONY: version all security analysis test build-test clean clear container
 
 version:
 	@echo "$(VERSION)"
@@ -123,18 +123,18 @@ remote-module-testing-%: module-testing
 	$(DOCKER) exec -it "$$ID" sh -c '/tmp/situation -module=$(TEST_MODULE) -test.v' \
 	$(DOCKER) rm -f "$$ID"
 
-security: .gosec.json .govulncheck.json
+security: gosec.json govulncheck.json
 	@cat $<
 
-.gosec.json:
+gosec.json:
 	@gosec -fmt json -exclude-dir dev -quiet ./... | jq > $@
 
-.govulncheck.json:
+govulncheck.json:
 	@govulncheck --json ./... | jq > $@
 
 analysis: .goweight.json
 
-.goweight.json:
+goweight.json:
 	@goweight --json . | jq > $@
 
 modules-doc: $(MODULE_FILES)
@@ -155,3 +155,6 @@ clear:
 	rm -f .go*.html
 
 clean: clear
+
+container:
+	ko build --local --tarball $@ --tags $(VERSION) --tag-only --base-import-paths
