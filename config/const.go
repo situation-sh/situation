@@ -1,5 +1,7 @@
 package config
 
+import "encoding/hex"
+
 // Version of the agent (it is set during compilation)
 var Version = "X.X.X"
 
@@ -12,4 +14,14 @@ var Commit = "SHORTCOMMITHASH"
 var ID = [...]byte{
 	202, 254, 202, 254, 202, 254, 202, 254,
 	202, 254, 202, 254, 202, 254, 202, 254,
+}
+
+const defaultIDHexString = "cafecafecafecafecafecafecafecafe"
+
+func GetDefaultID() []byte {
+	id, err := hex.DecodeString(defaultIDHexString)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }

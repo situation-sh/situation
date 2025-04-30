@@ -6,66 +6,66 @@ import (
 	"net/mail"
 	"os"
 	"runtime"
-	"sort"
 
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/config"
 
-	// "github.com/urfave/cli/altsrc"
 	"github.com/urfave/cli/v3"
-	// "github.com/urfave/cli/v2/altsrc"
 )
 
-// contextConfigKey is a type for config keys
-// stored in context
-// type contextConfigKey string
-
-// var flags = []cli.Flag{
-// 	&cli.PathFlag{
-// 		Name:    "config",
-// 		Aliases: []string{"c"},
-// 		Usage:   "Path to configuration file",
-// 	},
-// }
-
-//	var app = &cli.App{
-//		Name:                 "situation",
-//		Usage:                "Just run it",
-//		Version:              config.Version,
-//		Authors:              []*cli.Author{{Name: "Alban Siffer", Email: "alban@situation.sh"}},
-//		Action:               runRunCmd,
-//		Before:               before,
-//		Flags:                make([]cli.Flag, 0),
-//		EnableBashCompletion: true,
-//	}
-
-var logLevel uint = 0
+var logLevel uint = 1
 
 var app = &cli.Command{
 	Name:    "situation",
 	Usage:   "Just run it",
 	Version: config.Version,
 	Authors: []any{mail.Address{Name: "Alban Siffer", Address: "alban@situation.sh"}},
-	Action:  runAction,
-	Flags:   make([]cli.Flag, 0),
+	Flags: []cli.Flag{
+		&cli.UintFlag{
+			Name:        "log-level",
+			Usage:       "Log level (0: Panic, 1: Fatal, 2: Error, 3: Warn, 4: Info, 5: Debug)",
+			Value:       logLevel,
+			Destination: &logLevel,
+			Aliases:     []string{"l"},
+			Local:       false,
+		},
+	},
+	SuggestCommandFunc: func(commands []*cli.Command, provided string) string {
+		// this function is the only hook we can use to both run a default command
+		// when NOTHING is provided and to trigger a fatal error is a provided command
+		// does not exist
+		if provided == "" {
+			return runCmd.Name
+		}
+		for _, c := range commands {
+			// fmt.Println(c.Name)
+			if c.Name == provided {
+				return c.Name
+			}
+			for _, alias := range c.Aliases {
+				if alias == provided {
+					return c.Name
+				}
+			}
+		}
+		logrus.Fatalf("'%s' is not a valid command.\n", provided)
+		return ""
+	},
+	DefaultCommand: "run",
+	Suggest:        true,
 	Commands: []*cli.Command{
+		&runCmd,
 		&refreshIDCmd,
 		&defaultsCmd,
 		&idCmd,
 		&schemaCmd,
+		&updateCmd,
+		&versionCmd,
 	},
-}
-
-func init() {
-	config.DefineVarWithUsage(
-		"log-level",
-		&logLevel,
-		"Log level (0: Panic, 1: Fatal, 2: Error, 3: Warn, 4: Info, 5: Debug)",
-	)
-	app.Flags = append(app.Flags, config.Flags()...)
-	// sort app.Flags
-	sort.Sort(cli.FlagsByName(app.Flags))
+	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+		return ctx, initLog()
+	},
 }
 
 func initLog() error {
@@ -92,8 +92,5 @@ func initLog() error {
 
 // Execute executes the root command.
 func Execute(ctx context.Context, args []string) error {
-	if err := initLog(); err != nil {
-		return err
-	}
 	return app.Run(ctx, args)
 }

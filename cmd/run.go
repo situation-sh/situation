@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/asiffer/puzzle"
@@ -25,6 +26,14 @@ func init() {
 	config.DefineVar("scans", &scans, puzzle.WithDescription("Number of scans to perform"))
 	config.DefineVar("period", &period, puzzle.WithDescription("Waiting time between two scans"))
 	config.DefineVar("reset", &resetPeriod, puzzle.WithDescription("Number of runs before resetting the internal store"))
+	runCmd.Flags = config.Flags()
+	sort.Sort(cli.FlagsByName(runCmd.Flags))
+}
+
+var runCmd = cli.Command{
+	Name:   "run",
+	Usage:  "Run the agent (default)",
+	Action: runAction,
 }
 
 func loopCondition(n uint, scans uint, period time.Duration) bool {
@@ -81,11 +90,4 @@ func singleRun() error {
 
 	// store.Clear()
 	return nil
-}
-
-var runCmd = cli.Command{
-	Name:   "run",
-	Usage:  "Run the agent",
-	Action: runAction,
-	Flags:  config.Flags(),
 }
