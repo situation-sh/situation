@@ -24,7 +24,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
+          go-version-file: go.mod
+          cache: true
       # run gosec scanner
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
