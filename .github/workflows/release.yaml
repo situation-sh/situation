@@ -24,7 +24,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24.0"
+          go-version-file: go.mod
           cache: true
       # Run build of the application
       - name: Run build
@@ -53,7 +53,7 @@ jobs:
         with:
           name: situation
           path: dist/
-      - name: Create GitHub Release
+      - name: Create GitHub draft release
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
@@ -61,6 +61,7 @@ jobs:
           "$GITHUB_REF_NAME"
           --repo "$GITHUB_REPOSITORY"
           --notes ""
+          --draft
       - name: Upload artifact to GitHub Release
         env:
           GITHUB_TOKEN: ${{ github.token }}
