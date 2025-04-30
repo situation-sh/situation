@@ -1,6 +1,6 @@
 module github.com/situation-sh/situation
 
-go 1.24.0
+go 1.24.2
 
 require (
 	github.com/asiffer/puzzle v0.0.0-20250428133413-9adec626ab0b
