@@ -2,6 +2,7 @@ package backends
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/situation-sh/situation/models"
@@ -42,15 +43,16 @@ func (f *FileBackend) Init() error {
 	return nil
 }
 
-func (f *FileBackend) Close() {
+func (f *FileBackend) Close() error {
 	if f.file != nil {
 		if err := f.file.Close(); err != nil {
-			GetLogger(f).Error(err)
+			return err
 		}
 	}
+	return nil
 }
 
-func (f *FileBackend) Write(p *models.Payload) {
+func (f *FileBackend) Write(p *models.Payload) error {
 	logger := GetLogger(f)
 	var bytes []byte
 	var err error
@@ -63,15 +65,13 @@ func (f *FileBackend) Write(p *models.Payload) {
 	}
 
 	if err != nil {
-		logger.Error(err)
-		return
+		return fmt.Errorf("error while marshalling payload: %w", err)
 	}
 
 	_, err = f.file.Write(bytes)
 	if err != nil {
-		logger.Error(err)
-		return
+		return err
 	}
-
 	logger.Infof("Payload written to %s", f.file.Name())
+	return nil
 }
