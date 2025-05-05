@@ -31,29 +31,8 @@ var app = &cli.Command{
 			Local:       false,
 		},
 	},
-	SuggestCommandFunc: func(commands []*cli.Command, provided string) string {
-		// this function is the only hook we can use to both run a default command
-		// when NOTHING is provided and to trigger a fatal error is a provided command
-		// does not exist
-		if provided == "" {
-			return runCmd.Name
-		}
-		for _, c := range commands {
-			// fmt.Println(c.Name)
-			if c.Name == provided {
-				return c.Name
-			}
-			for _, alias := range c.Aliases {
-				if alias == provided {
-					return c.Name
-				}
-			}
-		}
-		logrus.Fatalf("'%s' is not a valid command.\n", provided)
-		return ""
-	},
-	DefaultCommand: "run",
-	Suggest:        true,
+	// Action: runAction,
+	DefaultCommand: runCmd.Name,
 	Commands: []*cli.Command{
 		&runCmd,
 		&refreshIDCmd,

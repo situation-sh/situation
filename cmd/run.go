@@ -26,8 +26,8 @@ func init() {
 	config.DefineVar("scans", &scans, puzzle.WithDescription("Number of scans to perform"))
 	config.DefineVar("period", &period, puzzle.WithDescription("Waiting time between two scans"))
 	config.DefineVar("reset", &resetPeriod, puzzle.WithDescription("Number of runs before resetting the internal store"))
-	runCmd.Flags = config.Flags()
-	sort.Sort(cli.FlagsByName(runCmd.Flags))
+	app.Flags = append(app.Flags, config.Flags()...)
+	sort.Sort(cli.FlagsByName(app.Flags))
 }
 
 var runCmd = cli.Command{
