@@ -11,8 +11,8 @@ github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEV
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/asiffer/puzzle v0.0.0-20250428133413-9adec626ab0b h1:ah4S8MATTi0FII0WJlDl9Vu3WnjKh0+3+6aRZMHTVgQ=
-github.com/asiffer/puzzle v0.0.0-20250428133413-9adec626ab0b/go.mod h1:eDH//I/VhJxcUhQ2x57wpx/NeoHPDOzLtPoWJRLGBI4=
+github.com/asiffer/puzzle v0.0.0-20250505082915-f6da4109f3a2 h1:CzKw8yWVU7TKl27YqPnKJKCZtAZgbpa6cQdDYsg9Zsk=
+github.com/asiffer/puzzle v0.0.0-20250505082915-f6da4109f3a2/go.mod h1:eDH//I/VhJxcUhQ2x57wpx/NeoHPDOzLtPoWJRLGBI4=
 github.com/bahlo/generic-list-go v0.2.0 h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPnH1Wvgk=
 github.com/bahlo/generic-list-go v0.2.0/go.mod h1:2KvAjgMlE5NNynlg/5iLrrCCZ2+5xWbdbCW3pNTGyYg=
 github.com/brianvoe/gofakeit/v6 v6.28.0 h1:Xib46XXuQfmlLS2EXRuJpqcw8St6qSZz75OUo0tgAW4=
