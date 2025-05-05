@@ -1,9 +1,6 @@
 package backends
 
 import (
-	"fmt"
-
-	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/models"
 )
 
@@ -23,29 +20,6 @@ type Backend interface {
 	Init() error
 	Close()
 	Write(*models.Payload)
-}
-
-// func isEnabled(backend Backend) bool {
-// 	enabled, err := GetConfig[bool](backend, "enabled")
-// 	if err == nil {
-// 		return enabled
-// 	}
-// 	return false
-// }
-
-// PrepareBackends select only the backend that have been enabled
-// func prepareBackends() {
-// 	enabledBackends = make([]Backend, 0)
-// 	for _, b := range backends {
-// 		if isEnabled(b) {
-// 			enabledBackends = append(enabledBackends, b)
-// 		}
-// 	}
-// }
-
-func isEnabled(b Backend) bool {
-	enabled, err := config.Get[bool](fmt.Sprintf("backend.%s", b.Name()))
-	return err == nil && enabled
 }
 
 // Init triggers the .Init() method of all the registered
