@@ -7,25 +7,23 @@ import (
 )
 
 func TestNewScheduler(t *testing.T) {
-	// injectDefaultConfig()
 	s := NewScheduler(GetEnabledModules())
 
 	for n, m := range modules {
-		if s.getModuleByName(n) != m {
+		if s.modules[n] != m {
 			t.Errorf("Bad module (name: %s)", n)
 		}
 	}
 }
 
-func TestMissingDependencies(t *testing.T) {
-	// injectDefaultConfig()
+func TestNoneMissingDependencies(t *testing.T) {
 	s := NewScheduler(GetEnabledModules())
 	if err := s.checkMissingDependencies(); err != nil {
 		t.Error(err)
 	}
 }
 
-func TestMissingDependencies2(t *testing.T) {
+func TestMissingDependencies(t *testing.T) {
 	m := &HostBasicModule{}
 	if err := config.Set(disableModuleKey(m), "true"); err != nil {
 		t.Error(err)
