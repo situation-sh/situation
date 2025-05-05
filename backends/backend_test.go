@@ -5,38 +5,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/situation-sh/situation/config"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/test"
 )
 
 // GenericTestBackend is a basic function to test a backend
 func GenericTestBackend(b Backend, payload *models.Payload) error {
-
-	// fake an http server
-	// if b.Name() == "http" {
-	// 	fs := flag.NewFlagSet("test", flag.ExitOnError)
-	// 	fs.Bool("backends.http.enabled", true, "")
-	// 	fs.String("backends.http.header.extra", "X-WTF-ID=89", "")
-	// 	// fs.("backends.http.header.extra", []string{"X-WTF-ID=89"}, "")
-	// 	ctx := cli.NewContext(nil, fs, nil)
-
-	// 	config.InjectContext(ctx)
-
-	// 	if !isEnabled(b) {
-	// 		return fmt.Errorf("backend %s is not enabled", b.Name())
-	// 	}
-
-	// 	defaultHttpBackend.url = fmt.Sprintf("http://%s%s", ADDR, ROUTE)
-	// 	wg := sync.WaitGroup{}
-	// 	wg.Add(1)
-	// 	srv := runServer(&wg)
-	// 	defer func() {
-	// 		if err := srv.Shutdown(context.Background()); err != nil {
-	// 			fmt.Println(err)
-	// 		}
-	// 		wg.Wait()
-	// 	}()
-	// }
 	if err := b.Init(); err != nil {
 		return err
 	}
@@ -55,44 +30,6 @@ func TestBackends(t *testing.T) {
 		}
 	}
 }
-
-// func TestPrepare(t *testing.T) {
-// 	proxy := &StdoutBackend{}
-// 	name := proxy.Name()
-// 	backend, exists := backends[name]
-// 	if !exists {
-// 		t.Errorf("the backend %s is not registered", name)
-// 	}
-// 	key := fmt.Sprintf("backends.%s.enabled", name)
-
-// 	fs := flag.NewFlagSet("test", flag.ExitOnError)
-// 	// define a flag equal to false by default
-// 	fs.Bool(key, false, "")
-// 	// fake the cmdline option
-// 	fs.Set(key, "true")
-
-// 	c := cli.NewContext(nil, fs, nil)
-// 	if !c.IsSet(key) {
-// 		t.Errorf("the key %s not set in context", key)
-// 	}
-
-// 	config.InjectContext(c)
-
-// 	if !isEnabled(backend) {
-// 		t.Errorf("backend %s is not enabled", name)
-// 	}
-
-// 	prepareBackends()
-// 	if len(enabledBackends) != 1 {
-// 		t.Errorf("1 backend expected, got %v", enabledBackends)
-// 	}
-
-// 	if err := Init(); err != nil {
-// 		t.Error(err)
-// 	}
-// 	Write(&models.Payload{})
-// 	Close()
-// }
 
 func TestNetworkInterfaceUnmarshal(t *testing.T) {
 	nic := test.RandomNIC()
@@ -127,4 +64,31 @@ func TestNetworkInterfaceUnmarshal(t *testing.T) {
 	}
 
 	t.Logf("\n%+v\n", otherNic)
+}
+
+func testEnableBackend(b Backend) error {
+	config.Set(enabledBackendKey(b), "true")
+	defer config.Set(enabledBackendKey(b), "false")
+
+	if err := Init(); err != nil {
+		return err
+	}
+
+	for _, backend := range backends {
+		if isEnabled(backend) && backend.Name() == b.Name() {
+			return nil
+		} else if isEnabled(backend) {
+			return fmt.Errorf("backend %s should not be enabled", backend.Name())
+		}
+	}
+	return nil
+}
+
+func TestEnableBackend(t *testing.T) {
+	for _, backend := range backends {
+		if err := testEnableBackend(backend); err != nil {
+			t.Errorf("error while enabling backend %s: %v", backend.Name(), err)
+		}
+	}
+
 }

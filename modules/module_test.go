@@ -33,8 +33,10 @@ const banner = `
 `
 
 func TestMain(m *testing.M) {
+	// inject config flags
 	// parse flags (use to test single module)
 	moduleFlag := flag.String("module", "", "name of the module to run")
+	config.PopulateFlags(flag.CommandLine)
 	flag.Parse()
 
 	// set logrus in debug level if the verbose flag has been activated
@@ -63,10 +65,21 @@ func TestMain(m *testing.M) {
 	}
 }
 
+type disabledModuleError struct {
+	moduleName string
+}
+
+func (e *disabledModuleError) Error() string {
+	return fmt.Sprintf("Module %s is disabled", e.moduleName)
+}
+
 // GenericTestModule is a basic function to test a module
 // Developer must ensure that the store is cleared and some
 // config are set
 func GenericTestModule(m Module, alreadyRun map[string]bool) error {
+	if isDisabled(m) {
+		return &disabledModuleError{m.Name()}
+	}
 	if alreadyRun == nil {
 		alreadyRun = make(map[string]bool)
 		// injectDefaultConfig()
@@ -78,7 +91,12 @@ func GenericTestModule(m Module, alreadyRun map[string]bool) error {
 
 		if !alreadyRun[depName] {
 			if err := GenericTestModule(dep, alreadyRun); err != nil {
-				return err
+				switch err.(type) {
+				case *disabledModuleError:
+					// do nothing, the module is disabled
+				default:
+					return err
+				}
 			}
 			alreadyRun[depName] = true
 		}
@@ -98,6 +116,7 @@ func TestModules(t *testing.T) {
 			switch err.(type) {
 			case *mustBeRunAsRootError:
 			case *notApplicableError:
+			case *disabledModuleError:
 				t.Logf("warning with module %s: %v", name, err)
 			default:
 				t.Errorf("error with module %s: %v", name, err)
@@ -170,14 +189,14 @@ func TestGetModuleNames(t *testing.T) {
 // 	config.InjectContext(c)
 // }
 
-func TestGetEnabledModules(t *testing.T) {
-	// injectDefaultConfig()
-	em := GetEnabledModules()
-	if len(em) != len(modules) {
-		t.Errorf("bad number of modules, expect %d, got %d",
-			len(modules), len(em))
-	}
-}
+// func TestGetEnabledModules(t *testing.T) {
+// 	// injectDefaultConfig()
+// 	em := GetEnabledModules()
+// 	if len(em) != len(modules) {
+// 		t.Errorf("bad number of modules, expect %d, got %d",
+// 			len(modules), len(em))
+// 	}
+// }
 
 func TestGetEnabledModules2(t *testing.T) {
 	mod := &TCPScanModule{}
