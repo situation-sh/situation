@@ -31,7 +31,6 @@ func TestBackends(t *testing.T) {
 	}
 }
 
-
 func TestPackage(t *testing.T) {
 	// activate all the backends
 	for _, backend := range backends {
@@ -67,7 +66,6 @@ func TestPackage(t *testing.T) {
 		t.Error(err)
 	}
 }
-
 
 func TestNetworkInterfaceUnmarshal(t *testing.T) {
 	nic := test.RandomNIC()
@@ -105,8 +103,8 @@ func TestNetworkInterfaceUnmarshal(t *testing.T) {
 }
 
 func testEnableBackend(b Backend) error {
-	config.Set(enabledBackendKey(b), "true")
-	defer config.Set(enabledBackendKey(b), "false")
+	config.Set(enableBackendKey(b), "true")
+	defer config.Set(enableBackendKey(b), "false")
 
 	if err := Init(); err != nil {
 		return err

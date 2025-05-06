@@ -34,15 +34,6 @@ func SetDefault[T any](backend Backend, key string, value *T, usage string) {
 	config.DefineVar(name, value, puzzle.WithDescription(usage), puzzle.WithFlagName(flagName))
 }
 
-func enabledBackendKey(backend Backend) string {
-	return fmt.Sprintf("enable-backend-%s", backend.Name())
-}
-
-func isEnabled(backend Backend) bool {
-	enabled, err := config.Get[bool](enabledBackendKey(backend))
-	return err == nil && enabled
-}
-
 // RegisterBackend is the function to call to register a backend
 // It panics if two modules have the same name
 func RegisterBackend(backend Backend) {
