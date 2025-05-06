@@ -8,17 +8,19 @@ import (
 	"github.com/situation-sh/situation/config"
 )
 
+func enableBackendKey(backend Backend) string {
+	return fmt.Sprintf("enable-backend-%s", backend.Name())
+}
+
+func isEnabled(b Backend) bool {
+	enabled, err := config.Get[bool](enableBackendKey(b))
+	return err == nil && enabled
+}
+
 // GetLogger is a helper function that returns a logger specific
 // to the input backend
 func GetLogger(backend Backend) *logrus.Entry {
 	return logrus.WithField("module", backend.Name())
-}
-
-// GetConfig is a generic function that returns a value
-// associated to a key within the backend namespace
-func GetConfig[T any](backend Backend, key string) (T, error) {
-	k := fmt.Sprintf("backends.%s.%s", backend.Name(), key)
-	return config.Get[T](k)
 }
 
 // SetDefault is a helper that defines default backend parameter
@@ -32,15 +34,6 @@ func SetDefault[T any](backend Backend, key string, value *T, usage string) {
 	config.DefineVar(name, value, puzzle.WithDescription(usage), puzzle.WithFlagName(flagName))
 }
 
-func enabledBackendKey(backend Backend) string {
-	return fmt.Sprintf("enable-backend-%s", backend.Name())
-}
-
-func isEnabled(backend Backend) bool {
-	enabled, err := config.Get[bool](enabledBackendKey(backend))
-	return err == nil && enabled
-}
-
 // RegisterBackend is the function to call to register a backend
 // It panics if two modules have the same name
 func RegisterBackend(backend Backend) {
@@ -49,8 +42,9 @@ func RegisterBackend(backend Backend) {
 		panic(fmt.Errorf("two backends have the same name: %s", name))
 	}
 	backends[name] = backend
+	// generate a config entry
 	config.Define(
-		enabledBackendKey(backend),
+		enableBackendKey(backend),
 		false,
 		puzzle.WithDescription(fmt.Sprintf("Enable the %s backend", backend.Name())),
 		puzzle.WithFlagName(fmt.Sprintf("%s", backend.Name())),

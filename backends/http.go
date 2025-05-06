@@ -20,6 +20,7 @@ type HttpBackend struct {
 }
 
 func (h *HttpBackend) populateHeaders(headers *http.Header) error {
+	headers.Set("user-agent", fmt.Sprintf("situation/%s", config.Version))
 	for _, ct := range h.ContentType {
 		headers.Add("content-type", ct)
 	}
@@ -61,35 +62,31 @@ func (h *HttpBackend) Init() error {
 	return nil
 }
 
-func (h *HttpBackend) Close() {
-
+func (h *HttpBackend) Close() error {
+	return nil
 }
 
-func (h *HttpBackend) Write(p *models.Payload) {
+func (h *HttpBackend) Write(p *models.Payload) error {
 	logger := GetLogger(h)
 
 	data, err := json.Marshal(p)
 	if err != nil {
-		logger.Error(err)
-		return
+		return fmt.Errorf("error while marshalling payload to json: %w", err)
 	}
 
 	req, err := http.NewRequest(h.Method, h.URL, bytes.NewReader(data))
 	if err != nil {
-		logger.Error(err)
-		return
+		return fmt.Errorf("error while creating request: %w", err)
 	}
 
 	// provide headers based on config
 	if err := h.populateHeaders(&req.Header); err != nil {
-		logger.Error(err)
-		return
+		return fmt.Errorf("error while populating request headers: %w", err)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logger.Errorf("an error occurred while sending data to '%s': %v", h.URL, err)
-		return
+		return fmt.Errorf("error while sending data to %s: %w", h.URL, err)
 	}
 
 	switch resp.StatusCode {
@@ -104,12 +101,11 @@ func (h *HttpBackend) Write(p *models.Payload) {
 
 		buffer := make([]byte, length)
 		if n, err := resp.Body.Read(buffer); n > 0 {
-			logger.Errorf("response: %s", string(buffer[:n]))
+			return fmt.Errorf("response error (%v): %s", resp.StatusCode, string(buffer[:n]))
 		} else if err != nil {
-			logger.Errorf("an error occurred while sending data to '%s': %v", h.URL, err)
-			return
+			return fmt.Errorf("error while reading body data after failed request: %w", err)
 		}
 
 	}
-
+	return nil
 }

@@ -7,6 +7,7 @@ on:
       - "**/*.go"
       - ".github/workflows/test.yaml"
       - "Makefile"
+
 env:
   test-module-binary: bin/situation-*module-testing-*
   artifact-basename: situation-module-testing
@@ -50,10 +51,15 @@ jobs:
         image:
           [
             "debian:10",
+            "debian:12",
             "ubuntu:22.04",
-            "fedora:36",
-            "rockylinux:9.0",
-            "alpine:3.17",
+            "ubuntu:24.04",
+            "fedora:40",
+            "fedora:42",
+            "rockylinux:8.9",
+            "rockylinux:9.3",
+            "alpine:3.18",
+            "alpine:3.21",
             "opensuse/leap:15.6",
           ]
     container:
@@ -64,20 +70,17 @@ jobs:
         with:
           name: ${{ env.artifact-basename }}
           path: bin
-      - name: Export binary name
-        run: |
-          echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
-          cat $GITHUB_ENV
       - name: Run the binary
         run: |
-          chmod +x ${{ env.SITUATION }}
-          ${{ env.SITUATION }} -test.v
+          mv bin/situation-*linux bin/situation-module-testing
+          chmod +x bin/situation-module-testing
+          bin/situation-module-testing -test.v -test.run=TestAllModules
 
   windows:
+    needs: build
     strategy:
       matrix:
         os: [windows-2022, windows-2019]
-    needs: build
     runs-on: ${{ matrix.os }}
     steps:
       - name: Download module testing binary
@@ -85,13 +88,13 @@ jobs:
         with:
           name: ${{ env.artifact-basename }}
           path: bin
-      - name: Export binary name
+      - name: Rename the built binary
         run: |
-          echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
-          Get-Content $env:GITHUB_ENV
+          Rename-Item -Path (Get-ChildItem -Path bin -Filter "situation-*.exe" | Select-Object -First 1).FullName -NewName "situation-module-testing.exe"
+
       - name: Run the binary
         run: |
-          & $env:SITUATION "-test.v"
+          & ".\bin\situation-module-testing.exe" "-test.v" "-test.run=TestAllModules" "-no-module-msi=true" "-skip-missing-deps=true"
 
   docs:
     runs-on: ubuntu-latest

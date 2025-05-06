@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.19.0
+VERSION    := 0.19.1
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -139,6 +139,9 @@ goweight.json:
 
 modules-doc: $(MODULE_FILES)
 	$(GO) run dev/doc/*.go -d modules -o docs/modules/
+
+test-modules:
+	$(GO) test -v -cover -run 'TestAllModules' ./modules
 
 test: .gocoverprofile.html
 

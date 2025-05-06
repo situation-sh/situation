@@ -20,12 +20,12 @@ var schemaCmd = cli.Command{
 // mapper is a custom jsonschema mapper
 func mapper(t reflect.Type) *jsonschema.Schema {
 	switch t.String() {
-	case "models.IP":
-		return &jsonschema.Schema{
-			AnyOf:    []*jsonschema.Schema{{Type: "string", Format: "ipv4"}, {Type: "string", Format: "ipv6"}},
-			Title:    "IPv4 or IPv6 address",
-			Examples: []interface{}{"192.168.10.103", "0.0.0.0", "::", "fe80::c1b2:a320:f799:10e0"},
-		}
+	// case "models.IP":
+	// 	return &jsonschema.Schema{
+	// 		AnyOf:    []*jsonschema.Schema{{Type: "string", Format: "ipv4"}, {Type: "string", Format: "ipv6"}},
+	// 		Title:    "IPv4 or IPv6 address",
+	// 		Examples: []interface{}{"192.168.10.103", "0.0.0.0", "::", "fe80::c1b2:a320:f799:10e0"},
+	// 	}
 	case "uuid.UUID":
 		return &jsonschema.Schema{
 			Type:     "string",

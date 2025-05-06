@@ -45,21 +45,21 @@ func (m *PingModule) Dependencies() []string {
 	return []string{"host-network"}
 }
 
-func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
+func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan<- error, log *logrus.Entry) {
 	defer wg.Done()
+	privileged := pingconfig.UseICMP()
 	pinger, err := ping.NewPinger(ip.String())
 	if err != nil {
 		return
 	}
 	pinger.Count = 1
-	pinger.SetPrivileged(pingconfig.UseICMP())
+	pinger.SetPrivileged(privileged)
 	pinger.Timeout = 300 * time.Millisecond
 	// see https://github.com/go-ping/ping/issues/168
 	pinger.Size = 2048
 
 	// callback when a target responds
 	pinger.OnRecv = func(p *ping.Packet) {
-		logger := logrus.WithField("module", "ping")
 		ip := p.IPAddr.IP
 
 		// check the store
@@ -73,11 +73,11 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 		if ip4 := ip.To4(); ip4 != nil {
 			nic.IP = ip4
 			nic.MaskSize = maskSize
-			logger = logger.WithField("ip", nic.IP).WithField("mask", maskSize)
+			log = log.WithField("ip", nic.IP).WithField("mask", maskSize)
 		} else {
 			nic.IP6 = ip.To16()
 			nic.Mask6Size = maskSize
-			logger = logger.WithField("ip6", nic.IP6).WithField("mask", maskSize)
+			log = log.WithField("ip6", nic.IP6).WithField("mask", maskSize)
 		}
 
 		// create machine with that NIC
@@ -85,23 +85,30 @@ func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan error) {
 		m.NICS = append(m.NICS, &nic)
 
 		// put this machine to the store
-		logger.Info("New machine added")
+		log.Info("New machine added")
 		store.InsertMachine(m)
 	}
 
-	pinger.OnSendError = func(p *ping.Packet, err error) {
-
-	}
-	// run
-	if err := pinger.Run(); err != nil {
-		logrus.Debugf("Error: %v", err)
-		cerr <- fmt.Errorf("error while pinging %v: %v", ip, err)
+	err = pinger.Run()
+	if err == nil {
+		pinger.Stop()
 		return
 	}
-	pinger.Stop()
+
+	log.Debugf("ping with privileged=%v failed (%v), trying with the opposite", privileged, err)
+	pinger.SetPrivileged(!privileged)
+
+	err = pinger.Run()
+	defer pinger.Stop()
+
+	if err == nil {
+		return
+	}
+	log.Errorf("ping with privileged=%v failed (%v), no fallback", privileged, err)
+	cerr <- fmt.Errorf("error while pinging %v: %v", ip, err)
 }
 
-func pingSubnetwork(network *net.IPNet) error {
+func pingSubnetwork(network *net.IPNet, log *logrus.Entry) error {
 	var wg sync.WaitGroup
 	cerr := make(chan error)
 	done := make(chan bool)
@@ -122,14 +129,14 @@ func pingSubnetwork(network *net.IPNet) error {
 			continue
 		}
 
-		logrus.Debugf("Pinging %s", ip)
+		log.Debugf("Pinging %s", ip)
 		ms, _ := network.Mask.Size()
 
 		wg.Add(1)
-		go singlePing(ip, ms, &wg, cerr)
+		go singlePing(ip, ms, &wg, cerr, log)
 	}
 
-	logrus.Debug("Waiting ping to finish")
+	log.Debug("Waiting ping to finish")
 	wg.Wait()
 
 	// closing the channel ensures that the above goroutine
@@ -173,7 +180,7 @@ func (m *PingModule) Run() error {
 		}
 
 		logger.Infof("Pinging %s", network.String())
-		if err := pingSubnetwork(network); err != nil {
+		if err := pingSubnetwork(network, logger); err != nil {
 			logger.Error(err)
 			errorMsg += fmt.Sprintf("Error(s) occurred while pinging %s:", network.String())
 			errorMsg += strings.ReplaceAll(err.Error(), errorPrefix, "\n\t - ")

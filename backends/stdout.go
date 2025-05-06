@@ -26,10 +26,11 @@ func (s *StdoutBackend) Init() error {
 	return nil
 }
 
-func (s *StdoutBackend) Close() {
+func (s *StdoutBackend) Close() error {
+	return nil
 }
 
-func (s *StdoutBackend) Write(p *models.Payload) {
+func (s *StdoutBackend) Write(p *models.Payload) error {
 	var bytes []byte
 	var err error
 
@@ -41,7 +42,8 @@ func (s *StdoutBackend) Write(p *models.Payload) {
 	}
 
 	if err != nil {
-		GetLogger(s).Error(err)
+		return fmt.Errorf("error while marshalling payload: %w", err)
 	}
 	fmt.Println(string(bytes))
+	return nil
 }

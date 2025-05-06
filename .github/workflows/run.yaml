@@ -38,7 +38,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download module testing binary
+      - name: Download linux binary
         uses: actions/download-artifact@v4
         with:
           name: situation-linux
@@ -62,7 +62,7 @@ jobs:
     needs: build
     runs-on: windows-latest
     steps:
-      - name: Download module testing binary
+      - name: Download windows binary
         uses: actions/download-artifact@v4
         with:
           name: situation-windows

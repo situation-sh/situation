@@ -31,6 +31,42 @@ func TestBackends(t *testing.T) {
 	}
 }
 
+func TestPackage(t *testing.T) {
+	// activate all the backends
+	for _, backend := range backends {
+		config.Set(enableBackendKey(backend), "true")
+		defer config.Set(enableBackendKey(backend), "false")
+	}
+
+	// save file to tmp
+	initialPath, err := config.Get[string]("backends.file.path")
+	if err != nil {
+		t.Fatalf("error while getting backends.file.path: %v", err)
+	}
+	config.Set("backends.file.path", t.TempDir()+"/situation.json")
+	defer config.Set("backends.file.path", initialPath)
+
+	// start dummy http server (it also configure the backend)
+	srv := &httpBackendTestServer{log: t.Logf}
+	if err := srv.start(); err != nil {
+		t.Fatalf("error while starting HTTP backend server: %v", err)
+	}
+	defer srv.stop()
+
+	if err := Init(); err != nil {
+		t.Error(err)
+	}
+
+	r := test.RandomPayload()
+	if err := Write(r); err != nil {
+		t.Error(err)
+	}
+
+	if err := Close(); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestNetworkInterfaceUnmarshal(t *testing.T) {
 	nic := test.RandomNIC()
 	raw, err := json.Marshal(nic)
@@ -67,8 +103,8 @@ func TestNetworkInterfaceUnmarshal(t *testing.T) {
 }
 
 func testEnableBackend(b Backend) error {
-	config.Set(enabledBackendKey(b), "true")
-	defer config.Set(enabledBackendKey(b), "false")
+	config.Set(enableBackendKey(b), "true")
+	defer config.Set(enableBackendKey(b), "false")
 
 	if err := Init(); err != nil {
 		return err
