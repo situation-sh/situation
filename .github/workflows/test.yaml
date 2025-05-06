@@ -71,7 +71,8 @@ jobs:
           name: ${{ env.artifact-basename }}
           path: bin
       - name: Run the binary
-        run: mv bin/situation-*linux bin/situation-module-testing
+        run: |
+          mv bin/situation-*linux bin/situation-module-testing
           chmod +x bin/situation-module-testing
           bin/situation-module-testing -test.v
 
@@ -93,7 +94,7 @@ jobs:
 
       - name: Run the binary
         run: |
-          .\bin\situation-module-testing.exe -test.v=true -no-module-msi=true -skip-missing-deps=true
+          & ".\bin\situation-module-testing.exe" "-test.v" "-no-module-msi=true" "-skip-missing-deps=true"
 
   docs:
     runs-on: ubuntu-latest
