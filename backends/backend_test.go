@@ -31,6 +31,7 @@ func TestBackends(t *testing.T) {
 	}
 }
 
+
 func TestPackage(t *testing.T) {
 	// activate all the backends
 	for _, backend := range backends {
@@ -67,6 +68,7 @@ func TestPackage(t *testing.T) {
 	}
 }
 
+
 func TestNetworkInterfaceUnmarshal(t *testing.T) {
 	nic := test.RandomNIC()
 	raw, err := json.Marshal(nic)
@@ -100,4 +102,31 @@ func TestNetworkInterfaceUnmarshal(t *testing.T) {
 	}
 
 	t.Logf("\n%+v\n", otherNic)
+}
+
+func testEnableBackend(b Backend) error {
+	config.Set(enabledBackendKey(b), "true")
+	defer config.Set(enabledBackendKey(b), "false")
+
+	if err := Init(); err != nil {
+		return err
+	}
+
+	for _, backend := range backends {
+		if isEnabled(backend) && backend.Name() == b.Name() {
+			return nil
+		} else if isEnabled(backend) {
+			return fmt.Errorf("backend %s should not be enabled", backend.Name())
+		}
+	}
+	return nil
+}
+
+func TestEnableBackend(t *testing.T) {
+	for _, backend := range backends {
+		if err := testEnableBackend(backend); err != nil {
+			t.Errorf("error while enabling backend %s: %v", backend.Name(), err)
+		}
+	}
+
 }

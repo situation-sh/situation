@@ -9,6 +9,7 @@ import (
 
 var singleModule string
 
+
 func init() {
 	flag.StringVar(&singleModule, "module", "", "name of the module to run")
 	if err := config.PopulateFlags(flag.CommandLine); err != nil {
@@ -28,6 +29,7 @@ func TestAllModules(t *testing.T) {
 		}
 		return
 	}
+
 	// run all the enabled modules
 	for _, mod := range GetEnabledModules() {
 		t.Run(mod.Name(), func(t *testing.T) {
@@ -63,3 +65,4 @@ func testSingleModule(m Module) error {
 	s := NewScheduler(modulesToRun)
 	return s.Run()
 }
+

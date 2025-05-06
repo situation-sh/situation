@@ -34,6 +34,7 @@ func (h *HttpBackend) populateHeaders(headers *http.Header) error {
 		}
 		headers.Add(s[0], s[1])
 	}
+	headers.Add("User-Agent", fmt.Sprintf("situation/%s", config.Version))
 	return nil
 }
 
