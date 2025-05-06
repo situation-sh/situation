@@ -2,12 +2,11 @@ name: release
 
 on:
   workflow_dispatch:
-  push:
-    # Pattern matched against refs/tags
-    branches:
+  pull_request:
+    types: # when a pull request merges, the pull request is automatically closed
+      - closed
+    branches: # only run on pull requests that target specific branch
       - main
-    tags:
-      - "*" # Push events to every tag not containing /
 
 env:
   GO111MODULE: on
