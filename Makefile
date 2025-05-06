@@ -114,7 +114,7 @@ $(BIN_PREFIX)-%: $(SRC_FILES)
 # binaries for module testing purpose
 $(BIN_PREFIX)-module-testing-%: $(MODULE_FILES)
 	@mkdir -p $(@D)
-	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD_TEST) -run 'TestAllModules' -o $@ $(MODULE)/modules
+	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD_TEST) -o $@ $(MODULE)/modules
 
 remote-module-testing-%: module-testing
 	ID=$$(head /dev/random|md5sum|head -c 8); \
