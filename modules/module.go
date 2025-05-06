@@ -30,6 +30,10 @@ func GetModuleNames() []string {
 	return list
 }
 
+func GetModuleByName(name string) Module {
+	return modules[name]
+}
+
 func isDisabled(m Module) bool {
 	disabled, err := config.Get[bool](disableModuleKey(m))
 	// if there is an error we prefer disable the module
