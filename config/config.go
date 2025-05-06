@@ -1,9 +1,11 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/asiffer/puzzle"
+	"github.com/asiffer/puzzle/flagset"
 	"github.com/asiffer/puzzle/jsonfile"
 	"github.com/asiffer/puzzle/urfave3"
 	"github.com/urfave/cli/v3"
@@ -55,4 +57,8 @@ func JSON() []byte {
 		panic(err)
 	}
 	return bytes
+}
+
+func PopulateFlags(fs *flag.FlagSet) error {
+	return flagset.Populate(k, fs)
 }
