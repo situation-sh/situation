@@ -20,6 +20,7 @@ type HttpBackend struct {
 }
 
 func (h *HttpBackend) populateHeaders(headers *http.Header) error {
+	headers.Set("user-agent", fmt.Sprintf("situation/%s", config.Version))
 	for _, ct := range h.ContentType {
 		headers.Add("content-type", ct)
 	}

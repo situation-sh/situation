@@ -16,11 +16,14 @@ const urlKey = "backends.http.url"
 type httpBackendTestServer struct {
 	initialURL string
 	srv        *http.Server
+	log        func(msg string, args ...any)
 }
 
-func postPayload(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("Headers: %v\n", r.Header)
-	w.WriteHeader(201)
+func (s *httpBackendTestServer) handlerFactory() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.log("Headers: %v\n", r.Header)
+		w.WriteHeader(201)
+	}
 }
 
 func (s *httpBackendTestServer) stop() error {
@@ -35,27 +38,52 @@ func (s *httpBackendTestServer) stop() error {
 	return nil
 }
 
-func (s *httpBackendTestServer) start() error {
+func (s *httpBackendTestServer) setUp() error {
 	initialURL, err := config.Get[string](urlKey)
 	if err != nil {
 		return err
 	}
 	s.initialURL = initialURL
-	config.Set(urlKey, "http://"+ADDR+ROUTE)
+	if err := config.Set(urlKey, "http://"+ADDR+ROUTE); err != nil {
+		return err
+	}
+	if err := config.Set("backends.http.extra-header", "X-Organization-ID=situation.sh"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *httpBackendTestServer) tearDown() error {
+	if err := config.Set(urlKey, s.initialURL); err != nil {
+		return err
+	}
+	if err := config.Set("backends.http.extra-header", ""); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *httpBackendTestServer) start() error {
+	if err := s.setUp(); err != nil {
+		return fmt.Errorf("error while setting up server: %w", err)
+	}
 
 	s.srv = &http.Server{Addr: ADDR, ReadHeaderTimeout: 3 * time.Second}
 	mux := http.NewServeMux()
-	mux.HandleFunc(ROUTE, postPayload)
+	mux.HandleFunc(ROUTE, s.handlerFactory())
 	s.srv.Handler = mux
 
 	go func() {
-		defer config.Set(urlKey, initialURL) // restore original URL
-
 		// always returns error. ErrServerClosed on graceful close
 		if err := s.srv.ListenAndServe(); err != http.ErrServerClosed {
 			// unexpected error. port in use?
 			fmt.Printf("ListenAndServe(): %v\n", err)
 		}
+
+		if err := s.tearDown(); err != nil {
+			fmt.Printf("error while tearing down server: %v\n", err)
+		}
+
 	}()
 
 	// returning reference so caller can call Shutdown()

@@ -32,6 +32,7 @@ func TestBackends(t *testing.T) {
 }
 
 func TestPackage(t *testing.T) {
+	// activate all the backends
 	for _, backend := range backends {
 		config.Set(enableBackendKey(backend), "true")
 		defer config.Set(enableBackendKey(backend), "false")
@@ -45,8 +46,8 @@ func TestPackage(t *testing.T) {
 	config.Set("backends.file.path", t.TempDir()+"/situation.json")
 	defer config.Set("backends.file.path", initialPath)
 
-	// start dummy http server
-	srv := &httpBackendTestServer{}
+	// start dummy http server (it also configure the backend)
+	srv := &httpBackendTestServer{log: t.Logf}
 	if err := srv.start(); err != nil {
 		t.Fatalf("error while starting HTTP backend server: %v", err)
 	}
