@@ -7,91 +7,54 @@ on:
       - "**/*.go"
       - ".github/workflows/test.yaml"
       - "Makefile"
-env:
-  test-module-binary: bin/situation-*module-testing-*
-  artifact-basename: situation-module-testing
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Source
-        uses: actions/checkout@v4
-      # Setup Go
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-      - name: Cache module testing binary
-        id: cache-mtb
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-mtb
-        with:
-          path: ${{ env.test-module-binary }}
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/*.go') }}
-      # build the binary
-      - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
-        name: Build module testing binaries
-        run: make build-test
-      - name: Upload module testing binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.artifact-basename }}
-          path: ${{ env.test-module-binary }}
-          retention-days: 1
-
   linux:
-    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
         image:
           [
             "debian:10",
+            "debian:12",
             "ubuntu:22.04",
-            "fedora:36",
-            "rockylinux:9.0",
-            "alpine:3.17",
+            "ubuntu:24.04",
+            "fedora:40",
+            "fedora:42",
+            "rockylinux:8.9",
+            "rockylinux:9.3",
+            "alpine:3.18",
+            "alpine:3.21",
             "opensuse/leap:15.6",
           ]
     container:
       image: ${{ matrix.image }}
     steps:
-      - name: Download module testing binary
-        uses: actions/download-artifact@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          name: ${{ env.artifact-basename }}
-          path: bin
-      - name: Export binary name
-        run: |
-          echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - name: Run the binary
-        run: |
-          chmod +x ${{ env.SITUATION }}
-          ${{ env.SITUATION }} -test.v
+          go-version-file: go.mod
+          cache: true
+      - name: Run module tests
+        run: go test -v -cover -run 'TestAllModules' ./modules
 
   windows:
     strategy:
       matrix:
         os: [windows-2022, windows-2019]
-    needs: build
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Download module testing binary
-        uses: actions/download-artifact@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          name: ${{ env.artifact-basename }}
-          path: bin
-      - name: Export binary name
-        run: |
-          echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
-          Get-Content $env:GITHUB_ENV
-      - name: Run the binary
-        run: |
-          & $env:SITUATION "-test.v"
+          go-version-file: go.mod
+          cache: true
+      - name: Run module tests
+        run: go test -v -cover -run 'TestAllModules' ./modules -no-module-msi=true -skip-missing-deps=true
 
   docs:
     runs-on: ubuntu-latest
