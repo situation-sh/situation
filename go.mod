@@ -3,7 +3,7 @@ module github.com/situation-sh/situation
 go 1.24.2
 
 require (
-	github.com/asiffer/puzzle v0.0.0-20250505082915-f6da4109f3a2
+	github.com/asiffer/puzzle v0.0.0-20250505143423-4290002ad84f
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
 	github.com/docker/docker v28.1.1+incompatible
