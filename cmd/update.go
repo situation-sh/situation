@@ -18,6 +18,16 @@ import (
 	"golang.org/x/mod/semver"
 )
 
+type updateUnavailableError struct {
+	currentVersion string
+	releases       []string
+}
+
+func (e *updateUnavailableError) Error() string {
+	return fmt.Sprintf("cannot find a non-breaking update (current: %s, releases: %v), but you can pass --force",
+		e.currentVersion, e.releases)
+}
+
 var forceUpdate bool = false
 var releaseURL string = "https://api.github.com/repos/situation-sh/situation/releases"
 var releaseToken string = ""
@@ -129,8 +139,14 @@ func selectRelease() (*GitHubRelease, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("cannot find a non-breaking update (current: %s, releases: %v), but you can pass --force",
-		currentVersion, upperReleases)
+	available := make([]string, 0)
+	for _, r := range upperReleases {
+		available = append(available, r.TagName)
+	}
+	return nil, &updateUnavailableError{
+		currentVersion: currentVersion,
+		releases:       available,
+	}
 }
 
 func downloadBinary(u string) ([]byte, error) {
