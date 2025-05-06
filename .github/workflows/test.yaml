@@ -30,6 +30,9 @@ jobs:
     container:
       image: ${{ matrix.image }}
     steps:
+      - name: Install tar if needed
+        if: matrix.image == 'opensuse/leap:15.6'
+        run: zypper --non-interactive install tar
       - name: Checkout source
         uses: actions/checkout@v4
       - name: Setup Go
