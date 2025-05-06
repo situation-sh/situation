@@ -104,7 +104,7 @@ go.mod:
 
 all: $(BIN_PREFIX)-$(GOARCH)-linux $(BIN_PREFIX)-$(GOARCH)-windows.exe
 
-# build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testing-amd64-windows.exe
+build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testing-amd64-windows.exe
 
 # final binary files
 $(BIN_PREFIX)-%: $(SRC_FILES)
@@ -112,9 +112,9 @@ $(BIN_PREFIX)-%: $(SRC_FILES)
 	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD) -o $@ main.go
 
 # binaries for module testing purpose
-# $(BIN_PREFIX)-module-testing-%: $(MODULE_FILES)
-# 	@mkdir -p $(@D)
-# 	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD_TEST) -o $@ $$(find ./modules -maxdepth 2 -type f -name "*.go" ! -name "*_test.go") ./modules/module_test.go
+$(BIN_PREFIX)-module-testing-%: $(MODULE_FILES)
+	@mkdir -p $(@D)
+	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD_TEST) -run 'TestAllModules' -o $@ $(MODULE)/modules
 
 remote-module-testing-%: module-testing
 	ID=$$(head /dev/random|md5sum|head -c 8); \

@@ -8,8 +8,43 @@ on:
       - ".github/workflows/test.yaml"
       - "Makefile"
 
+env:
+  test-module-binary: bin/situation-*module-testing-*
+  artifact-basename: situation-module-testing
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Cache module testing binary
+        id: cache-mtb
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-mtb
+        with:
+          path: ${{ env.test-module-binary }}
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/*.go') }}
+      # build the binary
+      - if: ${{ steps.cache-mtb.outputs.cache-hit != 'true' }}
+        name: Build module testing binaries
+        run: make build-test
+      - name: Upload module testing binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.artifact-basename }}
+          path: ${{ env.test-module-binary }}
+          retention-days: 1
+
   linux:
+    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -30,34 +65,35 @@ jobs:
     container:
       image: ${{ matrix.image }}
     steps:
-      - name: Install tar if needed
-        if: matrix.image == 'opensuse/leap:15.6'
-        run: zypper --non-interactive install tar
-      - name: Checkout source
-        uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Download module testing binary
+        uses: actions/download-artifact@v4
         with:
-          go-version-file: go.mod
-          cache: true
-      - name: Run module tests
-        run: go test -v -cover -run 'TestAllModules' ./modules
+          name: ${{ env.artifact-basename }}
+          path: bin
+      - name: Run the binary
+        run: mv situation-*linux ./situation-module-testing
+          chmod +x ./situation-module-testing
+          ./situation-module-testing -test.v
 
   windows:
+    needs: build
     strategy:
       matrix:
         os: [windows-2022, windows-2019]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
+      - name: Download module testing binary
+        uses: actions/download-artifact@v4
         with:
-          go-version-file: go.mod
-          cache: true
-      - name: Run module tests
-        run: go test -v -cover -run 'TestAllModules' ./modules -no-module-msi=true -skip-missing-deps=true
+          name: ${{ env.artifact-basename }}
+          path: bin
+      - name: Rename the built binary
+        run: |
+          Rename-Item -Path (Get-ChildItem -Path bin -Filter "situation-*.exe" | Select-Object -First 1).FullName -NewName "situation-module-testing.exe"
+
+      - name: Run the binary
+        run: |
+          .\bin\situation-module-testing.exe -test.v -no-module-msi=true -skip-missing-deps=true
 
   docs:
     runs-on: ubuntu-latest
