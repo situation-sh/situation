@@ -150,11 +150,16 @@ func (s *Scheduler) Run() error {
 	}
 
 	// arrange tasks
-	s.logger.Info("Scheduling tasks")
+
 	tasks, err := s.buildTasksList()
 	if err != nil {
 		return err
 	}
+	taskNames := make([]string, len(tasks))
+	for i, t := range tasks {
+		taskNames[i] = t.Name()
+	}
+	s.logger.WithField("tasks", taskNames).Info("Scheduling tasks")
 
 	// set all the module status to nil
 	resetStatus()
