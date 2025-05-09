@@ -15,29 +15,17 @@ article > p {
   min-width: unset;
 }
 
-[data-md-color-scheme="sweden"] {
-  --md-primary-fg-color: #1a3050;
-  --md-primary-fg-color--light: #005293;
-  --md-primary-fg-color--dark: #142638;
-  --md-accent-fg-color: #fecb00;
-  --md-typeset-a-color: var(--md-primary-fg-color--light);
-  --md-admonition-fg-color: var(--nord0);
-  --md-default-bg-color: #fafafa;
-}
+/* article table tbody tr td:has(img.tag) {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+} */
 
-.md-typeset {
-  font-weight: 200;
-  /* color: var(--md-default-fg-color); */
-}
-
-.md-typeset h1 {
-  font-weight: 700;
-  color: var(--md-primary-fg-color--dark);
-  font-size: 3em;
-  margin-bottom: 0.5em;
-}
-
-.scrollable pre code {
-  max-height: 50vh;
-  overflow-y: auto;
+img.tag {
+  display: inline-flex;
+  margin: 0.15rem;
 }

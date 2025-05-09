@@ -3,84 +3,31 @@ repo_url: https://github.com/situation-sh/situation
 docs_dir: docs
 
 theme:
-  name: material
-  icon:
-    logo: octicons/codespaces-24
-  favicon: img/codespaces.svg
-  palette:
-    scheme: nord
-  font:
-    text: "Geist"
-    code: "Geist Mono"
-  features:
-    - content.code.copy
-
-nav:
-  - Home: index.md
-  - Installation:
-      - "Pre-built binaries": "installation/pre_built_binaries.md"
-      - "From sources": "installation/from_sources.md"
-  - "quick_start.md"
-  - "configuration.md"
-  - Modules:
-      - modules/index.md
-      - modules/appuser.md
-      - modules/arp.md
-      - modules/chassis.md
-      - modules/docker.md
-      - modules/dpkg.md
-      - modules/host_basic.md
-      - modules/host_cpu.md
-      - modules/host_disk.md
-      - modules/host_gpu.md
-      - modules/host_network.md
-      - modules/msi.md
-      - modules/netstat.md
-      - modules/ping.md
-      - modules/reverse_lookup.md
-      - modules/rpm.md
-      - modules/snmp.md
-      - modules/ssh.md
-      - modules/tcp_scan.md
-      - modules/zypper.md
-  - "backends.md"
-  - Developer:
-      - "developer/index.md"
-      - "developer/architecture.md"
-      - "developer/modules.md"
-      - "developer/store.md"
-      - "developer/contributing.md"
-  - "roadmap.md"
+  name: shadcn
+  icon: "https://svgg.link/oo/eJzEkdFuKiEQhu9NfIfJeKMJLqNHOW2zeNH7PsRmRZYWwQAV-_YN29KafYHOZmH-PwPzAW28aridrYsSh5QuT5znnJv8r_FB8y0R8XjVCFej8rO_SSQg2O5F-fEwnwEAtEH1CbI5pkFi8WFQRg_pW5yMtRIXm__lQwg3iTtCCB9fM6-7aEihc_Hkw1nimNouqeVm12wZlHEFse-sWlLzuKq9x5WXLg1wlPiyIWKC-vXugREjJkTJhGA_mo26MjnvFEJMwb8piYvTGNVYW-NU310kBv_ujvjbr8Rdzas3rhZVv17G3fkmpHtRSCdgU_A_AW25PsxnbXn3w2cAAAD__yzhlMk="
 
 markdown_extensions:
   - admonition
+  - codehilite
+  - fenced_code
   - attr_list
   - pymdownx.keys
   - md_in_html
   - pymdownx.snippets
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.details
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
+  - pymdownx.blocks.tab
 
 plugins:
   - search:
-      lang: [en]
-  - section-index
+  - excalidraw:
+      directory: docs/excalidraw
   - macros:
       verbose: true
       module_name: docs/macros/main
 
 extra_css:
   - css/extra.css
-  - css/nord.css
+#   - css/nord.css
 
 extra:
   variables:

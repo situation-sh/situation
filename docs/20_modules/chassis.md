@@ -4,8 +4,8 @@ windows: false
 macos: unknown
 root: unknown
 title: Chassis
-summary: "ChassisModule fills host chassis information"
-date: 2025-03-05
+summary: "Fills host chassis information"
+date: 2025-05-09
 filename: chassis.go
 std_imports:
   - os
@@ -26,14 +26,18 @@ Currently it only works under linux. It uses DBUS and the "org.freedesktop.hostn
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

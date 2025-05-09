@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: Host Basic
-summary: "HostBasicModule retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime"
-date: 2025-03-05
+summary: "Retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime"
+date: 2025-05-09
 filename: host_basic.go
 std_imports:
   - os
@@ -38,14 +38,18 @@ It heavily relies on the [gopsutil](https://github.com/shirou/gopsutil/) library
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

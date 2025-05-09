@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: Host Network
-summary: "HostNetworkModule retrieves basic newtork information about the host: interfaces along with their mac, ip and mask (IPv4 and IPv6)"
-date: 2025-03-05
+summary: "Retrieves basic newtork information about the host: interfaces along with their mac, ip and mask (IPv4 and IPv6)"
+date: 2025-05-09
 filename: host_network.go
 std_imports:
   - fmt
@@ -30,14 +30,18 @@ On Linux, it uses the Netlink API. On Windows, it calls `GetAdaptersAddresses`.
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

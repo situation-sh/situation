@@ -1,70 +1,63 @@
 ---
 title: Backends
+summary: Dispatch the collected data
+order: 40
 ---
 
-# Backends
+The collected data can be sent to different endpoints, a.k.a. backends.
 
-## Stdout (default)
+## Stdout
 
-The default behavior of Situation is to print the final payload to stdout.
+The simplest way to show what situation ahs collected is to print the final payload to stdout.
 
-=== "CLI"
+/// tab |  Linux
+```bash
+situation --stdout
+```
+/// 
 
-    ```bash
-    situation --backends.stdout.enabled=false
-    ```
+/// tab |  Windows
+```ps1
+situation.exe --stdout
+```
+///
 
-=== "YAML"
-
-    ```yaml
-    backends:
-        stdout:
-            enabled: false
-    ```
-
-
-!!!warning
-    Due to a bug in a third party library, the `enabled` attribute cannot be changed in the configuration file (see [this issue](https://github.com/urfave/cli/issues/1395))
 
 ## File
 
 The payload can also be stored in a file.
 
-=== "CLI"
+/// tab | Linux
+```bash
+situation --file --file-path=/tmp/situation.json
+```
+/// 
 
-    ```bash
-    situation --backends.file.enabled=true --backends.file.format=json --backends.file.path=/tmp/situation.json
-    ```
-
-=== "YAML"
-
-    ```yaml
-    backends:
-        file:
-            enabled: true
-            format: json
-            path: /tmp/situation.json
-    ```
+/// tab | Windows
+```ps1
+situation.exe --file --file-path="C:\Users\situation.json"
+```
+/// 
 
 ## HTTP
 
-Finally, the http backend is very convenient to send the payload (json) directly to a remote server.
+Finally, the http backend is very convenient to send the payload (json) directly to a remote server. 
 
-=== "CLI"
+/// tab | Linux
+```bash
+situation --http --http-url=http://localhost:8000/situation/ --http-extra-header="X-API-Key=d50deba3-6183-425a-b35c-ef0e030c284e" 
+```
+/// 
 
-    ```bash
-    situation --backends.http.enabled=true --backends.http.url=http://localhost:8000/situation/ --backends.http.method=POST --backends.http.header.content-type=application/json --backends.http.header.authorization="Bearer <APIKEY>" 
-    ```
+/// tab | Windows
+```ps1
+situation.exe --http --http-url=http://localhost:8000/situation/ --http-extra-header="X-API-Key=d50deba3-6183-425a-b35c-ef0e030c284e" 
+```
+/// 
 
-=== "YAML"
+By default it uses the `POST` method, but you can also use `PUT` by using the `--http-method` option. 
 
-    ```yaml
-    backends:
-        http:
-            enabled: true
-            url: http://localhost:8000/situation/
-            method: POST
-            header:
-                content-type: application/json
-                authorization: "Bearer <APIKEY>" 
-    ```
+Also, it embeds a default authorization header, filled with the agent id:  `Authorization: <agent-id>` (can be modified with the `--http-authorization` flag)
+
+
+

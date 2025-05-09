@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: SNMP
-summary: "SNMPModule Module to collect data through SNMP protocol."
-date: 2025-03-05
+summary: "Module to collect data through SNMP protocol."
+date: 2025-05-09
 filename: snmp.go
 std_imports:
   - context
@@ -38,14 +38,18 @@ This module need to access the following OID TREE: `.1.3.6.1.2.1` In case of snm
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

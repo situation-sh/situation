@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: unknown
 title: Reverse Lookup
-summary: "ReverseLookupModule tries to get a hostname attached to a local IP address"
-date: 2025-03-05
+summary: "Tries to get a hostname attached to a local IP address"
+date: 2025-05-09
 filename: reverse_lookup.go
 std_imports:
   - net
@@ -24,14 +24,18 @@ ReverseLookupModule tries to get a hostname attached to a local IP address
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

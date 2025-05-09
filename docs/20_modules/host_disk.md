@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: Host Disk
-summary: "HostDiskModule retrieves basic information about disk: name, model, size, type, controller and partitions."
-date: 2025-03-05
+summary: "Retrieves basic information about disk: name, model, size, type, controller and partitions."
+date: 2025-05-09
 filename: host_disk.go
 std_imports:
   - fmt
@@ -46,14 +46,18 @@ On Linux, it reads `/sys/block/$DEVICE/**` files. On windows 11, the local user 
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

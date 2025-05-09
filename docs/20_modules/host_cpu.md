@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: Host CPU
-summary: "HostCPUModule retrieves host CPU info: model, vendor and the number of cores."
-date: 2025-03-05
+summary: "Retrieves host CPU info: model, vendor and the number of cores."
+date: 2025-05-09
 filename: host_cpu.go
 std_imports:
   - fmt
@@ -31,14 +31,18 @@ On windows 11, the local user account must have administrator permissions (it do
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

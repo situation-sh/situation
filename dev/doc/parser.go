@@ -223,15 +223,34 @@ func buildBadge(m *ModuleDoc) string {
 	return strings.Join(badges, " ")
 }
 
+const LEGEND = `
+<div style="display: flex; flex-direction: row; gap: 1.5rem; font-family: monospace; align-items: center;">
+	<div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+		<img src="{{ linux_icon_src }}" alt="linux" />
+		<span>Linux</span>
+	</div>
+	<div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+		<img src="{{ windows_icon_src }}" alt="windows" />
+		<span>Windows</span>
+	</div>
+	<div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+		<img src="{{ root_required_icon_src }}" alt="root-required" />
+		<span>Root required</span>
+	</div>
+</div>
+`
+
 func buildIndex(modules []*ModuleDoc) []byte {
-	head := "| Name | Summary | Dependencies | Status |\n"
+	head := "---\ntitle: Modules reference\nsummary: List of all collectors\nsidebar_title: Reference\n---\n\n"
+	head += LEGEND
+	head += "| Name | Summary | Dependencies | Status |\n"
 	head += "|------|---------|--------------|--------|"
 	line := "\n| %s   | %s      | %s           | %s     |"
 
 	out := []byte(head)
 	links := make(map[string]string)
 	for _, m := range modules {
-		links[m.Name] = fmt.Sprintf("[%s](%s)", m.Name, strings.Replace(m.SrcFile, ".go", ".md", 1))
+		links[m.Name] = fmt.Sprintf(`[%s](%s)`, m.Name, strings.Replace(m.SrcFile, ".go", ".md", 1))
 	}
 	// sort modules by name
 	sort.Slice(modules, func(i, j int) bool {
