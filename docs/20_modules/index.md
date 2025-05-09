@@ -1,3 +1,24 @@
+---
+title: Modules reference
+summary: List of all collectors
+sidebar_title: Reference
+---
+
+
+<div style="display: flex; flex-direction: row; gap: 1.5rem; font-family: monospace; align-items: center;">
+	<div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+		<img src="{{ linux_icon_src }}" alt="linux" />
+		<span>Linux</span>
+	</div>
+	<div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+		<img src="{{ windows_icon_src }}" alt="windows" />
+		<span>Windows</span>
+	</div>
+	<div style="display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+		<img src="{{ root_required_icon_src }}" alt="root-required" />
+		<span>Root required</span>
+	</div>
+</div>
 | Name | Summary | Dependencies | Status |
 |------|---------|--------------|--------|
 | [appuser](appuser.md)   | AppUserModule fills user information from the PID of an application      | [netstat](netstat.md)           | {{ linux_ok }} {{ windows_ok }}     |

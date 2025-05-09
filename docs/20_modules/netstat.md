@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: true
 title: Netstat
-summary: "NetstatModule aims to retrieve infos like the netstat command does It must be run as root to retrieve PID/process information."
-date: 2025-03-05
+summary: "Aims to retrieve infos like the netstat command does It must be run as root to retrieve PID/process information."
+date: 2025-05-09
 filename: netstat.go
 std_imports:
   - os/user
@@ -29,14 +29,18 @@ On windows, the privileges are not checked (because we need to parse the SID or 
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

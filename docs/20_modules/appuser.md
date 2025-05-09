@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: unknown
 title: App User
-summary: "AppUserModule fills user information from the PID of an application"
-date: 2025-03-05
+summary: "Fills user information from the PID of an application"
+date: 2025-05-09
 filename: appuser.go
 std_imports:
   - bufio
@@ -35,14 +35,18 @@ On windows, even if the agent is run as administrator, it may not have the requi
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

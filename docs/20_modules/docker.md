@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: true
 title: Docker
-summary: "DockerModule retrieves information about docker containers."
-date: 2025-03-05
+summary: "Retrieves information about docker containers."
+date: 2025-05-09
 filename: docker.go
 std_imports:
   - context
@@ -38,14 +38,18 @@ We generally need some privileges to reads UNIX sockets, so it may require root 
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: true
 title: MSI
-summary: "MSIModule creates models.Packages instance from the windows registry"
-date: 2025-03-05
+summary: "Creates models.Packages instance from the windows registry"
+date: 2025-05-09
 filename: msi.go
 std_imports:
   - fmt
@@ -33,14 +33,18 @@ For system-wide apps, it looks at `HKLM/SOFTWARE/Microsoft/Windows/CurrentVersio
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

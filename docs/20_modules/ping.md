@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: Ping
-summary: "PingModule pings local networks to discover new hosts."
-date: 2025-03-05
+summary: "Pings local networks to discover new hosts."
+date: 2025-05-09
 filename: ping.go
 std_imports:
   - fmt
@@ -37,14 +37,18 @@ A single ping attempt is made on every host of the local networks (the host may 
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

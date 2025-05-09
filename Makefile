@@ -138,7 +138,7 @@ goweight.json:
 	@goweight --json . | jq > $@
 
 modules-doc: $(MODULE_FILES)
-	$(GO) run dev/doc/*.go -d modules -o docs/modules/
+	$(GO) run dev/doc/*.go -d modules -o docs/20_modules/
 
 test-modules:
 	$(GO) test -v -cover -run 'TestAllModules' ./modules

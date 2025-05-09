@@ -4,8 +4,8 @@ windows: false
 macos: false
 root: false
 title: Zypper
-summary: "ZypperModule reads package information from the zypper package manager."
-date: 2025-03-05
+summary: "Reads package information from the zypper package manager."
+date: 2025-05-09
 filename: zypper.go
 std_imports:
   - fmt
@@ -29,14 +29,18 @@ It reads `/var/lib/rpm/Packages.db`.
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///
