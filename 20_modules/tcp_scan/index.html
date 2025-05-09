@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+        // for search plugin notably
+        const base_url = "None";
+    </script>
+    <script>
+        const darkTheme = window.matchMedia("(prefers-color-scheme: dark)");
+        darkTheme.onchange = (e) => {
+            if (e.matches) {
+                document.documentElement.classList.add("dark")
+                localStorage.theme = 'dark';
+            } else {
+                document.documentElement.classList.remove("dark")
+                localStorage.removeItem("theme")
+            }
+        };
+
+        // On page load. Priotiry to lcaolStorage
+        if (localStorage.theme === "dark") {
+            document.documentElement.classList.add("dark")
+        } else if (localStorage.theme === "light") {
+            document.documentElement.classList.remove("dark")
+        } else if (darkTheme.matches) {
+            document.documentElement.classList.add("dark")
+        } else {
+            document.documentElement.classList.remove("dark")
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TCP Scan - Situation</title>
+    
+
+
+<title>TCP Scan</title>
+
+
+
+
+
+
+
+
+
+
+<!-- Open Graph (Facebook, LinkedIn) -->
+
+<meta property="og:title" content="TCP Scan">
+
+
+
+
+
+
+
+
+
+
+<!-- Twitter Card -->
+
+<meta name="twitter:title" content="TCP Scan">
+
+
+
+
+
+
+<!-- JSON-LD Structured Data -->
+
+
+
+    <link rel="icon" href="../../img/favicon.ico">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link href="../../css/geist.css" rel="stylesheet">
+    
+    <link href="../../css/pygments/dracula.css" rel="stylesheet">
+    
+    <link href="../../css/extra.css" rel="stylesheet">
+
+    <script src="../../js/callbacks.js"></script>
+
+    
+
+    
+
+    
+
+</head>
+
+<body class="w-screen overflow-x-hidden bg-foreground md:bg-background text-foreground scroll-smooth m-0 p-0">
+    <div id="inner-body"
+        class="min-h-screen bg-background origin-[top_center_0px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+        <header
+    class="border-grid sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div class="w-full mx-auto 3xl:max-w-8xl">
+        <div
+            class="xl:px-6 h-14 w-full max-w-8xl mx-auto px-4 border-x border-grid flex flex-row justify-between items-center">
+            <div class="mr-4 hidden md:flex">
+                <a href="/" class="mr-4 flex items-center gap-2 lg:mr-6">
+                    
+
+<img class="h-6 w-6" src="https://svgg.link/oo/eJzEkdFuKiEQhu9NfIfJeKMJLqNHOW2zeNH7PsRmRZYWwQAV-_YN29KafYHOZmH-PwPzAW28aridrYsSh5QuT5znnJv8r_FB8y0R8XjVCFej8rO_SSQg2O5F-fEwnwEAtEH1CbI5pkFi8WFQRg_pW5yMtRIXm__lQwg3iTtCCB9fM6-7aEihc_Hkw1nimNouqeVm12wZlHEFse-sWlLzuKq9x5WXLg1wlPiyIWKC-vXugREjJkTJhGA_mo26MjnvFEJMwb8piYvTGNVYW-NU310kBv_ujvjbr8Rdzas3rhZVv17G3fkmpHtRSCdgU_A_AW25PsxnbXn3w2cAAAD__yzhlMk=">
+
+
+                    <h1 class="hidden lg:inline-block font-bold text-md">
+                        
+                        Situation
+                        
+                    </h1>
+                </a>
+            </div>
+            <button
+                class="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:text-accent-foreground py-2 -ml-2 mr-2 h-8 w-8 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+                type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:R15u6ja:"
+                data-state="closed" onclick="onMobileMenuButtonClick(event)">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="!size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"></path>
+                </svg>
+                <span class="sr-only">Toggle Menu</span>
+            </button>
+            <div class="flex flex-1 items-center justify-between gap-2 md:justify-end">
+                <button onclick="onSearchBarClick(event)"
+    class="cursor-pointer inline-flex items-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input hover:bg-accent hover:text-accent-foreground px-4 py-2 relative h-8 w-full justify-start rounded-[0.5rem] bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-56 xl:w-64">
+    <span class="hidden lg:inline-flex">Search documentation...</span>
+    <span class="inline-flex lg:hidden">Search...</span>
+    <kbd
+        class="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+        <span class="text-xs">⌘</span>K
+    </kbd>
+</button>
+<dialog id="search-dialog" onclick="onSearchDialogClick(event)"
+    class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background rounded-lg shadow-lg border overflow-hidden p-0">
+    <div class="w-lg gap-4">
+        <div class="flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground">
+            <div class="w-full flex items-center border-b px-3" cmdk-input-wrapper="">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="mr-2 h-4 w-4 shrink-0 opacity-50">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <!-- <script>
+                    let debounceTimer;
+                    const onInputHandler = function (event) {
+                        const query = event.target.value;
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => {
+                            if (searchWorker && (query.length > 2)) {
+                                console.log(`Posting message { "query": "${query}" }`)
+                                // https://lunrjs.com/guides/searching.html
+                                // we should append a wilcard and also a boost on exact term
+                                const lunrQuery = `${query}^10 ${query}* ${query}~1`;
+                                searchWorker.postMessage({ "query": lunrQuery });
+                            } else if (query.length > 2) {
+                                console.warn("searchWorker is not defined")
+                            } else {
+                                const results = document.getElementById("mkdocs-search-results");
+                                if (results) {
+                                    while (results.firstChild) {
+                                        results.removeChild(results.firstChild);
+                                    }
+                                }
+                            }
+                        }, 300);
+                    };
+                </script> -->
+                <input
+                    class="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Type a command or search..." autocomplete="off" autocorrect="off" spellcheck="false"
+                    aria-autocomplete="list" role="combobox" aria-expanded="true" type="text" value=""
+                    oninput="onInputHandler(event)">
+            </div>
+        </div>
+        <div id="mkdocs-search-results" class="max-h-[300px] overflow-y-auto overflow-x-hidden">
+            <!-- search results go there -->
+        </div>
+    </div>
+</dialog>
+<script>
+    document.removeEventListener("keydown", searchShortcutHandler);
+    document.addEventListener("keydown", searchShortcutHandler);
+</script>
+                <div class="flex items-center gap-0.5">
+                    
+                    <button
+                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-8 w-8 px-0"><a
+                            target="_blank" rel="noreferrer" href="https://github.com/situation-sh/situation">
+                            
+                            <svg viewBox="0 0 438.549 438.549" class="h-4 w-4">
+    <path fill="currentColor"
+        d="M409.132 114.573c-19.608-33.596-46.205-60.194-79.798-79.8-33.598-19.607-70.277-29.408-110.063-29.408-39.781 0-76.472 9.804-110.063 29.408-33.596 19.605-60.192 46.204-79.8 79.8C9.803 148.168 0 184.854 0 224.63c0 47.78 13.94 90.745 41.827 128.906 27.884 38.164 63.906 64.572 108.063 79.227 5.14.954 8.945.283 11.419-1.996 2.475-2.282 3.711-5.14 3.711-8.562 0-.571-.049-5.708-.144-15.417a2549.81 2549.81 0 01-.144-25.406l-6.567 1.136c-4.187.767-9.469 1.092-15.846 1-6.374-.089-12.991-.757-19.842-1.999-6.854-1.231-13.229-4.086-19.13-8.559-5.898-4.473-10.085-10.328-12.56-17.556l-2.855-6.57c-1.903-4.374-4.899-9.233-8.992-14.559-4.093-5.331-8.232-8.945-12.419-10.848l-1.999-1.431c-1.332-.951-2.568-2.098-3.711-3.429-1.142-1.331-1.997-2.663-2.568-3.997-.572-1.335-.098-2.43 1.427-3.289 1.525-.859 4.281-1.276 8.28-1.276l5.708.853c3.807.763 8.516 3.042 14.133 6.851 5.614 3.806 10.229 8.754 13.846 14.842 4.38 7.806 9.657 13.754 15.846 17.847 6.184 4.093 12.419 6.136 18.699 6.136 6.28 0 11.704-.476 16.274-1.423 4.565-.952 8.848-2.383 12.847-4.285 1.713-12.758 6.377-22.559 13.988-29.41-10.848-1.14-20.601-2.857-29.264-5.14-8.658-2.286-17.605-5.996-26.835-11.14-9.235-5.137-16.896-11.516-22.985-19.126-6.09-7.614-11.088-17.61-14.987-29.979-3.901-12.374-5.852-26.648-5.852-42.826 0-23.035 7.52-42.637 22.557-58.817-7.044-17.318-6.379-36.732 1.997-58.24 5.52-1.715 13.706-.428 24.554 3.853 10.85 4.283 18.794 7.952 23.84 10.994 5.046 3.041 9.089 5.618 12.135 7.708 17.705-4.947 35.976-7.421 54.818-7.421s37.117 2.474 54.823 7.421l10.849-6.849c7.419-4.57 16.18-8.758 26.262-12.565 10.088-3.805 17.802-4.853 23.134-3.138 8.562 21.509 9.325 40.922 2.279 58.24 15.036 16.18 22.559 35.787 22.559 58.817 0 16.178-1.958 30.497-5.853 42.966-3.9 12.471-8.941 22.457-15.125 29.979-6.191 7.521-13.901 13.85-23.131 18.986-9.232 5.14-18.182 8.85-26.84 11.136-8.662 2.286-18.415 4.004-29.263 5.146 9.894 8.562 14.842 22.077 14.842 40.539v60.237c0 3.422 1.19 6.279 3.572 8.562 2.379 2.279 6.136 2.95 11.276 1.995 44.163-14.653 80.185-41.062 108.068-79.226 27.88-38.161 41.825-81.126 41.825-128.906-.01-39.771-9.818-76.454-29.414-110.049z">
+    </path>
+</svg>
+                            <span class="sr-only">GitHub</span>
+                            
+                        </a>
+                    </button>
+                    
+                    <button
+                        class="cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground py-2 group/toggle h-8 w-8 px-0"
+                        onclick="onThemeSwitch(event)">
+                        
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round"
+    class="h-4 w-4 dark:hidden not-dark:block">
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+</svg>
+                        
+                        
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round"
+    class="h-4 w-4 not-dark:hidden dark:block">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2" />
+    <path d="M12 20v2" />
+    <path d="m4.93 4.93 1.41 1.41" />
+    <path d="m17.66 17.66 1.41 1.41" />
+    <path d="M2 12h2" />
+    <path d="M20 12h2" />
+    <path d="m6.34 17.66-1.41 1.41" />
+    <path d="m19.07 4.93-1.41 1.41" />
+</svg>
+                        
+                        <span class="sr-only">Toggle theme</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+        <div class="border-grid flex flex-1 flex-col">
+            <div class="w-full mx-auto 3xl:max-w-8xl">
+                <div
+                    class="px-4 w-full max-w-8xl mx-auto xl:px-6 flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+                    <aside
+                        class="border-grid fixed top-14 z-30 hidden h-[calc(100vh-3.55rem)] w-full shrink-0 border-r md:sticky md:block">
+                        <div
+    class="no-scrollbar [&::-webkit-scrollbar]:hidden h-full overflow-auto py-6 pr-4 lg:py-8 flex flex-col gap-[.125rem]">
+    
+    
+    
+
+    
+    
+    <a href="../.." 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Home
+    
+
+    
+
+    
+
+    
+</a>
+    
+    
+    
+    <a href="../../installation/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Installation
+    
+
+    
+
+    
+
+    
+</a>
+    
+    
+    
+    <a href="../../quick_start/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Quick start
+    
+
+    
+
+    
+
+    
+</a>
+    
+    
+    
+    <a href="../../configuration/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Configuration
+    
+
+    
+
+    
+
+    
+</a>
+    
+    
+    
+    <a href="../../backends/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Backends
+    
+
+    
+
+    
+
+    
+</a>
+    
+    
+    
+    <a href="../../roadmap/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Roadmap
+    
+
+    
+
+    
+
+    
+</a>
+    
+    
+
+
+    
+    
+    <div class="flex flex-col gap-1 mt-5 first:mt-0">
+        <h4 class="rounded-md px-2 py-1 text-sm font-semibold">Guides</h4>
+        <div class="grid grid-flow-row auto-rows-max gap-[.125rem]">
+            
+            <a href="../../10_guides/jq-one-liners/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    jq one-liners
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../../10_guides/fastapi/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    FastAPI
+    
+
+    
+
+    
+
+    
+</a>
+            
+        </div>
+    </div>
+    
+    
+    
+    <div class="flex flex-col gap-1 mt-5 first:mt-0">
+        <h4 class="rounded-md px-2 py-1 text-sm font-semibold">Modules</h4>
+        <div class="grid grid-flow-row auto-rows-max gap-[.125rem]">
+            
+            <a href="../" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Reference
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../appuser/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    App User
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../arp/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    ARP
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../chassis/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Chassis
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../docker/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Docker
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../dpkg/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    DPKG
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../host_basic/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Host Basic
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../host_cpu/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Host CPU
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../host_disk/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Host Disk
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../host_gpu/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Host GPU
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../host_network/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Host Network
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../msi/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    MSI
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../netstat/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Netstat
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../ping/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Ping
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../reverse_lookup/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Reverse Lookup
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../rpm/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    RPM
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../snmp/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    SNMP
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../ssh/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    SSH
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="./" data-active 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    TCP Scan
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../zypper/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Zypper
+    
+
+    
+
+    
+
+    
+</a>
+            
+        </div>
+    </div>
+    
+    
+    
+    <div class="flex flex-col gap-1 mt-5 first:mt-0">
+        <h4 class="rounded-md px-2 py-1 text-sm font-semibold">Developer</h4>
+        <div class="grid grid-flow-row auto-rows-max gap-[.125rem]">
+            
+            <a href="../../99_developer/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Overview
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../../99_developer/architecture/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Architecture
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../../99_developer/contributing/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Contributing
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../../99_developer/modules/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Module
+    
+
+    
+
+    
+
+    
+</a>
+            
+            <a href="../../99_developer/store/" 
+    class="text-sm flex shrink-0 h-8 w-full items-center rounded-lg px-2 text-foreground underline-offset-2 font-normal hover:bg-accent hover:text-accent-foreground data-active:bg-accent data-active:font-medium data-active:text-accent-foreground">
+    
+    Store
+    
+
+    
+
+    
+
+    
+</a>
+            
+        </div>
+    </div>
+    
+    
+    
+</div>
+                    </aside>
+                    <main class="relative py-6 lg:gap-10 lg:py-8 xl:grid xl:grid-cols-[1fr_300px]">
+                        <div class="mx-auto w-full min-w-0 xl:max-w-2xl">
+                            <article class="typography w-full">
+    
+    <div class="mb-4 flex items-center space-x-1 text-sm leading-none text-muted-foreground">
+    
+
+
+<span class="truncate">Modules</span>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right h-3.5 w-3.5">
+    <path d="m9 18 6-6-6-6"></path>
+</svg>
+<div class="text-foreground">TCP Scan</div>
+
+</div>
+    
+    
+    <h1 class="tracking-tight">TCP Scan</h1>
+    
+    
+    <p class="summary">
+        Tries to connect to neighbor TCP ports.
+    </p>
+    
+    <p><img alt="windows" class="tag" src="../../img/windows.svg" title="Windows" />
+<img alt="linux" class="tag" src="../../img/linux.svg" title="Linux" /></p>
+<p>TCPScanModule tries to connect to neighbor TCP ports.</p>
+<h3 id="details">Details</h3>
+<p>The module only uses the Go standard library.</p>
+<p>A TCP connect is performed on the <a href="https://nullsec.us/top-1-000-tcp-and-udp-ports-nmap-default/">NMAP top 1000 ports</a>. These connection attempts are made concurrently against the hosts previously found. The connections have a 500ms timeout.</p>
+<h3 id="dependencies">Dependencies</h3>
+<div class="tabbed-set" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><label for="__tabbed_1_1">Standard library</label><div class="tabbed-content">
+<ul>
+<li>
+<p><a href="https://pkg.go.dev/fmt">fmt</a></p>
+</li>
+<li>
+<p><a href="https://pkg.go.dev/net">net</a></p>
+</li>
+<li>
+<p><a href="https://pkg.go.dev/sync">sync</a></p>
+</li>
+<li>
+<p><a href="https://pkg.go.dev/time">time</a></p>
+</li>
+</ul>
+</div>
+<input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><label for="__tabbed_1_2">External</label><div class="tabbed-content"></div>
+</div>
+</article>
+                        </div>
+                        <div class="hidden text-sm xl:block">
+                            <div class="sticky top-20 -mt-6 pt-4">
+    <div class="no-scrollbar h-full overflow-auto pb-10">
+        <div class="space-y-2">
+            <p class="font-medium">On This Page</p>
+            <ul class="m-0 list-none">
+                
+                
+                
+                
+                <li class="mt-0 pt-2">
+                    <a class="inline-block no-underline transition-colors hover:text-foreground text-muted-foreground"
+                        href="#details">Details</a>
+                    
+                </li>
+                
+                <li class="mt-0 pt-2">
+                    <a class="inline-block no-underline transition-colors hover:text-foreground text-muted-foreground"
+                        href="#dependencies">Dependencies</a>
+                    
+                </li>
+                
+                
+                
+                
+            </ul>
+        </div>
+    </div>
+</div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+            <dialog id="bottom-sidebar" data-closing="0"
+    class="backdrop:bg-black backdrop:opacity-80 backdrop:transition-all backdrop:duration-500 text-foreground"
+    onclick="onBottomSidebarDialogClick(event)">
+    <div
+        class="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background max-h-[60svh] p-0 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+        <div class="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted"></div>
+        <div class="overflow-auto p-6 space-y-3">
+            
+            
+
+            <div class="flex flex-col">
+                
+                
+                <a href="../.." class="text-base shrink-0">
+    Situation
+</a>
+                
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                
+                <a href="../../backends/" class="text-base shrink-0">
+    Backends
+</a>
+                
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                
+                <a href="../../configuration/" class="text-base shrink-0">
+    Configuration
+</a>
+                
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                
+                <a href="../../installation/" class="text-base shrink-0">
+    Installation
+</a>
+                
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                
+                <a href="../../quick_start/" class="text-base shrink-0">
+    Quick start
+</a>
+                
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                
+                <a href="../../roadmap/" class="text-base shrink-0">
+    Roadmap
+</a>
+                
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                <div class="flex flex-col space-y-3 pt-4">
+                    <h4 class="font-medium">Guides </h4>
+                    
+                    <a href="../../10_guides/fastapi/" class="text-base shrink-0">
+    FastAPI
+</a>
+                    
+                    <a href="../../10_guides/jq-one-liners/" class="text-base shrink-0">
+    jq one-liners
+</a>
+                    
+                </div>
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                <div class="flex flex-col space-y-3 pt-4">
+                    <h4 class="font-medium">Modules </h4>
+                    
+                    <a href="../" class="text-base shrink-0">
+    Modules reference
+</a>
+                    
+                    <a href="../appuser/" class="text-base shrink-0">
+    App User
+</a>
+                    
+                    <a href="../arp/" class="text-base shrink-0">
+    ARP
+</a>
+                    
+                    <a href="../chassis/" class="text-base shrink-0">
+    Chassis
+</a>
+                    
+                    <a href="../docker/" class="text-base shrink-0">
+    Docker
+</a>
+                    
+                    <a href="../dpkg/" class="text-base shrink-0">
+    DPKG
+</a>
+                    
+                    <a href="../host_basic/" class="text-base shrink-0">
+    Host Basic
+</a>
+                    
+                    <a href="../host_cpu/" class="text-base shrink-0">
+    Host CPU
+</a>
+                    
+                    <a href="../host_disk/" class="text-base shrink-0">
+    Host Disk
+</a>
+                    
+                    <a href="../host_gpu/" class="text-base shrink-0">
+    Host GPU
+</a>
+                    
+                    <a href="../host_network/" class="text-base shrink-0">
+    Host Network
+</a>
+                    
+                    <a href="../msi/" class="text-base shrink-0">
+    MSI
+</a>
+                    
+                    <a href="../netstat/" class="text-base shrink-0">
+    Netstat
+</a>
+                    
+                    <a href="../ping/" class="text-base shrink-0">
+    Ping
+</a>
+                    
+                    <a href="../reverse_lookup/" class="text-base shrink-0">
+    Reverse Lookup
+</a>
+                    
+                    <a href="../rpm/" class="text-base shrink-0">
+    RPM
+</a>
+                    
+                    <a href="../snmp/" class="text-base shrink-0">
+    SNMP
+</a>
+                    
+                    <a href="../ssh/" class="text-base shrink-0">
+    SSH
+</a>
+                    
+                    <a href="./" class="text-base shrink-0">
+    TCP Scan
+</a>
+                    
+                    <a href="../zypper/" class="text-base shrink-0">
+    Zypper
+</a>
+                    
+                </div>
+                
+            </div>
+            
+
+            <div class="flex flex-col">
+                
+                <div class="flex flex-col space-y-3 pt-4">
+                    <h4 class="font-medium">Developer </h4>
+                    
+                    <a href="../../99_developer/" class="text-base shrink-0">
+    Overview
+</a>
+                    
+                    <a href="../../99_developer/architecture/" class="text-base shrink-0">
+    Architecture
+</a>
+                    
+                    <a href="../../99_developer/contributing/" class="text-base shrink-0">
+    Contributing
+</a>
+                    
+                    <a href="../../99_developer/modules/" class="text-base shrink-0">
+    Module
+</a>
+                    
+                    <a href="../../99_developer/store/" class="text-base shrink-0">
+    Store
+</a>
+                    
+                </div>
+                
+            </div>
+            
+            
+        </div>
+    </div>
+</dialog>
+        </div>
+    </div> 
+    
+    <script src="../../search/main.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.3.0/dist/iconify-icon.min.js"></script>
+    <script src="../../js/copy-button.js"></script>
+</body>
+
+</html>
