@@ -57,12 +57,12 @@ func isTesting(ctx context.Context) bool {
 func schemaAction(ctx context.Context, cmd *cli.Command) error {
 	reflector := jsonschema.Reflector{Mapper: mapper}
 
-	if !isTesting(ctx) {
-		if err := reflector.AddGoComments("github.com/situation-sh/situation/models", "models"); err != nil {
+	// if !isTesting(ctx) {
+	// 	if err := reflector.AddGoComments("github.com/situation-sh/situation/models", "models"); err != nil {
 
-			return err
-		}
-	}
+	// 		return err
+	// 	}
+	// }
 
 	schema := reflector.Reflect(&models.Payload{})
 	// we manually add these definition since the User prameter of the Application is an interface{}

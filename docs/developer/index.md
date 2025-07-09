@@ -1,6 +1,6 @@
 # Developers
 
-The Situation project aims to be enriched by the community, and [modules](../modules/index.md) are definitely a good starting point for developers to contribute.
+The Situation project aims to be enriched by the community, and [modules](../20_modules/index.md) are definitely a good starting point for developers to contribute.
 
 Before detailing the internals of Situation, it is paramount to understand the overall spirit of the project.
 

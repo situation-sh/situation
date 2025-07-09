@@ -9,6 +9,40 @@ import requests
 from mkdocs_macros.plugin import MacrosPlugin
 
 
+@cache
+def latest_release() -> Dict[str, Any]:
+    try:
+        response = requests.get(
+            "https://api.github.com/repos/situation-sh/situation/releases/latest",
+            headers={
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            timeout=1000,
+        )
+    except BaseException as err:
+        print("error:", err)
+        return {
+            "tag_name": "v0.19.1",
+        }
+    if response.status_code == 200:
+        return response.json()
+    print("error:", response.content)
+    return {
+        "tag_name": "v0.19.1",
+    }
+
+
+@cache
+def latest_binary(
+    platform: Literal["linux", "windows"],
+    version: str,
+    arch: str = "amd64",
+):
+    suffix = ".exe" if platform == "windows" else ""
+    return f"situation-{version}-{arch}-{platform}{suffix}"
+
+
 def define_env(env: MacrosPlugin):
     """
     This is the hook for defining variables, macros and filters

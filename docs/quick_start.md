@@ -31,7 +31,7 @@ By default, the json output is printed to stdout (you can find the json schema i
     --8<-- "docs/data/windows.json"
     ```
 
-So what you should do next, is to **pipe that json to another tool** (like `jq` see [below](#one-liners)).
+So what you should do next, is to **pipe that json to another tool** (like `jq` see in the [guide](./10_guides/jq-one-liners.md)).
 
 ## Other commands
 
