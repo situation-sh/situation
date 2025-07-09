@@ -4,8 +4,8 @@ windows: unknown
 macos: 
 root: true
 title: SSH
-summary: "SSHModule aims to retrieve info from remote ssh services."
-date: 2025-03-05
+summary: "Aims to retrieve info from remote ssh services."
+date: 2025-05-09
 filename: ssh.go
 std_imports:
   - encoding/json
@@ -32,14 +32,18 @@ It mainly tries to connect to open tcp/22 ports, gathering everything it can lik
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

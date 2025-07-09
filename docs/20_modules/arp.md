@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: ARP
-summary: "ARPModule reads internal ARP table to find network neighbors."
-date: 2025-03-05
+summary: "Reads internal ARP table to find network neighbors."
+date: 2025-05-09
 filename: arp.go
 std_imports:
   - encoding/binary
@@ -34,14 +34,18 @@ On Linux, it uses the Netlink API with the [netlink](https://github.com/vishvana
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

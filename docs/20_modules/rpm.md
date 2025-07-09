@@ -4,8 +4,8 @@ windows: false
 macos: false
 root: false
 title: RPM
-summary: "RPMModule reads package information from the rpm package manager."
-date: 2025-03-05
+summary: "Reads package information from the rpm package manager."
+date: 2025-05-09
 filename: rpm.go
 std_imports:
   - bytes
@@ -36,14 +36,18 @@ It tries to read the rpm database: `/var/lib/rpm/rpmdb.sqlite`. Otherwise, it wi
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

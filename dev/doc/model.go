@@ -24,17 +24,21 @@ const (
 const librariesTemplate = `
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///
 `
 
 const headerTemplate = `
@@ -119,6 +123,18 @@ func (m *ModuleDoc) Title() string {
 	z := re.ReplaceAllFunc([]byte(base), f)
 	z = bytes.ReplaceAll(z, []byte("  "), []byte(" "))
 	return strings.TrimSpace(string(z))
+}
+
+func (m *ModuleDoc) Summary() string {
+	words := strings.Fields(m.Synopsis)
+	if len(words) == 0 {
+		return ""
+	}
+	if strings.Contains(words[0], "Module") {
+		words[1] = strings.ToUpper(words[1][:1]) + words[1][1:]
+		return strings.Join(words[1:], " ")
+	}
+	return strings.Join(words, " ")
 }
 
 func (m *ModuleDoc) insertSubmoduleImports() {
@@ -208,7 +224,7 @@ func (m *ModuleDoc) Markdown() []byte {
 func (m *ModuleDoc) MkDocs() []byte {
 	h := []byte(fmt.Sprintf(metadataTemplate,
 		m.Status.LINUX, m.Status.WINDOWS, m.Status.MACOS, m.Status.ROOT,
-		m.Title(), m.Synopsis, time.Now().Format("2006-01-02"), m.SrcFile,
+		m.Title(), m.Summary(), time.Now().Format("2006-01-02"), m.SrcFile,
 		m.ImportHeader()))
 
 	h = append(h, m.Markdown()...)

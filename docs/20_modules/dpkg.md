@@ -4,8 +4,8 @@ windows: false
 macos: false
 root: false
 title: DPKG
-summary: "DPKGModule reads package information from the dpkg package manager."
-date: 2025-03-05
+summary: "Reads package information from the dpkg package manager."
+date: 2025-05-09
 filename: dpkg.go
 std_imports:
   - bufio
@@ -32,14 +32,18 @@ It reads `/var/log/dpkg.log` and also files from `/var/lib/dpkg/info/`.
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///

@@ -1,4 +1,7 @@
-# Modules
+---
+title: Module
+summary: Independent piece of magic
+---
 
 ## Introduction
 
@@ -14,15 +17,20 @@ import (
     // ...
 )
 
-func init() {
-    m := &MyNewModule{}
-    RegisterModule(m)
-    // SetDefault
-    SetDefault(m, "myparam", value, "the value of myparam")
-    // ...
+type MyNewModule struct {
+    Attribute string
 }
 
-type MyNewModule struct {}
+func init() {
+    m := &MyNewModule{
+        Attribute: "defultValue"
+    }
+    RegisterModule(m)
+    // bind attributes with configuration variable (the attribute will be exposed to CLI flags)
+    SetDefault(m, "attribute", &m.Attribute, "Custom attribute for my new module")
+}
+
+
 
 // Name returns the name of the module
 func (m * MyNewModule) Name() string {
@@ -43,10 +51,6 @@ func (m * MyNewModule) Dependencies() []string {
 func (m * MyNewModule) Run() error {
     // you can grab your logger (from https://github.com/Sirupsen/logrus)
     logger := GetLogger(m)
-    // you can grab config with GetConfig.
-    // :warning: generics are used to access the config
-    // GetConfig[<TYPE>](>MODULE>, <KEY>)
-    myParam := GetConfig[time.Duration](m, "myparam")
     // ...
     // do what you want
     // ...
@@ -69,7 +73,7 @@ You are free about the module naming, but obviously there are some constraints:
 
 - the module name must be unique
 - the name should describe what the module does (or the ecosystem, like "docker")
-- If you wan to create a module called "awesome stuff":
+- If you want to create a module called "awesome stuff":
   - its name (output of `.Name()`) must be `awesome-stuff`
   - the object that respects the `Module` interface must be `AwesomeStuffModule`
   - the source file must be `awesome_stuff.go`
@@ -88,35 +92,41 @@ type Module interface {
 }
 ```
 
-The `Name()` outputs the [unique] name of the module.
+The `Name()` outputs the **unique** name of the module.
 
-The `Dependencies()` returns the name of the modules required to start this module (prior information).
+The `Dependencies()` returns the names of the modules required to start this module (prior information).
 
 The `Run()` function does the job. This functions is called during the scan. It may have several interactions:
 
 - [config](#configuration) (get extra configuration data)
 - [logging](#logging) (output some information about the run)
-- [store](#the-store) (retrieve/store collected data)
+- [store](store.md) (retrieve/store collected data)
 
 ## Configuration
 
-The configuration is only managed by the flags of [urfave/cli](https://github.com/urfave/cli).
+The configuration is managed by [asiffer/puzzle](https://github.com/asiffer/puzzle). As the example above, you should put the required information into the base module struct, along with a relevant default value. If you want to let the user modify attributes, you should bind your struct attribute with the configuration, through the following helper:
 
-The configuration of the modules are stored in the `modules.module-name.*` namespace. To hide it to the developper, the `modules` package expose two helpers:
 
 ```go
-// GetConfig is a generic function that returns a value
-// associated to a key within the module namespace
-func GetConfig[T any](m Module, key string) (T, error) {
+// SetDefault is a helper that defines default module parameter.
+// The provided values can be overwritten by CLI flags, env variables or anything
+// the asiffer/puzzle library may support.
+func SetDefault[T any](m Module, key string, value *T, usage string) {
 	// ...
 }
+```
 
-// SetDefault is a helper that defines default module parameter.
-// The provided values can be overwritten by CLI flags or config file.
-func SetDefault(m Module, key string, value interface{}, usage string) {
-    // ...
+The configuration of the modules are stored in the `modules.module-name.*` namespace in the `config` module, so it can be accessed by other modules through `config.Get[T](key string)`. In your code (like in the `Run()` function), you should directly access the attributes through the pointer receiver.
+
+```go
+func (m *MyNewModule) Run() error {
+    // do not get it through the config
+    attr, err := config.Get[string]("modules.my-new-module.attribute")
+    // rather access it directly
+    attr := m.Attribute
 }
 ```
+
 
 ## Logging
 
@@ -234,5 +244,5 @@ The format of the note is given by the [doc](https://pkg.go.dev/go/doc#Note) pac
 Currently there are 4 attributes to provide: `LINUX`, `WINDOWS`, `MACOS` and `ROOT`. Their corresponding values must be
 `yes`/`ok` (meaning "supported"), `no` (meaning "not supported"), or `?` (meaning "don't know").
 
-!!! warning
+!!! warning ""
     For `ROOT`, `yes`/`ok` means that root privileges are required

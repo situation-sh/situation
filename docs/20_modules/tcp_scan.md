@@ -4,8 +4,8 @@ windows: true
 macos: unknown
 root: false
 title: TCP Scan
-summary: "TCPScanModule tries to connect to neighbor TCP ports."
-date: 2025-03-05
+summary: "Tries to connect to neighbor TCP ports."
+date: 2025-05-09
 filename: tcp_scan.go
 std_imports:
   - fmt
@@ -30,14 +30,18 @@ A TCP connect is performed on the [NMAP top 1000 ports](https://nullsec.us/top-1
 
 ### Dependencies
 
-=== "Standard library"
+/// tab | Standard library
 
-	{% for i in std_imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+{% for i in std_imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
 
-=== "External"
+///
 
-	{% for i in imports %}
-	 - [{{ i }}](https://pkg.go.dev/{{ i }})
-	{% endfor %}
+/// tab | External
+
+{% for i in imports %}
+- [{{ i }}](https://pkg.go.dev/{{ i }})
+{% endfor %}
+
+///
