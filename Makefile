@@ -24,7 +24,7 @@
 # 
 
 MODULE     := github.com/situation-sh/situation
-VERSION    := 0.19.1
+VERSION    := 0.19.2
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff

@@ -1,6 +1,6 @@
 [project]
 name = "situation-docs"
-version = "0.18.0"
+version = "0.19.2"
 description = "The autonomous data collector"
 readme = "README.md"
 requires-python = ">=3.13"
