@@ -59,6 +59,11 @@ func (m *SSHModule) Run() error {
 				continue
 			}
 
+			if service == nil || service.Raw == nil {
+				logger.Errorf("ssh discovery returned no data for %s", address)
+				continue
+			}
+
 			if err := json.Unmarshal(service.Raw, &s); err != nil {
 				logger.Errorf("fail to unmarshal discovery results: %v", err)
 				continue
