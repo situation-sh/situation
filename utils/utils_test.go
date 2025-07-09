@@ -190,6 +190,25 @@ func TestIsReserved(t *testing.T) {
 	// return false
 }
 
+func TestIsPublic(t *testing.T) {
+	a := net.IPv4(192, 168, 0, 1)
+	b := net.IPv4(8, 8, 8, 8)
+	c := net.IPv4(10, 0, 0, 1)
+	d := net.IPv4(172, 16, 0, 1)
+	e := net.IPv6zero
+	var f net.IP = nil
+
+	for _, ip := range []net.IP{a, c, d, e, f} {
+		if IsPublic(ip) {
+			t.Errorf("the ip %v must not be public", ip)
+		}
+	}
+
+	if !IsPublic(b) {
+		t.Errorf("the ip %v must be public", b)
+	}
+}
+
 func randomString(size int) string {
 	bytes := RandBytes(size)
 	for i, b := range bytes {

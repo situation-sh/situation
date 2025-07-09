@@ -42,14 +42,6 @@ func (m *TCPScanModule) Dependencies() []string {
 
 func (m *TCPScanModule) Run() error {
 	logger := GetLogger(m)
-	// conf := GetConfig(m)
-
-	// timeout := conf.Duration("timeout")
-	// timeout, err := GetConfig[time.Duration](m, "timeout")
-	// if err != nil {
-	// 	timeout = defaultTCPConnTimeout
-	// }
-	// logger.Infof("Scanning with the following timeout: %v", timeout)
 
 	for machine := range store.IterateMachines() {
 

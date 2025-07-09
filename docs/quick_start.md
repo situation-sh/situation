@@ -27,7 +27,7 @@ You will see the json output in the terminal.
 
 
 
-So what you should do next, is to **pipe that json to another tool** (like `jq` see [below](#one-liners)).
+So what you should do next, is to **pipe that json to another tool** (like `jq` see in the [guide](./10_guides/jq-one-liners.md)).
 
 ## Update
 

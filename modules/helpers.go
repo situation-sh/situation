@@ -18,15 +18,9 @@ func GetLogger(m Module) *logrus.Entry {
 	return logrus.WithField("module", m.Name())
 }
 
-// GetConfig is a generic function that returns a value
-// associated to a key within the module namespace
-func GetConfig[T any](m Module, key string) (T, error) {
-	k := fmt.Sprintf("modules.%s.%s", m.Name(), key)
-	return config.Get[T](k)
-}
-
 // SetDefault is a helper that defines default module parameter.
-// The provided values can be overwritten by CLI flags or config file.
+// The provided values can be overwritten by CLI flags, env variables or anything
+// the asiffer/puzzle library may support.
 func SetDefault[T any](m Module, key string, value *T, usage string) {
 	name := fmt.Sprintf("modules.%s.%s", m.Name(), key)
 	config.DefineVar(

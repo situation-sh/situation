@@ -11,14 +11,20 @@ from mkdocs_macros.plugin import MacrosPlugin
 
 @cache
 def latest_release() -> Dict[str, Any]:
-    response = requests.get(
-        "https://api.github.com/repos/situation-sh/situation/releases/latest",
-        headers={
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-        },
-        timeout=1000,
-    )
+    try:
+        response = requests.get(
+            "https://api.github.com/repos/situation-sh/situation/releases/latest",
+            headers={
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            timeout=1000,
+        )
+    except BaseException as err:
+        print("error:", err)
+        return {
+            "tag_name": "v0.19.1",
+        }
     if response.status_code == 200:
         return response.json()
     print("error:", response.content)

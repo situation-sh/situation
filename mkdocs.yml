@@ -1,6 +1,7 @@
 site_name: Situation
 repo_url: https://github.com/situation-sh/situation
 docs_dir: docs
+dev_addr: "127.0.0.1:12000"
 
 theme:
   name: shadcn

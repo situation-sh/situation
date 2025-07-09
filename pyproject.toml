@@ -1,6 +1,6 @@
 [project]
 name = "situation-docs"
-version = "0.18.0"
+version = "0.19.2"
 description = "The autonomous data collector"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -9,10 +9,8 @@ dependencies = [
     "mkdocs-material>=9.6.4",
     "mkdocs-section-index>=0.3.9",
     "mkdocs-macros-plugin>=1.3.7",
-    "mkdocs-shadcn>=0.4.1",
+    "mkdocs-shadcn>=0.7.0",
 ]
 
 [tool.uv.workspace]
-members = [
-    ".dev/guide/situation-fastapi",
-]
+members = [".dev/guide/situation-fastapi"]
