@@ -173,13 +173,12 @@ func (m *PingModule) Run() error {
 		case ones > 24:
 			// if the network is restricted. We try to
 			// send pings in a wider one. It may appear
-			// in VPN cases
-			// this change does not modify the mask inside
-			// the store
+			// in VPN cases (so we ensure that the base ip is not public)
+			// this change does not modify the mask inside the store
 			if !utils.IsPublic(network.IP) {
 				network.Mask = net.CIDRMask(24, bits)
 			}
-			
+
 		}
 
 		logger.Infof("Pinging %s", network.String())
