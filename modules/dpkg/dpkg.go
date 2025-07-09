@@ -2,6 +2,7 @@ package dpkg
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -83,6 +84,7 @@ func parseLogLine(line string) *models.Package {
 // GetInstalledPackages returns the list of installed packages
 // based on the log files. It populates Name, Version, Manager and InstallTimeUnix
 func GetInstalledPackages() ([]*models.Package, error) {
+	var openErr error
 	out := make([]*models.Package, 0)
 	d, err := filepath.Abs(logDir)
 	if err != nil {
@@ -103,7 +105,8 @@ func GetInstalledPackages() ([]*models.Package, error) {
 			file := filepath.Join(d, entry.Name())
 			f, err := os.Open(file) // #nosec G304 -- False positive: 'file' has the following format: /var/log/dpkg.log*
 			if err != nil {
-				// ignore this file
+				openErr = errors.Join(openErr, err)
+				// keep on
 				continue
 			}
 			scanner := bufio.NewScanner(f)
@@ -115,9 +118,10 @@ func GetInstalledPackages() ([]*models.Package, error) {
 				}
 			}
 			if f.Close() != nil {
+				// it returns an error if the f has already been closed
 				continue
 			}
 		}
 	}
-	return out, nil
+	return out, openErr
 }
