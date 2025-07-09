@@ -176,7 +176,10 @@ func (m *PingModule) Run() error {
 			// in VPN cases
 			// this change does not modify the mask inside
 			// the store
-			network.Mask = net.CIDRMask(24, bits)
+			if !utils.IsPublic(network.IP) {
+				network.Mask = net.CIDRMask(24, bits)
+			}
+			
 		}
 
 		logger.Infof("Pinging %s", network.String())

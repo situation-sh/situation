@@ -126,3 +126,7 @@ func EnforceMask(nw *net.IPNet) *net.IPNet {
 	}
 	return &out
 }
+
+func IsPublic(ip net.IP) bool {
+	return !ip.IsPrivate() && !ip.IsLoopback() && !ip.IsLinkLocalUnicast() && !ip.IsLinkLocalMulticast() && !ip.IsMulticast() && !ip.IsInterfaceLocalMulticast()
+}
