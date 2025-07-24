@@ -1,31 +1,32 @@
 ---
 linux: true
-windows: false
-macos: false
+windows: true
+macos: unknown
 root: false
-title: Zypper
-summary: "Reads package information from the zypper package manager."
+title: TLS
+summary: "Enrich endpoints with TLS information."
 date: 2025-07-24
-filename: zypper.go
+filename: tls.go
 std_imports:
+  - crypto/sha1
+  - crypto/sha256
+  - crypto/tls
+  - encoding/hex
   - fmt
-  - time
-imports:
-  - github.com/knqyf263/go-rpmdb/pkg
+  - net
+imports: []
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-ZypperModule reads package information from the zypper package manager.
+TLSModule enrich endpoints with TLS information.
 
 ### Details
 
 
-This module is relevant for distros that use zypper, like suse and their derivatives. It uses [go-rpmdb](https://github.com/knqyf263/go-rpmdb/).
-
-It reads `/var/lib/rpm/Packages.db`.
+The module only uses the Go standard library. Currently it only supports TLS over TCP.
 
 ### Dependencies
 

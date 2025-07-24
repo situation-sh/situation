@@ -12,7 +12,7 @@ func GetKeys(m map[string]interface{}) []string {
 }
 
 // Includes check if a slice includes a given element (string)
-func Includes(slice []string, s string) bool {
+func Includes[T comparable](slice []T, s T) bool {
 	for _, x := range slice {
 		if x == s {
 			return true
