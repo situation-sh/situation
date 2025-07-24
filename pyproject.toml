@@ -13,4 +13,7 @@ dependencies = [
 ]
 
 [tool.uv.workspace]
-members = [".dev/guide/situation-fastapi"]
+members = [
+    ".dev/guide/situation-fastapi",
+ ".dev/ja4s/python",
+]

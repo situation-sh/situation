@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: Netstat
 summary: "Aims to retrieve infos like the netstat command does It must be run as root to retrieve PID/process information."
-date: 2025-05-09
+date: 2025-07-24
 filename: netstat.go
 std_imports:
   - os/user

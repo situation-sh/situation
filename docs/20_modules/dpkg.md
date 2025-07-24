@@ -5,10 +5,11 @@ macos: false
 root: false
 title: DPKG
 summary: "Reads package information from the dpkg package manager."
-date: 2025-05-09
+date: 2025-07-24
 filename: dpkg.go
 std_imports:
   - bufio
+  - errors
   - fmt
   - os
   - path/filepath
