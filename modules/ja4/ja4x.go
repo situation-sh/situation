@@ -65,7 +65,10 @@ func components(cert *x509.Certificate) []string {
 func getASN1Body(oid asn1.ObjectIdentifier) []byte {
 
 	var rawValue asn1.RawValue
-	m, _ := asn1.Marshal(oid)
+	m, err := asn1.Marshal(oid)
+	if err != nil {
+		return nil
+	}
 	asn1.Unmarshal(m, &rawValue)
 
 	return rawValue.Bytes
