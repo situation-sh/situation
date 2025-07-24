@@ -2,6 +2,7 @@ package models
 
 import (
 	"net"
+	"time"
 
 	"github.com/invopop/jsonschema"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
@@ -116,12 +117,42 @@ type Flow struct {
 	Status     string `json:"status"`
 }
 
+// type TLSSubject struct {
+// 	CommonName   string `json:"common_name,omitempty" jsonschema:"description=common name of the subject,example=www.example.com"`
+// 	Organization string `json:"organization,omitempty" jsonschema:"description=organization of the subject,example=Example Inc.,example=Example Ltd."`
+// }
+
+type TLS struct {
+	Subject            string    `json:"subject,omitempty"`
+	Issuer             string    `json:"issuer,omitempty"`
+	NotBefore          time.Time `json:"not_before,omitempty" jsonschema:"description=UNIX timestamp of the certificate not before date,example=1670520587"`
+	NotAfter           time.Time `json:"not_after,omitempty" jsonschema:"description=UNIX timestamp of the certificate not after date,example=1670520587"`
+	SerialNumber       string    `json:"serial_number,omitempty" jsonschema:"description=serial number of the certificate,example=1234567890"`
+	SignatureAlgorithm string    `json:"signature_algorithm,omitempty" jsonschema:"description=signature algorithm used to sign the certificate,example=SHA256withRSA"`
+	PublicKeyAlgorithm string    `json:"public_key_algorithm,omitempty" jsonschema:"description=public key algorithm used in the certificate,example=RSA,example=ECDSA"`
+	// Signature          string    `json:"signature,omitempty" jsonschema:"description=base64 encoded signature of the certificate"`
+	SHA1Fingerprint   string `json:"sha1_fingerprint,omitempty" jsonschema:"description=SHA1 fingerprint of the certificate,example=3A:5B:7C:8D:9E:0F:1A:2B:3C:4D:5E:6F:7A:8B:9C"`
+	SHA256Fingerprint string `json:"sha256_fingerprint,omitempty" jsonschema:"description=SHA256 fingerprint of the certificate,example=3A:5B:7C:8D:9E:0F:1A:2B:3C:4D"`
+}
+
+type JA4 struct {
+	JA4  string `json:"ja4,omitempty" jsonschema:"description=JA4 TLS client fingerprint,example=t13d1516h2_8daaf6152771_02713d6af862"`
+	JA4S string `json:"ja4s,omitempty" jsonschema:"description=JA4S TLS server fingerprint,example=t130200_1302_a56c5b993250 "`
+	JA4X string `json:"ja4x,omitempty" jsonschema:"description=JA4X TLS cert fingerprint,example=2bab15409345_af684594efb4_000000000000"`
+}
+
+type Fingerprints struct {
+	JA4 *JA4 `json:"ja4,omitempty" jsonschema:"description=JA4 fingerprints"`
+}
+
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
 type ApplicationEndpoint struct {
-	Port     uint16 `json:"port"`
-	Protocol string `json:"protocol"`
-	Addr     net.IP `json:"addr"`
+	Port         uint16        `json:"port"`
+	Protocol     string        `json:"protocol"`
+	Addr         net.IP        `json:"addr"`
+	TLS          *TLS          `json:"tls,omitempty" jsonschema:"description=TLS information if the endpoint is using TLS"`
+	Fingerprints *Fingerprints `json:"fingerprints,omitempty" jsonschema:"description=application fingerprints"`
 }
 
 func (s *Application) lastEndpoint() *ApplicationEndpoint {
