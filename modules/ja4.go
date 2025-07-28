@@ -104,6 +104,7 @@ func (m *JA4Module) Run() error {
 					WithField("ip", endpoint.Addr).
 					WithField("port", endpoint.Port).
 					WithField("protocol", endpoint.Protocol).
+					WithField("ja4", fp.JA4).
 					WithField("ja4s", fp.JA4S)
 
 				// ja4x
