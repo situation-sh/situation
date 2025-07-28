@@ -65,7 +65,9 @@ func (m *HostBasicModule) Run() error {
 		machine.Distribution = info.Platform
 		machine.DistributionVersion = info.PlatformVersion
 		// here the returned uptime is in seconds
-		machine.Uptime = time.Duration(info.Uptime) * time.Second
+		if info.Uptime <= 0x7fffffffffffffff {
+			machine.Uptime = time.Duration(info.Uptime) * time.Second
+		}
 
 		// logging
 		entry := logger.WithField("arch", machine.Arch)

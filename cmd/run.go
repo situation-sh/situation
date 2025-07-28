@@ -86,8 +86,5 @@ func singleRun() error {
 		Perfs:     perfs,
 	}
 
-	backends.Write(payload)
-
-	// store.Clear()
-	return nil
+	return backends.Write(payload)
 }

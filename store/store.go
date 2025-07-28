@@ -76,6 +76,8 @@ func GetMachineByIP(ip net.IP) *models.Machine {
 }
 
 func GetMachineByHostID(id string) *models.Machine {
+	internalMutex.Lock()
+	defer internalMutex.Unlock()
 	// ignore empty ID
 	if id == "" {
 		return nil
@@ -94,6 +96,9 @@ func GetMachineByHostID(id string) *models.Machine {
 // an application listening on this TCP port. In addition it also
 // returns the list of the related app endpoints.
 func GetMachinesByOpenTCPPort(port uint16) ([]*models.Machine, []*models.Application, []*models.ApplicationEndpoint) {
+	internalMutex.Lock()
+	defer internalMutex.Unlock()
+
 	outMachines := make([]*models.Machine, 0)
 	outApps := make([]*models.Application, 0)
 	outEndpoints := make([]*models.ApplicationEndpoint, 0)
