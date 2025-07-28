@@ -23,6 +23,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v3 v3.3.8
 	github.com/vishvananda/netlink v1.3.1
+	github.com/vmware/govmomi v0.51.0
 	github.com/winlabs/gowin32 v0.0.0-20240930213947-f504d7e14639
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	golang.org/x/mod v0.25.0
