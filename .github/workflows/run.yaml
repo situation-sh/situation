@@ -50,7 +50,7 @@ jobs:
       - name: Run the binary
         run: |
           chmod +x ${{ env.SITUATION }}
-          ${{ env.SITUATION }} > linux.json
+          ${{ env.SITUATION }} --file --file-path=linux.json
       - name: Upload linux results
         uses: actions/upload-artifact@v4
         with:
@@ -73,7 +73,7 @@ jobs:
           Get-Content $env:GITHUB_ENV
       - name: Run the binary
         run: |
-          & $env:SITUATION > windows.json
+          & $env:SITUATION --file --file-path=windows.json
       - name: Upload windows results
         uses: actions/upload-artifact@v4
         with:

@@ -69,7 +69,9 @@ func getASN1Body(oid asn1.ObjectIdentifier) []byte {
 	if err != nil {
 		return nil
 	}
-	asn1.Unmarshal(m, &rawValue)
+	if _, err := asn1.Unmarshal(m, &rawValue); err != nil {
+		return nil
+	}
 
 	return rawValue.Bytes
 }

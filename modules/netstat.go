@@ -109,7 +109,10 @@ func (m *NetstatModule) Run() error {
 						args = args[1:]
 					}
 					soft, created := machine.GetOrCreateApplicationByName(name)
-					soft.PID = uint(entry.Process.Pid)
+					pid := entry.Process.Pid
+					if pid >= 0 {
+						soft.PID = uint(pid)
+					}
 
 					if created {
 						// logging
