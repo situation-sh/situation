@@ -6,7 +6,7 @@ require (
 	github.com/asiffer/puzzle v0.0.0-20250511132214-7c02d281ae1a
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
-	github.com/docker/docker v28.3.1+incompatible
+	github.com/docker/docker v28.3.3+incompatible
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/google/uuid v1.6.0
 	github.com/gosnmp/gosnmp v1.41.0
