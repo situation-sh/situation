@@ -33,7 +33,7 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
-// VMwareModule try to connect to esxi/vcenter hosts and list VMs
+// VMwareModule tries to connect to esxi/vcenter hosts and list VMs
 type VMwareModule struct {
 	Username string
 	Password string

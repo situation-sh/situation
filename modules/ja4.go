@@ -10,6 +10,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/modules/ja4"
 	"github.com/situation-sh/situation/store"
@@ -44,86 +45,106 @@ func (m *JA4Module) Run() error {
 				if endpoint.TLS == nil {
 					continue
 				}
+				if ja4, err := m.fingerprint(endpoint.Protocol, endpoint.Addr, endpoint.Port, logger); err == nil && ja4 != nil {
+					if endpoint.Fingerprints == nil {
+						endpoint.Fingerprints = &models.Fingerprints{}
+					}
+					endpoint.Fingerprints.JA4 = ja4
+				}
+			}
 
-				target := net.JoinHostPort(endpoint.Addr.String(), fmt.Sprintf("%d", endpoint.Port))
-				conn, err := net.DialTimeout(
-					"tcp",
-					target,
-					1*time.Second,
-				)
-				if err != nil {
-					logger.WithError(err).
-						WithField("ip", endpoint.Addr).
-						WithField("port", endpoint.Port).
-						WithField("protocol", endpoint.Protocol).
-						Error("fail to dial")
+			for _, flow := range app.Flows {
+				if flow.RemoteExtra == nil {
 					continue
 				}
-
-				tconn := &tapConn{Conn: conn}
-				tlsConn := tls.Client(tconn, &tls.Config{
-					InsecureSkipVerify: true, // #nosec G402 - skip certificate verification for scanning
-				})
-				err = tlsConn.Handshake()
-				if err != nil {
-					logger.WithError(err).
-						WithField("ip", endpoint.Addr).
-						WithField("port", endpoint.Port).
-						WithField("protocol", endpoint.Protocol).
-						Error("TLS handshake failed")
+				if flow.RemoteExtra.TLS == nil {
 					continue
 				}
-
-				ja4_, err := ja4.JA4(tconn.writeBuf)
-				if err != nil {
-					logger.WithError(err).
-						WithField("ip", endpoint.Addr).
-						WithField("port", endpoint.Port).
-						WithField("protocol", endpoint.Protocol).
-						Error("JA4 parse failed")
-					continue
+				if ja4, err := m.fingerprint(flow.Protocol, flow.RemoteAddr, flow.RemotePort, logger); err == nil && ja4 != nil {
+					if flow.RemoteExtra.Fingerprints == nil {
+						flow.RemoteExtra.Fingerprints = &models.Fingerprints{}
+					}
+					flow.RemoteExtra.Fingerprints.JA4 = ja4
 				}
-
-				// Step 3: Extract JA4S from raw handshake
-				ja4s, err := ja4.JA4S(tconn.readBuf)
-				if err != nil {
-					logger.WithError(err).
-						WithField("ip", endpoint.Addr).
-						WithField("port", endpoint.Port).
-						WithField("protocol", endpoint.Protocol).
-						Error("JA4S parse failed")
-					continue
-				}
-
-				fp := models.JA4{
-					JA4:  ja4_,
-					JA4S: ja4s,
-				}
-
-				entry := logger.
-					WithField("ip", endpoint.Addr).
-					WithField("port", endpoint.Port).
-					WithField("protocol", endpoint.Protocol).
-					WithField("ja4", fp.JA4).
-					WithField("ja4s", fp.JA4S)
-
-				// ja4x
-				certs := tlsConn.ConnectionState().PeerCertificates
-				if len(certs) > 0 {
-					fp.JA4X = ja4.JA4X(certs[0])
-					entry = entry.WithField("ja4x", fp.JA4X)
-				}
-
-				if endpoint.Fingerprints == nil {
-					endpoint.Fingerprints = &models.Fingerprints{}
-				}
-
-				endpoint.Fingerprints.JA4 = &fp
-				entry.Info("JA4 fingerprints retrieved")
 			}
 		}
 	}
 	return nil
+}
+
+func (m *JA4Module) fingerprint(proto string, ip net.IP, port uint16, logger *logrus.Entry) (*models.JA4, error) {
+	target := net.JoinHostPort(ip.String(), fmt.Sprintf("%d", port))
+	conn, err := net.DialTimeout(
+		"tcp",
+		target,
+		1*time.Second,
+	)
+	if err != nil {
+		logger.WithError(err).
+			WithField("ip", ip).
+			WithField("port", port).
+			WithField("protocol", proto).
+			Error("fail to dial")
+		return nil, err
+	}
+
+	tconn := &tapConn{Conn: conn}
+	tlsConn := tls.Client(tconn, &tls.Config{
+		InsecureSkipVerify: true, // #nosec G402 - skip certificate verification for scanning
+	})
+	err = tlsConn.Handshake()
+	if err != nil {
+		logger.WithError(err).
+			WithField("ip", ip).
+			WithField("port", port).
+			WithField("protocol", proto).
+			Error("TLS handshake failed")
+		return nil, err
+	}
+
+	ja4_, err := ja4.JA4(tconn.writeBuf)
+	if err != nil {
+		logger.WithError(err).
+			WithField("ip", ip).
+			WithField("port", port).
+			WithField("protocol", proto).
+			Error("JA4 parse failed")
+		return nil, err
+	}
+
+	// Step 3: Extract JA4S from raw handshake
+	ja4s, err := ja4.JA4S(tconn.readBuf)
+	if err != nil {
+		logger.WithError(err).
+			WithField("ip", ip).
+			WithField("port", port).
+			WithField("protocol", proto).
+			Error("JA4S parse failed")
+		return nil, err
+	}
+
+	fp := models.JA4{
+		JA4:  ja4_,
+		JA4S: ja4s,
+	}
+
+	entry := logger.
+		WithField("ip", ip).
+		WithField("port", port).
+		WithField("protocol", proto).
+		WithField("ja4", fp.JA4).
+		WithField("ja4s", fp.JA4S)
+
+	// ja4x
+	certs := tlsConn.ConnectionState().PeerCertificates
+	if len(certs) > 0 {
+		fp.JA4X = ja4.JA4X(certs[0])
+		entry = entry.WithField("ja4x", fp.JA4X)
+	}
+	entry.Info("JA4 fingerprints retrieved")
+
+	return &fp, nil
+
 }
 
 // tapConn saves handshake bytes
