@@ -107,14 +107,20 @@ func NewApplication() *Application {
 	}
 }
 
+type FlowRemoteExtra struct {
+	TLS          *TLS          `json:"tls,omitempty" jsonschema:"description=TLS information if the flow is using TLS"`
+	Fingerprints *Fingerprints `json:"fingerprints,omitempty" jsonschema:"description=flow fingerprints if relevant"`
+}
+
 // Flow aims to represent a layer 4 connection
 type Flow struct {
-	LocalAddr  net.IP `json:"local_addr"`
-	LocalPort  uint16 `json:"local_port"`
-	RemoteAddr net.IP `json:"remote_addr"`
-	RemotePort uint16 `json:"remote_port"`
-	Protocol   string `json:"protocol"`
-	Status     string `json:"status"`
+	LocalAddr   net.IP           `json:"local_addr"`
+	LocalPort   uint16           `json:"local_port"`
+	RemoteAddr  net.IP           `json:"remote_addr"`
+	RemotePort  uint16           `json:"remote_port"`
+	Protocol    string           `json:"protocol"`
+	Status      string           `json:"status"`
+	RemoteExtra *FlowRemoteExtra `json:"remote_extra,omitempty" jsonschema:"description=extra information about the remote endpoint"`
 }
 
 // type TLSSubject struct {

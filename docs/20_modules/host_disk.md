@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Host Disk
 summary: "Retrieves basic information about disk: name, model, size, type, controller and partitions."
-date: 2025-07-24
+date: 2025-07-28
 filename: host_disk.go
 std_imports:
   - fmt
