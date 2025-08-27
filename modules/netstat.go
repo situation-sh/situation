@@ -5,6 +5,7 @@
 package modules
 
 import (
+	"os"
 	"os/user"
 	"runtime"
 
@@ -96,6 +97,10 @@ func (m *NetstatModule) Run() error {
 		if entries, err := provider(portFilter); err == nil {
 			for _, entry := range entries {
 				if entry.Process != nil {
+					if entry.Process.Pid == os.Getpid() {
+						// ignore self
+						continue
+					}
 					// ignore docker-proxy
 					// this process aims at forwarding port
 					if entry.Process.Name == "docker-proxy" {
