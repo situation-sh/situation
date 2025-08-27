@@ -5,7 +5,7 @@ macos:
 root: true
 title: SSH
 summary: "Aims to retrieve info from remote ssh services."
-date: 2025-07-24
+date: 2025-07-28
 filename: ssh.go
 std_imports:
   - encoding/json

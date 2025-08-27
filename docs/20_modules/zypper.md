@@ -5,7 +5,7 @@ macos: false
 root: false
 title: Zypper
 summary: "Reads package information from the zypper package manager."
-date: 2025-07-24
+date: 2025-07-28
 filename: zypper.go
 std_imports:
   - fmt

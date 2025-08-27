@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: TLS
 summary: "Enrich endpoints with TLS information."
-date: 2025-07-24
+date: 2025-07-28
 filename: tls.go
 std_imports:
   - crypto/sha1

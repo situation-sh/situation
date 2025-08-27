@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/models"
 	"github.com/situation-sh/situation/store"
 	"github.com/situation-sh/situation/utils"
@@ -54,7 +55,7 @@ func (m *TLSModule) Name() string {
 }
 
 func (m *TLSModule) Dependencies() []string {
-	return []string{"tcp-scan"}
+	return []string{"tcp-scan", "netstat"}
 }
 
 func (m *TLSModule) Run() error {
@@ -62,32 +63,47 @@ func (m *TLSModule) Run() error {
 	for machine := range store.IterateMachines() {
 		for _, app := range machine.Applications() {
 			for _, endpoint := range app.Endpoints {
-				if endpoint.Protocol != "tcp" {
-					continue
+				if info, err := m.tlsInfo(endpoint.Protocol, endpoint.Addr, endpoint.Port, logger); err == nil && info != nil {
+					endpoint.TLS = info
 				}
-				if !utils.Includes(m.Ports, endpoint.Port) {
-					continue
+			}
+
+			// flows
+			for _, flow := range app.Flows {
+				if info, err := m.tlsInfo(flow.Protocol, flow.RemoteAddr, flow.RemotePort, logger); err == nil && info != nil {
+					if flow.RemoteExtra == nil {
+						flow.RemoteExtra = &models.FlowRemoteExtra{}
+					}
+					flow.RemoteExtra.TLS = info
 				}
-
-				tlsInfo, err := getTLS(endpoint.Protocol, endpoint.Addr, endpoint.Port)
-				if err != nil {
-					logger.WithError(err).
-						WithField("ip", endpoint.Addr).
-						Error("failed to get TLS info")
-					continue
-				}
-
-				endpoint.TLS = tlsInfo
-
-				logger.WithField("ip", endpoint.Addr).
-					WithField("port", endpoint.Port).
-					WithField("subject", tlsInfo.Subject).
-					WithField("issuer", tlsInfo.Issuer).
-					Info("TLS information retrieved")
 			}
 		}
 	}
 	return nil
+}
+
+func (m *TLSModule) tlsInfo(proto string, ip net.IP, port uint16, logger *logrus.Entry) (*models.TLS, error) {
+	if proto != "tcp" {
+		return nil, fmt.Errorf("unsupported protocol %s for TLS", proto)
+	}
+	if !utils.Includes(m.Ports, port) {
+		return nil, fmt.Errorf("port %d not in configured TLS ports", port)
+	}
+
+	tlsInfo, err := getTLS(proto, ip, port)
+	if err != nil {
+		logger.WithError(err).
+			WithField("ip", ip).
+			Error("failed to get TLS info")
+		return nil, err
+	}
+
+	logger.WithField("ip", ip).
+		WithField("port", port).
+		WithField("subject", tlsInfo.Subject).
+		WithField("issuer", tlsInfo.Issuer).
+		Info("TLS information retrieved")
+	return tlsInfo, nil
 }
 
 func formatFingerprint(hash []byte) string {
