@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/invopop/jsonschema"
-	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 // Package is a wrapper around application that stores distribution
@@ -114,12 +113,12 @@ type FlowRemoteExtra struct {
 
 // Flow aims to represent a layer 4 connection
 type Flow struct {
-	LocalAddr   net.IP           `json:"local_addr"`
-	LocalPort   uint16           `json:"local_port"`
-	RemoteAddr  net.IP           `json:"remote_addr"`
-	RemotePort  uint16           `json:"remote_port"`
-	Protocol    string           `json:"protocol"`
-	Status      string           `json:"status"`
+	LocalAddr   net.IP           `json:"local_addr" jsonschema:"description=local IP address of the flow,example=127.0.0.1,example=fe80::12b8:43e7:11f0:a406"`
+	LocalPort   uint16           `json:"local_port" jsonschema:"description=local port of the flow,example=22,example=443,example=49667,minimum=1,maximum=65535"`
+	RemoteAddr  net.IP           `json:"remote_addr" jsonschema:"description=remote IP address of the flow,example=9.10.11.12,example=2607:5300:201:abcd::7c5"`
+	RemotePort  uint16           `json:"remote_port" jsonschema:"description=remote port of the flow,example=22,example=443,example=8080,minimum=1,maximum=65535"`
+	Protocol    string           `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
+	Status      string           `json:"status" jsonschema:"description=Link status,example=CLOSE_WAIT,example=ESTABLISHED"`
 	RemoteExtra *FlowRemoteExtra `json:"remote_extra,omitempty" jsonschema:"description=extra information about the remote endpoint"`
 }
 
@@ -129,8 +128,8 @@ type Flow struct {
 // }
 
 type TLS struct {
-	Subject            string    `json:"subject,omitempty"`
-	Issuer             string    `json:"issuer,omitempty"`
+	Subject            string    `json:"subject,omitempty" jsonschema:"description=subject of the certificate,example=www.example.com,example=CN=www.example.com,O=Example Inc.,C=US"`
+	Issuer             string    `json:"issuer,omitempty" jsonschema:"description=issuer of the certificate,example=Let's Encrypt Authority X3,O=Let's Encrypt,C=US"`
 	NotBefore          time.Time `json:"not_before,omitempty" jsonschema:"description=UNIX timestamp of the certificate not before date,example=1670520587"`
 	NotAfter           time.Time `json:"not_after,omitempty" jsonschema:"description=UNIX timestamp of the certificate not after date,example=1670520587"`
 	SerialNumber       string    `json:"serial_number,omitempty" jsonschema:"description=serial number of the certificate,example=1234567890"`
@@ -154,9 +153,9 @@ type Fingerprints struct {
 // ApplicationEndpoint is a structure used by Application
 // to tell that the app listens on given addr and port
 type ApplicationEndpoint struct {
-	Port         uint16        `json:"port"`
-	Protocol     string        `json:"protocol"`
-	Addr         net.IP        `json:"addr"`
+	Port         uint16        `json:"port" jsonschema:"description=port number,example=22,example=80,example=443,minimum=1,maximum=65535"`
+	Protocol     string        `json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
+	Addr         net.IP        `json:"addr" jsonschema:"description=IP address the application listens on,example=127.0.0.1,example=fe80::12b8:43e7:11f0:a406"`
 	TLS          *TLS          `json:"tls,omitempty" jsonschema:"description=TLS information if the endpoint is using TLS"`
 	Fingerprints *Fingerprints `json:"fingerprints,omitempty" jsonschema:"description=application fingerprints"`
 }
@@ -193,110 +192,85 @@ func (s *Application) AddEndpoint(addr net.IP, port uint16, proto string) (*Appl
 	return s.lastEndpoint(), true
 }
 
-func (ApplicationEndpoint) JSONSchema() *jsonschema.Schema {
-	properties := orderedmap.New[string, *jsonschema.Schema]()
-	properties.Set("port", &jsonschema.Schema{
-		Type:        "integer",
-		Maximum:     "65535",
-		Minimum:     "1",
-		Description: "port",
-		Examples: []interface{}{
-			22,
-			80,
-			443,
-			49667,
-		},
-	})
-
-	properties.Set("protocol", &jsonschema.Schema{
-		Type:        "string",
-		Description: "transport layer protocol",
-		Examples: []interface{}{
-			"tcp",
-			"udp",
-		},
-	})
-
-	properties.Set("addr", &jsonschema.Schema{
-		Title: "IPv4 or IPv6 address",
-		AnyOf: []*jsonschema.Schema{
+func (ApplicationEndpoint) JSONSchemaExtend(schema *jsonschema.Schema) {
+	if addrSchema, ok := schema.Properties.Get("addr"); ok {
+		addrSchema.AnyOf = []*jsonschema.Schema{
 			{Type: "string", Format: "ipv4"},
 			{Type: "string", Format: "ipv6"},
-		},
-		Description: "binding IP address",
-		Examples: []interface{}{
-			"192.168.10.103",
-			"0.0.0.0",
-			"::",
-			"fe80::c1b2:a320:f799:10e0",
-		},
-	})
-
-	return &jsonschema.Schema{
-		Properties:           properties,
-		AdditionalProperties: jsonschema.FalseSchema,
-		Type:                 "object",
-		Required:             []string{"port", "protocol", "addr"},
+		}
 	}
 }
 
-func (Flow) JSONSchema() *jsonschema.Schema {
-	properties := orderedmap.New[string, *jsonschema.Schema]()
-
-	for _, prop := range []string{"local_port", "remote_port"} {
-		properties.Set(prop, &jsonschema.Schema{
-			Type:        "integer",
-			Maximum:     "65535",
-			Minimum:     "1",
-			Description: "port",
-			Examples: []interface{}{
-				22,
-				80,
-				443,
-				49667,
-			},
-		})
-	}
-
+func (Flow) JSONSchemaExtend(schema *jsonschema.Schema) {
 	for _, prop := range []string{"local_addr", "remote_addr"} {
-		properties.Set(prop, &jsonschema.Schema{
-			Title: "IPv4 or IPv6 address",
-			AnyOf: []*jsonschema.Schema{
+		if addrSchema, ok := schema.Properties.Get(prop); ok {
+			addrSchema.AnyOf = []*jsonschema.Schema{
 				{Type: "string", Format: "ipv4"},
 				{Type: "string", Format: "ipv6"},
-			},
-			Description: "binding IP address",
-			Examples: []interface{}{
-				"192.168.10.103",
-				"0.0.0.0",
-				"::",
-				"fe80::c1b2:a320:f799:10e0",
-			},
-		})
-	}
-
-	properties.Set("protocol", &jsonschema.Schema{
-		Type:        "string",
-		Description: "transport layer protocol",
-		Examples: []interface{}{
-			"tcp",
-			"udp",
-		},
-	})
-
-	properties.Set("status", &jsonschema.Schema{
-		Type:        "string",
-		Description: "Link status",
-		Examples: []interface{}{
-			"CLOSE_WAIT",
-			"ESTABLISHED",
-		},
-	})
-
-	return &jsonschema.Schema{
-		Properties:           properties,
-		AdditionalProperties: jsonschema.FalseSchema,
-		Type:                 "object",
-		Required:             []string{"local_port", "local_addr", "remote_port", "remote_addr", "protocol", "status"},
+			}
+		}
 	}
 }
+
+// func (Flow) JSONSchema() *jsonschema.Schema {
+// 	properties := orderedmap.New[string, *jsonschema.Schema]()
+
+// 	for _, prop := range []string{"local_port", "remote_port"} {
+// 		properties.Set(prop, &jsonschema.Schema{
+// 			Type:        "integer",
+// 			Maximum:     "65535",
+// 			Minimum:     "1",
+// 			Description: "port",
+// 			Examples: []interface{}{
+// 				22,
+// 				80,
+// 				443,
+// 				49667,
+// 			},
+// 		})
+// 	}
+
+// 	for _, prop := range []string{"local_addr", "remote_addr"} {
+// 		properties.Set(prop, &jsonschema.Schema{
+// 			Title: "IPv4 or IPv6 address",
+// 			AnyOf: []*jsonschema.Schema{
+// 				{Type: "string", Format: "ipv4"},
+// 				{Type: "string", Format: "ipv6"},
+// 			},
+// 			Description: "binding IP address",
+// 			Examples: []interface{}{
+// 				"192.168.10.103",
+// 				"0.0.0.0",
+// 				"::",
+// 				"fe80::c1b2:a320:f799:10e0",
+// 			},
+// 		})
+// 	}
+
+// 	properties.Set("protocol", &jsonschema.Schema{
+// 		Type:        "string",
+// 		Description: "transport layer protocol",
+// 		Examples: []interface{}{
+// 			"tcp",
+// 			"udp",
+// 		},
+// 	})
+
+// 	properties.Set("status", &jsonschema.Schema{
+// 		Type:        "string",
+// 		Description: "Link status",
+// 		Examples: []interface{}{
+// 			"CLOSE_WAIT",
+// 			"ESTABLISHED",
+// 		},
+// 	})
+
+// 	properties.Set("remote_extra", jsonschema.Reflect(&FlowRemoteExtra{}))
+
+// 	return &jsonschema.Schema{
+// 		Properties:           properties,
+// 		AdditionalProperties: jsonschema.FalseSchema,
+// 		Type:                 "object",
+// 		Required:             []string{"local_port", "local_addr", "remote_port", "remote_addr", "protocol", "status"},
+// 	}
+// }
