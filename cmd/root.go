@@ -41,6 +41,7 @@ var app = &cli.Command{
 		&schemaCmd,
 		&updateCmd,
 		&versionCmd,
+		&taskCmd,
 	},
 	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 		return ctx, initLog()
