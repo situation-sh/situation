@@ -132,7 +132,7 @@ gosec.json:
 govulncheck.json:
 	@govulncheck --json ./... | jq > $@
 
-analysis: .goweight.json
+analysis: goweight.json
 
 goweight.json:
 	@goweight --json . | jq > $@
