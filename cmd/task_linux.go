@@ -46,7 +46,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	cronLine := fmt.Sprintf("%s %s %s * * %s %s\n", minutes, hours, day, file, strings.Join(getRunArgs(cmd), " "))
 
 	logrus.Infof("Creating cron job file %s", cronFile)
-	f, err := os.OpenFile(cronFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err := os.OpenFile(cronFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("cannot open or create %s: %w", cronFile, err)
 	}
