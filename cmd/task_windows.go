@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
+	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/config"
 	"github.com/urfave/cli/v3"
 )
@@ -182,6 +183,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	}
 	defer ole.CoUninitialize()
 
+	logrus.Debugf("Connecting to Windows Task Scheduler")
 	service, err := taskConnect()
 	if err != nil {
 		return err
@@ -189,6 +191,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	defer service.Release()
 
 	// get root folder (for incoming registration)
+	logrus.Debugf("Getting root folder")
 	root, err := getRoot(service)
 	if err != nil {
 		return err
@@ -196,6 +199,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	defer root.Release()
 
 	if uninstall {
+		logrus.Infof("Deleting scheduled task %s", taskName)
 		// Unregister the task if it exists
 		_, err := oleutil.CallMethod(root, "DeleteTask", taskName, 0)
 		if err != nil {
@@ -204,6 +208,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 		return nil
 	}
 
+	logrus.Debugf("Creating scheduled task definition")
 	taskDef, err := createTask(service)
 	if err != nil {
 		return err
@@ -211,6 +216,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	defer taskDef.Release()
 
 	// registration info
+	logrus.Debugf("Setting registration info")
 	regInfo, err := getTaskProps(taskDef, "RegistrationInfo")
 	if err != nil {
 		return err
@@ -221,6 +227,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// principal
+	logrus.Debugf("Setting principal info")
 	principal, err := getTaskProps(taskDef, "Principal")
 	if err != nil {
 		return err
@@ -231,6 +238,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// settings
+	logrus.Debugf("Setting taks settings")
 	settings, err := getTaskProps(taskDef, "Settings")
 	if err != nil {
 		return err
@@ -241,6 +249,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// triggers
+	logrus.Debugf("Setting task triggers")
 	triggers, err := getTaskProps(taskDef, "Triggers")
 	if err != nil {
 		return err
@@ -256,6 +265,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// repetition
+	logrus.Debugf("Setting task repetition")
 	repetition, err := getTaskProps(trigger, "Repetition")
 	if err != nil {
 		return err
@@ -266,6 +276,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// actions
+	logrus.Debugf("Setting task actions")
 	actions, err := getTaskProps(taskDef, "Actions")
 	if err != nil {
 		return err
@@ -283,6 +294,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 
 	// REGISTER
 	// https://learn.microsoft.com/fr-fr/windows/win32/taskschd/taskfolder-registertaskdefinition
+	logrus.Infof("Registering scheduled task %s", taskName)
 	_, err = oleutil.CallMethod(
 		root,
 		"RegisterTaskDefinition",

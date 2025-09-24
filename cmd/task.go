@@ -8,10 +8,11 @@ import (
 )
 
 var (
-	startTime  time.Time     = time.Now()
-	daysPeriod uint          = 1
-	timePeriod time.Duration = 0
-	uninstall  bool          = false
+	startTime    time.Time     = time.Now()
+	daysPeriod   uint          = 1
+	timePeriod   time.Duration = 0
+	uninstall    bool          = false
+	taskLogLevel uint          = 1
 )
 
 var taskCmd = cli.Command{
@@ -47,12 +48,27 @@ var taskCmd = cli.Command{
 			Value:       false,
 			Destination: &uninstall,
 		},
+		&cli.UintFlag{
+			Name:        "task-log-level",
+			Usage:       "Define the log level used in the scheduled task (0: Panic, 1: Fatal, 2: Error, 3: Warn, 4: Info, 5: Debug)",
+			Value:       1,
+			Destination: &taskLogLevel,
+		},
 	},
 }
 
 func getRunArgs(cmd *cli.Command) []string {
 	out := make([]string, 0)
 	for _, name := range cmd.Root().LocalFlagNames() { // only root-defined (global) flags
+		if len(name) == 1 {
+			// skip short names
+			// corresponding long names are also in the list
+			// it seems to be the behaviour of flag.FlagSet
+			continue
+		}
+		if name == "log-level" {
+			continue // we set it specifically for the task with task-log-level
+		}
 		if cmd.IsSet(name) { // user provided it
 			// Value() returns a cli.Value; String() gives a normalized string form
 			switch v := cmd.Value(name).(type) {

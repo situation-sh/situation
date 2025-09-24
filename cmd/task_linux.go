@@ -9,35 +9,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 )
-
-// func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
-// 	// fmt.Println(cmd.Args().Slice())
-// 	// fmt.Println(cmd.Arguments)
-// 	// fmt.Println(cmd.Root().Arguments)
-// 	// fmt.Println(cmd.Root().Args().Slice())
-// 	out := make([]string, 0)
-// 	for _, name := range cmd.Root().LocalFlagNames() { // only root-defined (global) flags
-// 		if cmd.IsSet(name) { // user provided it
-// 			// Value() returns a cli.Value; String() gives a normalized string form
-// 			switch v := cmd.Value(name).(type) {
-// 			case bool:
-// 				out = append(out, fmt.Sprintf("--%s", name))
-// 			default:
-// 				out = append(out, fmt.Sprintf("--%s", name), fmt.Sprintf("%v", v))
-// 			}
-
-// 		}
-// 	}
-// 	fmt.Println(out)
-// 	return nil
-// }
 
 const cronFile = "/etc/cron.d/situation"
 
 func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	if uninstall {
+		logrus.Infof("Removing cron job file %s", cronFile)
 		return os.Remove(cronFile)
 	}
 	file, err := os.Executable()
@@ -65,11 +45,14 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	}
 	cronLine := fmt.Sprintf("%s %s %s * * %s %s\n", minutes, hours, day, file, strings.Join(getRunArgs(cmd), " "))
 
+	logrus.Infof("Creating cron job file %s", cronFile)
 	f, err := os.OpenFile(cronFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("cannot open or create %s: %w", cronFile, err)
 	}
 	defer f.Close()
+
+	logrus.Debugf("Writing cron line: %s", cronLine)
 	if _, err := f.WriteString(cronLine); err != nil {
 		return fmt.Errorf("cannot write to %s: %w", cronFile, err)
 	}
