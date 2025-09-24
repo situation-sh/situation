@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: JA4
 summary: "Attempts JA4, JA4S and JA4X fingerprinting"
-date: 2025-07-28
+date: 2025-09-24
 filename: ja4.go
 std_imports:
   - crypto/sha256
@@ -20,7 +20,8 @@ std_imports:
   - slices
   - strings
   - time
-imports: []
+imports:
+  - github.com/sirupsen/logrus
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}

@@ -17,6 +17,7 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.details
   - pymdownx.blocks.tab
+  - footnotes
 
 plugins:
   - search:

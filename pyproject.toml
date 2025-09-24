@@ -9,11 +9,8 @@ dependencies = [
     "mkdocs-material>=9.6.4",
     "mkdocs-section-index>=0.3.9",
     "mkdocs-macros-plugin>=1.3.7",
-    "mkdocs-shadcn>=0.7.0",
+    "mkdocs-shadcn>=0.9.4",
 ]
 
 [tool.uv.workspace]
-members = [
-    ".dev/guide/situation-fastapi",
- ".dev/ja4s/python",
-]
+members = [".dev/guide/situation-fastapi", ".dev/ja4s/python"]

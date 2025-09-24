@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: ARP
 summary: "Reads internal ARP table to find network neighbors."
-date: 2025-07-28
+date: 2025-09-24
 filename: arp.go
 std_imports:
   - encoding/binary

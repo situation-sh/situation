@@ -47,3 +47,4 @@ go install {{ variables.go_module }}
 
 !!! warning ""
     The `$GOPATH/bin` folder must be in your PATH to run `situation` directly from the command line
+
