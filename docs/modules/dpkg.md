@@ -1,36 +1,35 @@
 ---
 linux: true
-windows: true
-macos: unknown
+windows: false
+macos: false
 root: false
-title: V Mware
-summary: "Try to connect to esxi/vcenter hosts and list VMs"
-date: 2025-07-28
-filename: vmware.go
+title: DPKG
+summary: "Reads package information from the dpkg package manager."
+date: 2025-09-24
+filename: dpkg.go
 std_imports:
-  - context
+  - bufio
+  - errors
   - fmt
-  - net
-  - net/url
-  - regexp
+  - os
+  - path/filepath
   - strings
   - time
-imports:
-  - github.com/sirupsen/logrus
-  - github.com/vmware/govmomi
-  - github.com/vmware/govmomi/find
-  - github.com/vmware/govmomi/vim25/mo
-  - github.com/vmware/govmomi/vim25/types
+imports: []
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-VMwareModule try to connect to esxi/vcenter hosts and list VMs
+DPKGModule reads package information from the dpkg package manager.
 
 ### Details
 
+
+This module is relevant for distros that use dpkg, like debian, ubuntu and their derivatives. It only uses the standard library.
+
+It reads `/var/log/dpkg.log` and also files from `/var/lib/dpkg/info/`.
 
 ### Dependencies
 

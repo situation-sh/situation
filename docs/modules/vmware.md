@@ -3,30 +3,34 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: Host Network
-summary: "Retrieves basic newtork information about the host: interfaces along with their mac, ip and mask (IPv4 and IPv6)"
-date: 2025-07-28
-filename: host_network.go
+title: VMware
+summary: "Tries to connect to esxi/vcenter hosts and list VMs"
+date: 2025-09-24
+filename: vmware.go
 std_imports:
+  - context
   - fmt
   - net
+  - net/url
+  - regexp
   - strings
+  - time
 imports:
-  - github.com/libp2p/go-netroute
+  - github.com/sirupsen/logrus
+  - github.com/vmware/govmomi
+  - github.com/vmware/govmomi/find
+  - github.com/vmware/govmomi/vim25/mo
+  - github.com/vmware/govmomi/vim25/types
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-HostNetworkModule retrieves basic newtork information about the host: interfaces along with their mac, ip and mask (IPv4 and IPv6)
+VMwareModule tries to connect to esxi/vcenter hosts and list VMs
 
 ### Details
 
-
-It uses the [go](https://pkg.go.dev/net) standard library.
-
-On Linux, it uses the Netlink API. On Windows, it calls `GetAdaptersAddresses`.
 
 ### Dependencies
 

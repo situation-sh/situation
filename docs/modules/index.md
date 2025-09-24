@@ -40,6 +40,6 @@ sidebar_title: Reference
 | [snmp](snmp.md)   | SNMPModule Module to collect data through SNMP protocol.      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [ssh](ssh.md)   | SSHModule aims to retrieve info from remote ssh services.      | [tcp-scan](tcp_scan.md)           | {{ linux_ok }} {{ root_required }}     |
 | [tcp-scan](tcp_scan.md)   | TCPScanModule tries to connect to neighbor TCP ports.      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
-| [tls](tls.md)   | TLSModule enrich endpoints with TLS information.      | [tcp-scan](tcp_scan.md)           | {{ linux_ok }} {{ windows_ok }}     |
-| [vmware](vmware.md)   | VMwareModule try to connect to esxi/vcenter hosts and list VMs      | [tls](tls.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [tls](tls.md)   | TLSModule enrich endpoints with TLS information.      | [tcp-scan](tcp_scan.md), [netstat](netstat.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [vmware](vmware.md)   | VMwareModule tries to connect to esxi/vcenter hosts and list VMs      | [tls](tls.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [zypper](zypper.md)   | ZypperModule reads package information from the zypper package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |

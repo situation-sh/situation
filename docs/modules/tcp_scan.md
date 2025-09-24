@@ -3,17 +3,15 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: TLS
-summary: "Enrich endpoints with TLS information."
-date: 2025-07-28
-filename: tls.go
+title: TCP Scan
+summary: "Tries to connect to neighbor TCP ports."
+date: 2025-09-24
+filename: tcp_scan.go
 std_imports:
-  - crypto/sha1
-  - crypto/sha256
-  - crypto/tls
-  - encoding/hex
   - fmt
   - net
+  - sync
+  - time
 imports: []
 ---
 
@@ -21,12 +19,14 @@ imports: []
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-TLSModule enrich endpoints with TLS information.
+TCPScanModule tries to connect to neighbor TCP ports.
 
 ### Details
 
 
-The module only uses the Go standard library. Currently it only supports TLS over TCP.
+The module only uses the Go standard library.
+
+A TCP connect is performed on the [NMAP top 1000 ports](https://nullsec.us/top-1-000-tcp-and-udp-ports-nmap-default/). These connection attempts are made concurrently against the hosts previously found. The connections have a 500ms timeout.
 
 ### Dependencies
 
