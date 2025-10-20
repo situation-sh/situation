@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/situation-sh/situation/models"
+	"github.com/asiffer/puzzle"
+	"github.com/situation-sh/situation/pkg/models"
 	"gopkg.in/yaml.v3"
 )
 
 type FileBackend struct {
+	BaseBackend
+
 	Format string
 	Path   string
 	file   *os.File
@@ -21,19 +24,28 @@ func init() {
 		Path:   "situation.json",
 		file:   nil,
 	}
-	RegisterBackend(b)
+	registerBackend(b)
 	// SetDefault(b, "enabled", false, "enable the backend")
-	SetDefault(b, "format", &b.Format, "output format")
-	SetDefault(b, "path", &b.Path, "output file")
+	// SetDefault(b, "format", &b.Format, "output format")
+	// SetDefault(b, "path", &b.Path, "output file")
 }
 
 func (f *FileBackend) Name() string {
 	return "file"
 }
 
+func (f *FileBackend) Bind(config *puzzle.Config) error {
+	if err := setDefault(config, f, "format", &f.Format, "output format"); err != nil {
+		return err
+	}
+	if err := setDefault(config, f, "path", &f.Path, "output file"); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (f *FileBackend) Init() error {
-	logger := GetLogger(f)
-	logger.Infof("Opening file %s", f.Path)
+	f.logger.Infof("Opening file %s", f.Path)
 	file, err := os.Create(f.Path)
 	if err != nil {
 		return err
@@ -53,7 +65,6 @@ func (f *FileBackend) Close() error {
 }
 
 func (f *FileBackend) Write(p *models.Payload) error {
-	logger := GetLogger(f)
 	var bytes []byte
 	var err error
 
@@ -72,6 +83,6 @@ func (f *FileBackend) Write(p *models.Payload) error {
 	if err != nil {
 		return err
 	}
-	logger.Infof("Payload written to %s", f.file.Name())
+	f.logger.Infof("Payload written to %s", f.file.Name())
 	return nil
 }

@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/situation-sh/situation/config"
-	"github.com/situation-sh/situation/models"
+	"github.com/asiffer/puzzle"
+	"github.com/situation-sh/situation/pkg/models"
 )
 
 type HttpBackend struct {
+	BaseBackend
+
 	URL           string
 	Method        string
 	ContentType   []string
@@ -20,7 +22,7 @@ type HttpBackend struct {
 }
 
 func (h *HttpBackend) populateHeaders(headers *http.Header) error {
-	headers.Set("user-agent", fmt.Sprintf("situation/%s", config.Version))
+	// headers.Set("user-agent", fmt.Sprintf("situation/%s", Version))
 	for _, ct := range h.ContentType {
 		headers.Add("content-type", ct)
 	}
@@ -34,28 +36,47 @@ func (h *HttpBackend) populateHeaders(headers *http.Header) error {
 		}
 		headers.Add(s[0], s[1])
 	}
-	headers.Add("User-Agent", fmt.Sprintf("situation/%s", config.Version))
+	// headers.Add("User-Agent", fmt.Sprintf("situation/%s", config.Version))
 	return nil
 }
 
 func init() {
 	b := &HttpBackend{
-		URL:           "http://127.0.0.1:8000/import/situation/",
-		Method:        "POST",
-		ContentType:   []string{"application/json"},
-		Authorization: []string{config.GetAgent().String()},
-		ExtraHeaders:  []string{},
+		URL:         "http://127.0.0.1:8000/import/situation/",
+		Method:      "POST",
+		ContentType: []string{"application/json"},
+		// Authorization: []string{config.GetAgent().String()},
+		ExtraHeaders: []string{},
 	}
-	RegisterBackend(b)
-	SetDefault(b, "url", &b.URL, "endpoint to send data")
-	SetDefault(b, "method", &b.Method, "http method to send data (POST or PUT)")
-	SetDefault(b, "content-type", &b.ContentType, "Content-Type header")
-	SetDefault(b, "authorization", &b.Authorization, "Authorization header")
-	SetDefault(b, "extra-header", &b.ExtraHeaders, "Extra http header with KEY=VALUE format")
+	registerBackend(b)
+	// SetDefault(b, "url", &b.URL, "endpoint to send data")
+	// SetDefault(b, "method", &b.Method, "http method to send data (POST or PUT)")
+	// SetDefault(b, "content-type", &b.ContentType, "Content-Type header")
+	// SetDefault(b, "authorization", &b.Authorization, "Authorization header")
+	// SetDefault(b, "extra-header", &b.ExtraHeaders, "Extra http header with KEY=VALUE format")
 }
 
 func (h *HttpBackend) Name() string {
 	return "http"
+}
+
+func (h *HttpBackend) Bind(config *puzzle.Config) error {
+	if err := setDefault(config, h, "url", &h.URL, "endpoint to send data"); err != nil {
+		return err
+	}
+	if err := setDefault(config, h, "method", &h.Method, "http method to send data (POST or PUT)"); err != nil {
+		return err
+	}
+	if err := setDefault(config, h, "content-type", &h.ContentType, "Content-Type header"); err != nil {
+		return err
+	}
+	if err := setDefault(config, h, "authorization", &h.Authorization, "Authorization header"); err != nil {
+		return err
+	}
+	if err := setDefault(config, h, "extra-header", &h.ExtraHeaders, "Extra http header with KEY=VALUE format"); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (h *HttpBackend) Init() error {
@@ -67,8 +88,6 @@ func (h *HttpBackend) Close() error {
 }
 
 func (h *HttpBackend) Write(p *models.Payload) error {
-	logger := GetLogger(h)
-
 	data, err := json.Marshal(p)
 	if err != nil {
 		return fmt.Errorf("error while marshalling payload to json: %w", err)
@@ -91,9 +110,9 @@ func (h *HttpBackend) Write(p *models.Payload) error {
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusCreated:
-		logger.Infof("Payload successfully sent to %s (%d)", h.URL, resp.StatusCode)
+		h.logger.Infof("Payload successfully sent to %s (%d)", h.URL, resp.StatusCode)
 	default:
-		logger.Errorf("Unexpected status code: %d", resp.StatusCode)
+		h.logger.Errorf("Unexpected status code: %d", resp.StatusCode)
 		length := resp.ContentLength
 		if length < 0 {
 			length = 512

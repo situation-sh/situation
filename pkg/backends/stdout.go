@@ -4,22 +4,31 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/situation-sh/situation/models"
+	"github.com/asiffer/puzzle"
+	"github.com/situation-sh/situation/pkg/models"
 	"gopkg.in/yaml.v3"
 )
 
 type StdoutBackend struct {
+	BaseBackend
+
 	Format string
 }
 
 func init() {
 	b := &StdoutBackend{Format: jsonFormat}
-	RegisterBackend(b)
-	SetDefault(b, "format", &b.Format, "output format")
+	registerBackend(b)
 }
 
 func (s *StdoutBackend) Name() string {
 	return "stdout"
+}
+
+func (s *StdoutBackend) Bind(config *puzzle.Config) error {
+	if err := setDefault(config, s, "format", &s.Format, "output format"); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *StdoutBackend) Init() error {
