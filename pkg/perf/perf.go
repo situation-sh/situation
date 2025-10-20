@@ -6,7 +6,7 @@ package perf
 import (
 	"runtime"
 
-	"github.com/situation-sh/situation/models"
+	"github.com/situation-sh/situation/pkg/models"
 )
 
 var memStats runtime.MemStats
