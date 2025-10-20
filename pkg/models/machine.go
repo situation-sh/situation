@@ -46,12 +46,6 @@ func NewMachine() *Machine {
 	}
 }
 
-// IsHost returns whether the machine is the
-// current machine where this agent runs
-func (m *Machine) IsHost() bool {
-	return m.Agent != nil
-}
-
 // GetNetworkInterfaceByIP returns the network interface of
 // this machine that has this IP. It returns nil if the IP
 // is nil and if the machine has not this IP
