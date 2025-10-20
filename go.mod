@@ -9,6 +9,7 @@ require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
 	github.com/docker/docker v28.4.0+incompatible
+	github.com/fatih/color v1.18.0
 	github.com/go-ole/go-ole v1.3.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/google/uuid v1.6.0
@@ -18,6 +19,7 @@ require (
 	github.com/knqyf263/go-rpmdb v0.1.1
 	github.com/libp2p/go-netroute v0.2.2
 	github.com/lorenzosaino/go-sysctl v0.3.1
+	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/minio/selfupdate v0.6.0
 	github.com/praetorian-inc/fingerprintx v1.1.15
 	github.com/prometheus-community/pro-bing v0.7.0
@@ -56,9 +58,11 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/jaypipes/pcidb v1.1.1 // indirect
+	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/jondot/goweight v1.0.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20250827001030-24949be3fa54 // indirect
 	github.com/mailru/easyjson v0.9.1 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-zglob v0.0.0-20180803001819-2ea3427bfa53 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
@@ -89,7 +93,7 @@ require (
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067 // indirect
 	golang.org/x/net v0.44.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/time v0.13.0 // indirect
 	golang.org/x/tools v0.37.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250826171959-ef028d996bc1 // indirect
