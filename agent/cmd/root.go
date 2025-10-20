@@ -9,7 +9,6 @@ import (
 
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
-	"github.com/situation-sh/situation/config"
 
 	"github.com/urfave/cli/v3"
 )
@@ -19,7 +18,7 @@ var logLevel uint = 1
 var app = &cli.Command{
 	Name:    "situation",
 	Usage:   "Just run it",
-	Version: config.Version,
+	Version: Version,
 	Authors: []any{mail.Address{Name: "Alban Siffer", Address: "alban@situation.sh"}},
 	Flags: []cli.Flag{
 		&cli.UintFlag{
@@ -51,6 +50,7 @@ var app = &cli.Command{
 func initLog() error {
 	// Log as JSON instead of the default ASCII formatter.
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
+	// logrus.SetFormatter(&ModuleFormatter{})
 	// ensure log level is between 0 and 5
 	if logLevel > 5 {
 		logLevel = 5

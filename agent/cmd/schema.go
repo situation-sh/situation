@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/invopop/jsonschema"
-	"github.com/situation-sh/situation/models"
+	"github.com/situation-sh/situation/pkg/models"
 	"github.com/urfave/cli/v3"
 )
 

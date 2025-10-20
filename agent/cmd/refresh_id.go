@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/minio/selfupdate"
-	"github.com/situation-sh/situation/config"
 	"github.com/urfave/cli/v3"
 )
 
@@ -61,7 +60,7 @@ func refreshIDAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// set a new random ID
-	toWrite := bytes.Replace(raw, config.ID[:16], newBytes[:16], 1)
+	toWrite := bytes.Replace(raw, ID[:16], newBytes[:16], 1)
 	// turn toWrite into is.Reader
 	if err := selfupdate.Apply(bytes.NewReader(toWrite), selfupdate.Options{}); err != nil {
 		return err

@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/situation-sh/situation/config"
 	"github.com/urfave/cli/v3"
 )
+
+// Version of the agent (it is set during compilation)
+var Version = "X.X.X"
 
 var versionCmd = cli.Command{
 	Name:   "version",
@@ -15,6 +17,6 @@ var versionCmd = cli.Command{
 }
 
 func versionAction(ctx context.Context, cmd *cli.Command) error {
-	fmt.Println(config.Version)
+	fmt.Println(Version)
 	return nil
 }

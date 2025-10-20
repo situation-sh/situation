@@ -13,7 +13,6 @@ import (
 
 	"github.com/minio/selfupdate"
 	"github.com/sirupsen/logrus"
-	"github.com/situation-sh/situation/config"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/mod/semver"
 )
@@ -120,7 +119,7 @@ func selectRelease() (*GitHubRelease, error) {
 		return nil, err
 	}
 	// clean the version
-	currentVersion := config.Version
+	currentVersion := Version
 	if !strings.HasPrefix(currentVersion, "v") {
 		currentVersion = "v" + currentVersion
 	}
@@ -174,7 +173,7 @@ func updateAction(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	logrus.Infof("A new version is available: %s (current: v%s)\n", release.TagName, config.Version)
+	logrus.Infof("A new version is available: %s (current: v%s)\n", release.TagName, Version)
 
 	url, err := getBinaryURL(release)
 	if err != nil {
@@ -187,7 +186,7 @@ func updateAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	logrus.Infof("Download successful")
 	// inject our current ID into the downloaded binary
-	toWrite := bytes.Replace(binary, config.GetDefaultID(), config.ID[:16], 1)
+	toWrite := bytes.Replace(binary, getDefaultID(), ID[:16], 1)
 	if err := selfupdate.Apply(bytes.NewReader(toWrite), selfupdate.Options{}); err != nil {
 		return err
 	}
