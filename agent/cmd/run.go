@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/asiffer/puzzle"
-	"github.com/asiffer/puzzle/urfave3"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v3"
 
+	"github.com/situation-sh/situation/agent/config"
 	"github.com/situation-sh/situation/pkg/backends"
 	"github.com/situation-sh/situation/pkg/models"
 	"github.com/situation-sh/situation/pkg/modules"
@@ -18,15 +18,6 @@ import (
 	"github.com/situation-sh/situation/pkg/store"
 	"github.com/situation-sh/situation/pkg/types"
 )
-
-// var (
-// 	scans       uint          = 1
-// 	period      time.Duration = time.Minute
-// 	resetPeriod uint          = 2
-// )
-
-// cli config
-var config = puzzle.NewConfig()
 
 var ignoreMissingDeps bool = false
 
@@ -55,8 +46,7 @@ func enableBackendKey(name string) string {
 }
 
 func populateConfig() {
-	puzzle.DefineVar(
-		config,
+	config.DefineVar(
 		"ignore-missing-deps",
 		&ignoreMissingDeps,
 		puzzle.WithDescription("Skip modules with missing dependencies"),
@@ -66,11 +56,11 @@ func populateConfig() {
 	modules.Walk(func(name string, mod modules.Module) {
 		// add specific config to flags
 		if configurableMod, ok := mod.(types.Configurable); ok {
-			configurableMod.Bind(config)
+			config.Bind(configurableMod)
+			// configurableMod.Bind(config)
 		}
 		// enable/disable module
-		puzzle.Define(
-			config,
+		config.Define(
 			disableFlagName(name),
 			false,
 			puzzle.WithDescription(fmt.Sprintf("Disable module %s", name)))
@@ -80,11 +70,10 @@ func populateConfig() {
 	backends.Walk(func(name string, backend backends.Backend) {
 		// add specific config to flags
 		if configurableBackend, ok := backend.(types.Configurable); ok {
-			configurableBackend.Bind(config)
+			config.Bind(configurableBackend)
 		}
 		// enable/disable backend
-		puzzle.Define(
-			config,
+		config.Define(
 			enableBackendKey(name),
 			false,
 			puzzle.WithDescription(fmt.Sprintf("Enable the %s backend", name)),
@@ -94,7 +83,7 @@ func populateConfig() {
 }
 
 func generateFlags() []cli.Flag {
-	if flags, err := urfave3.Build(config); err != nil {
+	if flags, err := config.Urfave3(); err != nil {
 		panic(err)
 	} else {
 		sort.Sort(cli.FlagsByName(flags))
@@ -112,16 +101,22 @@ func generateFlags() []cli.Flag {
 // }
 
 func runAction(ctx context.Context, cmd *cli.Command) error {
-	begin = time.Now()
-
 	logger := logrus.New()
 	logger.Formatter = &ModuleFormatter{}
-	storage := store.NewMemoryStore(ID)
+	s := store.NewMemoryStore(ID)
+	return run(s, logger)
+}
+
+func run(storage store.Store, logger *logrus.Logger) error {
+	begin = time.Now()
+	// logger := logrus.New()
+	// logger.Formatter = &ModuleFormatter{}
+	// storage := store.NewMemoryStore(ID)
 	enabledBackends := make([]backends.Backend, 0)
 
 	// init backends
 	for backend := range backends.Iterate() {
-		enabled, err := puzzle.Get[bool](config, enableBackendKey(backend.Name()))
+		enabled, err := config.Get[bool](enableBackendKey(backend.Name()))
 		if err != nil {
 			return err
 		}
@@ -142,7 +137,7 @@ func runAction(ctx context.Context, cmd *cli.Command) error {
 	// init modules and scheduler
 	mods := make([]modules.Module, 0)
 	modules.Walk(func(name string, m modules.Module) {
-		disabled, err := puzzle.Get[bool](config, disableFlagName(name))
+		disabled, err := config.Get[bool](disableFlagName(name))
 		if err != nil {
 			panic(err)
 		}

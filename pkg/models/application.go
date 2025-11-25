@@ -122,6 +122,36 @@ type Flow struct {
 	RemoteExtra *FlowRemoteExtra `json:"remote_extra,omitempty" jsonschema:"description=extra information about the remote endpoint"`
 }
 
+func (f *Flow) Revert() Flow {
+	return Flow{
+		LocalAddr:  append(net.IP(nil), f.RemoteAddr...),
+		LocalPort:  f.RemotePort,
+		RemoteAddr: append(net.IP(nil), f.LocalAddr...),
+		RemotePort: f.LocalPort,
+		Protocol:   f.Protocol,
+		Status:     f.Status,
+	}
+}
+
+func (f *Flow) Equal(other *Flow) bool {
+	if !f.LocalAddr.Equal(other.LocalAddr) {
+		return false
+	}
+	if f.LocalPort != other.LocalPort {
+		return false
+	}
+	if !f.RemoteAddr.Equal(other.RemoteAddr) {
+		return false
+	}
+	if f.RemotePort != other.RemotePort {
+		return false
+	}
+	if f.Protocol != other.Protocol {
+		return false
+	}
+	return true
+}
+
 // type TLSSubject struct {
 // 	CommonName   string `json:"common_name,omitempty" jsonschema:"description=common name of the subject,example=www.example.com"`
 // 	Organization string `json:"organization,omitempty" jsonschema:"description=organization of the subject,example=Example Inc.,example=Example Ltd."`
@@ -190,6 +220,16 @@ func (s *Application) AddEndpoint(addr net.IP, port uint16, proto string) (*Appl
 		&ApplicationEndpoint{Addr: addr, Port: port, Protocol: proto})
 
 	return s.lastEndpoint(), true
+}
+
+func (s *Application) AddFlow(flow *Flow) {
+	// check if it exist
+	for _, f := range s.Flows {
+		if f.Equal(flow) {
+			return
+		}
+	}
+	s.Flows = append(s.Flows, flow)
 }
 
 func (ApplicationEndpoint) JSONSchemaExtend(schema *jsonschema.Schema) {

@@ -21,4 +21,5 @@ type Store interface {
 	InsertMachine(m *models.Machine)
 	IterateMachines() chan *models.Machine
 	GetAllIPv4Networks() []*net.IPNet
+	InitPayload() *models.Payload
 }

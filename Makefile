@@ -28,13 +28,14 @@ VERSION    := 0.20.0
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
-GO        := $(shell which go)
-GOARCH    ?= $(shell go env|grep GOARCH|awk -F '=' '{print $$2}'|sed -e "s/[']//g")
-GOOS      ?= $(shell go env|grep GOOS  |awk -F '=' '{print $$2}'|sed -e "s/[']//g")
+GO          := $(shell which go)
+GOARCH      ?= $(shell go env|grep GOARCH|awk -F '=' '{print $$2}'|sed -e "s/[']//g")
+GOOS        ?= $(shell go env|grep GOOS  |awk -F '=' '{print $$2}'|sed -e "s/[']//g")
+CGO_ENABLED ?= 0
 
 # files
 SRC_FILES    := $(shell find . -path "*.go" -not -path "./.*")
-MODULE_FILES := $(shell find ./modules -path "*.go")
+MODULE_FILES := $(shell find ./pkg/modules -path "*.go")
 
 
 # Put the version in the config file
@@ -55,8 +56,8 @@ GO_LDFLAGS_PROD        := $(GO_LDFLAGS_STRIP) $(GO_LDFLAGS_STRIP_DWARF)
 GO_LDFLAGS             ?= -ldflags '$(GO_LDFLAGS_BASE) $(GO_LDFLAGS_PROD)'
 
 # build command
-BUILD      := CGO_ENABLED=0 $(GO) build $(GO_LDFLAGS)
-BUILD_TEST := CGO_ENABLED=0 $(GO) test $(GO_LDFLAGS) -c
+BUILD      := CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GO_LDFLAGS)
+BUILD_TEST := CGO_ENABLED=$(CGO_ENABLED) $(GO) test $(GO_LDFLAGS) -c
 
 # name of the final binary
 BIN        := situation
@@ -109,7 +110,7 @@ build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testin
 # final binary files
 $(BIN_PREFIX)-%: $(SRC_FILES)
 	@mkdir -p $(@D)
-	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD) -o $@ main.go
+	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD) -o $@ agent/main.go
 
 # binaries for module testing purpose
 $(BIN_PREFIX)-module-testing-%: $(MODULE_FILES)

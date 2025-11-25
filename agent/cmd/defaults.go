@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/asiffer/puzzle/jsonfile"
+	"github.com/situation-sh/situation/agent/config"
 	"github.com/urfave/cli/v3"
 )
 
@@ -16,7 +16,7 @@ var defaultsCmd = cli.Command{
 }
 
 func runDefaultsCmd(ctx context.Context, cmd *cli.Command) error {
-	bytes, err := jsonfile.ToJSON(config)
+	bytes, err := config.JSON()
 	if err != nil {
 		panic(err)
 	}

@@ -41,6 +41,8 @@ var app = &cli.Command{
 		&updateCmd,
 		&versionCmd,
 		&taskCmd,
+		&serveCmd,
+		&openapiCmd,
 	},
 	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 		return ctx, initLog()

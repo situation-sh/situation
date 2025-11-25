@@ -5,7 +5,6 @@
 package modules
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -53,7 +52,6 @@ func (m *HostBasicModule) Run() error {
 	if machine == nil {
 		machine = models.NewMachine()
 	}
-	fmt.Println("MACHINE:", machine)
 	if h, err := os.Hostname(); err == nil {
 		machine.Hostname = h
 		m.logger.WithField("hostname", machine.Hostname).Info("Get hostname")
