@@ -1,5 +1,4 @@
 //go:build windows
-// +build windows
 
 package cmd
 
@@ -13,6 +12,7 @@ import (
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	"github.com/sirupsen/logrus"
+	"github.com/situation-sh/situation/agent/config"
 	"github.com/urfave/cli/v3"
 )
 
@@ -21,7 +21,7 @@ const taskName = "Situation"
 var regInfoProps = map[string]interface{}{
 	"Author":      "situation.sh",
 	"Description": "Situation is a lightweight single binary that collects network, system and application data",
-	"Version":     Version,
+	"Version":     config.Version,
 	"Date":        time.Now().Format("2006-01-02T15:04:05"),
 	"Source":      "situation.sh",
 }

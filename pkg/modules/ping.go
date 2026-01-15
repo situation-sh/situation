@@ -5,24 +5,23 @@
 package modules
 
 import (
+	"context"
 	"fmt"
 	"net"
-	"strings"
-	"sync"
 	"time"
 
-	ping "github.com/prometheus-community/pro-bing"
+	"github.com/asiffer/puzzle"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/pkg/models"
-	"github.com/situation-sh/situation/pkg/modules/pingconfig"
+	"github.com/situation-sh/situation/pkg/modules/ping"
 	"github.com/situation-sh/situation/pkg/store"
 	"github.com/situation-sh/situation/pkg/utils"
 )
 
-const errorPrefix = "[ERROR_PREFIX]"
-
 func init() {
-	registerModule(&PingModule{})
+	registerModule(&PingModule{
+		timeout: 300 * time.Millisecond,
+	})
 }
 
 // PingModule pings local networks to discover new hosts.
@@ -37,6 +36,12 @@ func init() {
 // [pro-bing]: https://github.com/prometheus-community/pro-bing
 type PingModule struct {
 	BaseModule
+
+	timeout time.Duration
+}
+
+func (m *PingModule) Bind(config *puzzle.Config) error {
+	return setDefault(config, m, "timeout", &m.timeout, "Ping timeout")
 }
 
 func (m *PingModule) Name() string {
@@ -47,153 +52,116 @@ func (m *PingModule) Dependencies() []string {
 	return []string{"host-network"}
 }
 
-func singlePing(ip net.IP, maskSize int, wg *sync.WaitGroup, cerr chan<- error, log logrus.FieldLogger, s store.Store) {
-	defer wg.Done()
-	privileged := pingconfig.UseICMP()
-	pinger, err := ping.NewPinger(ip.String())
+func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, source net.IP, logger logrus.FieldLogger, s *store.BunStorage) error {
+	ips := utils.ListIPs(network)
+
+	ipChan := make(chan net.IP, len(ips))
+
+	onRecv := func(addr net.IP) {
+		ipChan <- addr
+		logger.WithField("ip", addr).Infof("Host found")
+	}
+	pool := utils.NewIPWorkerPool(64, func(ip net.IP) error {
+		// return singlePing(ip, onRecv, logger)
+		return ping.Ping4(ip, source, 500*time.Millisecond, onRecv)
+	})
+
+	if err := pool.Run(ips); err != nil {
+		logger.
+			WithField("network", network).
+			WithError(err).
+			Warnf("error while pinging subnetwork")
+	}
+	close(ipChan)
+
+	subnet := s.GetOrCreateSubnetwork(ctx, network.String())
+	if subnet == nil {
+		return fmt.Errorf("unable to create or retrieve subnetwork %s", network.String())
+	}
+	nics := make([]models.NetworkInterface, 0)
+	for ip := range ipChan {
+		nics = append(nics, models.NetworkInterface{
+			IP: ip.String(),
+		})
+	}
+	_, err := s.DB().
+		NewInsert().
+		Model(&nics).
+		On("CONFLICT (ip, subnetwork_id) DO UPDATE").
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Exec(ctx)
+
+	links := make([]models.NetworkInterfaceSubnet, 0)
+	for _, nic := range nics {
+		link := models.NetworkInterfaceSubnet{
+			NetworkInterfaceID: nic.ID,
+			SubnetworkID:       subnet.ID,
+		}
+		links = append(links, link)
+	}
+	_, err = s.DB().
+		NewInsert().
+		Model(&links).
+		On("CONFLICT DO NOTHING").
+		Exec(ctx)
+
 	if err != nil {
-		return
+		// fmt.Println("nics:", nics)
+		return fmt.Errorf("unable to insert new NICs for subnetwork %s: %v", network.String(), err)
 	}
-	pinger.Count = 1
-	pinger.SetPrivileged(privileged)
-	pinger.Timeout = 300 * time.Millisecond
-	// see https://github.com/go-ping/ping/issues/168
-	pinger.Size = 2048
-
-	// callback when a target responds
-	pinger.OnRecv = func(p *ping.Packet) {
-		ip := p.IPAddr.IP
-
-		// check the store
-		m := s.GetMachineByIP(ip)
-		if m != nil {
-			return
-		}
-
-		// create nic
-		nic := models.NetworkInterface{}
-		if ip4 := ip.To4(); ip4 != nil {
-			nic.IP = ip4
-			nic.MaskSize = maskSize
-			log = log.WithField("ip", nic.IP).WithField("mask", maskSize)
-		} else {
-			nic.IP6 = ip.To16()
-			nic.Mask6Size = maskSize
-			log = log.WithField("ip6", nic.IP6).WithField("mask", maskSize)
-		}
-
-		// create machine with that NIC
-		m = models.NewMachine()
-		m.NICS = append(m.NICS, &nic)
-
-		// put this machine to the store
-		log.Info("New machine added")
-		s.InsertMachine(m)
-	}
-
-	err = pinger.Run()
-	if err == nil {
-		pinger.Stop()
-		return
-	}
-
-	log.Debugf("ping with privileged=%v failed (%v), trying with the opposite", privileged, err)
-	pinger.SetPrivileged(!privileged)
-
-	err = pinger.Run()
-	defer pinger.Stop()
-
-	if err == nil {
-		return
-	}
-	log.Errorf("ping with privileged=%v failed (%v), no fallback", privileged, err)
-	cerr <- fmt.Errorf("error while pinging %v: %v", ip, err)
-}
-
-func pingSubnetwork(network *net.IPNet, log logrus.FieldLogger, s store.Store) error {
-	var wg sync.WaitGroup
-	cerr := make(chan error)
-	done := make(chan bool)
-	var err error
-	var once sync.Once
-
-	// consume the channel, sets the first error only
-	go func() {
-		for e := range cerr {
-			once.Do(func() { err = e })
-		}
-		done <- true
-	}()
-
-	for ip := range utils.Iterate(network) {
-		// ignore 0 and 255 in case of IPv4
-		if utils.IsReserved(ip) {
-			continue
-		}
-
-		log.Debugf("Pinging %s", ip)
-		ms, _ := network.Mask.Size()
-
-		wg.Add(1)
-		go singlePing(ip, ms, &wg, cerr, log, s)
-	}
-
-	log.Debug("Waiting ping to finish")
-	wg.Wait()
-
-	// closing the channel ensures that the above goroutine
-	// will stop. Indeed, if no error raised, err will be equal
-	// to nil
-	close(cerr)
-	<-done
-
-	// now the goroutine is over
-	// err is well sync
-	return err
+	return nil
 }
 
 // Ping sends unprivileged ICMP echo messages to all
 // hosts on a subnetwork
-func (m *PingModule) Run() error {
-
-	errorMsg := ""
+func (m *PingModule) Run(ctx context.Context) error {
+	logger := getLogger(ctx, m)
+	storage := getStorage(ctx)
 
 	// host := store.GetHost()
 	// try to ping all networks
-	for _, network := range m.store.GetAllIPv4Networks() {
+	for _, network := range storage.GetAllIPv4Networks(ctx) {
 		// network() returns the IPv4 network attached to this nic
 		// for _, network := range []*net.IPNet{nic.Network()} {
-		if network == nil {
+		// if network == nil {
+		// 	continue
+		// }
+		ipnet, err := network.IPNet()
+		_, zeros := ipnet.Mask.Size()
+
+		if err != nil {
+			logger.
+				WithField("network", network.NetworkCIDR).
+				WithError(err).
+				Warn("unable to parse network CIDR")
 			continue
 		}
 
-		switch ones, bits := network.Mask.Size(); {
+		switch ones := network.MaskSize; {
 		case ones < 20:
 			// ignore to large network (here /20 at most)
-			m.logger.Warnf("Ignoring %s (network is too wide)", network.String())
+			logger.Warnf("Ignoring %s (network is too wide)", ipnet)
 			continue
 		case ones > 24:
 			// if the network is restricted. We try to
 			// send pings in a wider one. It may appear
 			// in VPN cases (so we ensure that the base ip is not public)
 			// this change does not modify the mask inside the store
-			if !utils.IsPublic(network.IP) {
-				network.Mask = net.CIDRMask(24, bits)
+			if !utils.IsPublic(ipnet.IP) {
+				ipnet.Mask = net.CIDRMask(24, zeros)
 			}
 
 		}
 
-		m.logger.Infof("Pinging %s", network.String())
-		if err := pingSubnetwork(network, m.logger, m.store); err != nil {
-			m.logger.Error(err)
-			errorMsg += fmt.Sprintf("Error(s) occurred while pinging %s:", network.String())
-			errorMsg += strings.ReplaceAll(err.Error(), errorPrefix, "\n\t - ")
+		logger.Infof("Pinging %s", ipnet)
+		if err := pingSubnetwork(ctx, ipnet, network.ID, nil, logger, storage); err != nil {
+			logger.
+				WithField("network", network).
+				WithError(err).
+				Error("error while pinging subnetwork")
 		}
 		// }
 	}
 
-	if len(errorMsg) > 0 {
-		return fmt.Errorf("%s", errorMsg)
-	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"context"
 	"testing"
 )
 
@@ -35,9 +36,10 @@ import (
 // }
 
 func TestSingleRun(t *testing.T) {
+	ctx := context.Background()
 	// injectDefaultConfig()
-	s := NewScheduler([]Module{modules["host-basic"]})
-	if err := s.Run(); err != nil {
+	s := NewScheduler([]Module{mods["host-basic"]})
+	if err := s.Run(ctx); err != nil {
 		t.Error(err)
 	}
 }

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sirupsen/logrus"
@@ -11,7 +12,23 @@ type Scheduler struct {
 	modules           map[string]Module
 	logger            logrus.FieldLogger
 	ignoreMissingDeps bool
+	supervisor        SchedulerSupervisor
 }
+
+type SchedulerSupervisor interface {
+	StartChild(name string) SchedulerSupervisor
+	SetStatus(err error)
+	Finish()
+}
+
+type DummySchedulerSupervisor struct{}
+
+func (s *DummySchedulerSupervisor) StartChild(name string) SchedulerSupervisor {
+	return &DummySchedulerSupervisor{}
+}
+func (s *DummySchedulerSupervisor) Finish() {}
+
+func (s *DummySchedulerSupervisor) SetStatus(err error) {}
 
 type SchedulerOptions func(*Scheduler)
 
@@ -27,10 +44,19 @@ func IgnoreMissingDeps(skip bool) SchedulerOptions {
 	}
 }
 
+func WithSupervisor(supervisor SchedulerSupervisor) SchedulerOptions {
+	return func(s *Scheduler) {
+		s.supervisor = supervisor
+	}
+}
+
 // NewScheduler inits a scheduler
 func NewScheduler(modules []Module, options ...SchedulerOptions) *Scheduler {
 	s := Scheduler{
-		modules: make(map[string]Module),
+		modules:           make(map[string]Module),
+		logger:            dummyLogger(),
+		ignoreMissingDeps: false,
+		supervisor:        &DummySchedulerSupervisor{},
 	}
 	for _, m := range modules {
 		s.modules[m.Name()] = m
@@ -145,7 +171,7 @@ func (s *Scheduler) buildTasksList() ([]Module, error) {
 
 // Run returns an error only if the scheduler fails to
 // plan the modules. It does not return error if a module fails
-func (s *Scheduler) Run() error {
+func (s *Scheduler) Run(ctx context.Context) error {
 	// check deps
 	if !s.ignoreMissingDeps {
 		s.logger.Info("Checking dependencies")
@@ -170,9 +196,20 @@ func (s *Scheduler) Run() error {
 	resetStatus()
 
 	for _, t := range tasks {
+		span := s.supervisor.StartChild(t.Name())
 		// run the module
 		s.logger.Infof("Running module %s", t.Name())
-		moduleStatus[t.Name()] = t.Run()
+
+		err := t.Run(ctx)
+		if err != nil {
+			s.logger.
+				WithField("module", t.Name()).
+				WithError(err).
+				Error("Module failed")
+		}
+		span.SetStatus(err)
+		// moduleStatus[t.Name()] = t.Run(ctx)
+		span.Finish()
 	}
 
 	return nil

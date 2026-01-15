@@ -18,7 +18,6 @@ import (
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/agent/config"
-	"github.com/situation-sh/situation/pkg/store"
 	"github.com/urfave/cli/v3"
 )
 
@@ -132,7 +131,7 @@ func initAPI() (huma.API, *http.ServeMux, *logrus.Logger) {
 	// CORS: adapte l'origine à TON front (localhost:3000 si Next.js dev)
 
 	router := http.NewServeMux()
-	config := huma.DefaultConfig("Situation Agent API", Version)
+	config := huma.DefaultConfig("Situation Agent API", config.Version)
 	api := humago.New(router, config)
 
 	logger := logrus.New()
@@ -230,12 +229,12 @@ func bindAPI(api huma.API, logger *logrus.Logger) {
 		return out, nil
 	})
 
-	huma.Post(api, "/run", func(ctx context.Context, input *struct{}) (*struct{}, error) {
-		s := store.NewMemoryStore(ID)
-		appState.SetStatus("running")
-		defer appState.SetStatus("idle")
-		return nil, run(s, logger)
-	})
+	// huma.Post(api, "/run", func(ctx context.Context, input *struct{}) (*struct{}, error) {
+	// 	s := store.NewMemoryStore(ID)
+	// 	appState.SetStatus("running")
+	// 	defer appState.SetStatus("idle")
+	// 	return nil, run(s, logger)
+	// })
 
 	sse.Register(api, huma.Operation{
 		OperationID: "sse-logs",

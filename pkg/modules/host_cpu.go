@@ -5,11 +5,11 @@
 package modules
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	"github.com/shirou/gopsutil/v4/cpu"
-	"github.com/situation-sh/situation/pkg/models"
 )
 
 func init() {
@@ -41,34 +41,49 @@ func (m *HostCPUModule) Dependencies() []string {
 	return []string{"host-basic"}
 }
 
-func (m *HostCPUModule) Run() error {
-	
-	machine := m.store.GetHost()
-	if machine == nil {
-		return fmt.Errorf("cannot retrieve host machine")
+func (m *HostCPUModule) Run(ctx context.Context) error {
+	logger := getLogger(ctx, m)
+	storage := getStorage(ctx)
+
+	hostCPU := storage.GetorCreateHostCPU(ctx)
+	if hostCPU == nil {
+		return fmt.Errorf("unable to create or retrieve host CPU")
 	}
+	// machine := m.store.GetHost()
+	// if machine == nil {
+	// 	return fmt.Errorf("cannot retrieve host machine")
+	// }
 
 	info, err := cpu.Info()
 	if err != nil {
 		return fmt.Errorf("error while retrieving CPU information: %v", err)
 	}
 
-	machine.CPU = &models.CPU{}
-	machine.CPU.ModelName = info[0].ModelName
-	machine.CPU.Vendor = info[0].VendorID
-	m.logger.WithField(
-		"model_name", machine.CPU.ModelName).WithField(
-		"vendor", machine.CPU.Vendor).Info("Got CPU info on host")
+	query := storage.DB().NewUpdate().
+		Model(hostCPU).
+		Where("id = ?", hostCPU.ID).
+		Set("model_name = ?", info[0].ModelName).
+		Set("vendor = ?", info[0].VendorID)
+
+	// hostCPU.ModelName = info[0].ModelName
+	// hostCPU.Vendor = info[0].VendorID
+	logger.
+		WithField("model_name", hostCPU.ModelName).
+		WithField("vendor", hostCPU.Vendor).
+		Info("Got CPU info on host")
 
 	lastCoreID, err := strconv.Atoi(info[len(info)-1].CoreID)
 	if err == nil {
-		machine.CPU.Cores = lastCoreID + 1
-		m.logger.WithField("cores", machine.CPU.Cores).Info("Get the number of cores")
-		return nil
+		// machine.CPU.Cores = lastCoreID + 1
+		query = query.Set("cores = ?", lastCoreID+1)
+		logger.WithField("cores", lastCoreID+1).Info("Get the number of cores")
+	} else {
+		// fallback to the number of InfoStats
+		logger.WithField("cores", len(info)).Warn("Falling back to the number of records")
+		query = query.Set("cores = ?", len(info))
 	}
-	// fallback to the number of InfoStats
-	machine.CPU.Cores = len(info)
-	m.logger.WithField("cores", machine.CPU.Cores).Warn("Falling back to the number of records")
-	m.logger.Errorf("cannot parse coreID: %s (%v)", info[len(info)-1].CoreID, err)
-	return nil
+
+	_, err = query.Exec(ctx)
+
+	return err
 }

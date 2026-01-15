@@ -5,6 +5,7 @@
 package modules
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jaypipes/ghw"
@@ -43,13 +44,17 @@ func (m *HostGPUModule) Dependencies() []string {
 	return []string{"host-basic"}
 }
 
-func (m *HostGPUModule) Run() error {
-	
-	machine := m.store.GetHost()
-	if machine == nil {
-		return fmt.Errorf("cannot retrieve host machine")
-	}
+func (m *HostGPUModule) Run(ctx context.Context) error {
+	logger := getLogger(ctx, m)
+	storage := getStorage(ctx)
 
+	hostID := storage.GetHostID(ctx)
+	// machine := m.store.GetHost()
+	// if machine == nil {
+	// 	return fmt.Errorf("cannot retrieve host machine")
+	// }
+
+	gpus := make([]models.GPU, 0)
 	gpu, err := ghw.GPU(ghw.WithDisableWarnings())
 	if err != nil {
 		return fmt.Errorf("error while retrieving GPU information: %v", err)
@@ -58,9 +63,10 @@ func (m *HostGPUModule) Run() error {
 	for _, card := range gpu.GraphicsCards {
 		// init structure
 		g := models.GPU{
-			Index: card.Index,
+			Index:     card.Index,
+			MachineID: hostID,
 		}
-		l := m.logger.WithField("index", g.Index)
+		l := logger.WithField("index", g.Index)
 
 		dinfo := card.DeviceInfo
 		// check sub structures to fill other fields
@@ -76,8 +82,21 @@ func (m *HostGPUModule) Run() error {
 				l = l.WithField("product", g.Product)
 			}
 		}
-		machine.GPUS = append(machine.GPUS, &g)
+		gpus = append(gpus, g)
 		l.Info("Found GPU on host")
 	}
+
+	// update DB
+	// we update everything even if input data may depend on the
+	// content of dinfo on every card. This is not ideal but
+	// it seems reliable enough for now.
+	_, err = storage.DB().NewInsert().
+		Model(&gpus).
+		On("CONFLICT (machine_id, index) DO UPDATE").
+		Set("product = EXCLUDED.product").
+		Set("vendor = EXCLUDED.vendor").
+		Set("driver = EXCLUDED.driver").
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Exec(ctx)
 	return nil
 }

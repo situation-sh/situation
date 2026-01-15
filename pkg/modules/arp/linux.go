@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package arp
 
@@ -34,6 +33,7 @@ func neighToARPEntry(n netlink.Neigh) ARPEntry {
 		MAC:            neighMAC(n),
 		IP:             neighIP(n),
 		State:          LinuxState(n.State),
+		VLAN:           n.Vlan,
 	}
 }
 

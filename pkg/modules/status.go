@@ -7,7 +7,7 @@ var moduleStatus map[string]error
 
 func resetStatus() {
 	moduleStatus = make(map[string]error)
-	for _, m := range modules {
+	for _, m := range mods {
 		moduleStatus[m.Name()] = nil
 	}
 }

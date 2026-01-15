@@ -52,6 +52,14 @@ func RandBytes(size int) []byte {
 	return buffer
 }
 
+// func Rand128() [16]byte {
+// 	var arr [16]byte
+// 	buffer := make([]byte, 16)
+// 	fillRandom(buffer)
+// 	copy(arr[:], buffer)
+// 	return arr
+// }
+
 // RandomTCPPort returns a TCP port between a and b
 // a <= port < b
 func RandomTCPPort(a, b uint16) uint16 {

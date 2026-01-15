@@ -4,32 +4,25 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/asiffer/puzzle"
+	"github.com/getsentry/sentry-go"
+	sentrylogrus "github.com/getsentry/sentry-go/logrus"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v3"
+	cli "github.com/urfave/cli/v3"
 
 	"github.com/situation-sh/situation/agent/config"
-	"github.com/situation-sh/situation/pkg/backends"
-	"github.com/situation-sh/situation/pkg/models"
 	"github.com/situation-sh/situation/pkg/modules"
-	"github.com/situation-sh/situation/pkg/perf"
 	"github.com/situation-sh/situation/pkg/store"
-	"github.com/situation-sh/situation/pkg/types"
 )
 
-var ignoreMissingDeps bool = false
-
-func init() {
-	// config.DefineVar("scans", &scans, puzzle.WithDescription("Number of scans to perform"))
-	// config.DefineVar("period", &period, puzzle.WithDescription("Waiting time between two scans"))
-	// config.DefineVar("reset", &resetPeriod, puzzle.WithDescription("Number of runs before resetting the internal store"))
-	// app.Flags = append(app.Flags, config.Flags()...)
-	// sort.Sort(cli.FlagsByName(app.Flags))
-	populateConfig()
-	runCmd.Flags = append(runCmd.Flags, generateFlags()...)
-}
+var (
+	ignoreMissingDeps bool   = false
+	db                string = ":memory:"
+	sentryDSN         string = ""
+)
 
 var runCmd = cli.Command{
 	Name:   "run",
@@ -37,104 +30,139 @@ var runCmd = cli.Command{
 	Action: runAction,
 }
 
+func init() {
+	populateConfig()
+	runCmd.Flags = append(runCmd.Flags, generateFlags()...)
+	// we first read env before parsing cli parameters
+	config.ReadEnv()
+}
+
 func disableFlagName(name string) string {
 	return fmt.Sprintf("no-module-%s", name)
 }
 
-func enableBackendKey(name string) string {
-	return fmt.Sprintf("enable-backend-%s", name)
+func moduleEnvName(name string) string {
+	e := strings.TrimSpace(name)
+	e = strings.ReplaceAll(e, "-", "_")
+	return strings.ToUpper(e)
 }
 
+// populateConfig adds configuration variables from modules
+// These conf variables will be exported as CLI flags
 func populateConfig() {
 	config.DefineVar(
 		"ignore-missing-deps",
 		&ignoreMissingDeps,
 		puzzle.WithDescription("Skip modules with missing dependencies"),
 	)
+	config.DefineVar(
+		"db",
+		&db,
+		puzzle.WithDescription("Database DSN (e.g. file path for SQLite or connection string for postgres)"),
+		puzzle.WithEnvName("SITUATION_DB"),
+	)
+	config.DefineVar(
+		"sentry",
+		&sentryDSN,
+		puzzle.WithDescription("Sentry DSN for tracing"),
+		puzzle.WithEnvName("SENTRY_DSN"),
+	)
 
 	// config from modules
 	modules.Walk(func(name string, mod modules.Module) {
 		// add specific config to flags
-		if configurableMod, ok := mod.(types.Configurable); ok {
+		if configurableMod, ok := mod.(config.Configurable); ok {
 			config.Bind(configurableMod)
-			// configurableMod.Bind(config)
 		}
 		// enable/disable module
 		config.Define(
 			disableFlagName(name),
 			false,
-			puzzle.WithDescription(fmt.Sprintf("Disable module %s", name)))
-	})
-
-	// config from backends
-	backends.Walk(func(name string, backend backends.Backend) {
-		// add specific config to flags
-		if configurableBackend, ok := backend.(types.Configurable); ok {
-			config.Bind(configurableBackend)
-		}
-		// enable/disable backend
-		config.Define(
-			enableBackendKey(name),
-			false,
-			puzzle.WithDescription(fmt.Sprintf("Enable the %s backend", name)),
-			puzzle.WithFlagName(name),
+			puzzle.WithDescription(fmt.Sprintf("Disable module %s", name)),
+			puzzle.WithEnvName(fmt.Sprintf("NO_MODULE_%s", moduleEnvName(name))),
 		)
 	})
 }
 
 func generateFlags() []cli.Flag {
-	if flags, err := config.Urfave3(); err != nil {
+	flags, err := config.Urfave3()
+	if err != nil {
 		panic(err)
-	} else {
-		sort.Sort(cli.FlagsByName(flags))
-		// fmt.Println("Generated flags:", flags)
-		return flags
 	}
+	sort.Sort(cli.FlagsByName(flags))
+	return flags
 }
-
-// func loopCondition(n uint, scans uint, period time.Duration) bool {
-// 	if n == scans {
-// 		return false
-// 	}
-// 	time.Sleep(period)
-// 	return true
-// }
 
 func runAction(ctx context.Context, cmd *cli.Command) error {
 	logger := logrus.New()
-	logger.Formatter = &ModuleFormatter{}
-	s := store.NewMemoryStore(ID)
-	return run(s, logger)
-}
+	var loggerInterface logrus.FieldLogger = logger
+	// scheduler opts
+	opts := make([]modules.SchedulerOptions, 0)
 
-func run(storage store.Store, logger *logrus.Logger) error {
-	begin = time.Now()
-	// logger := logrus.New()
-	// logger.Formatter = &ModuleFormatter{}
-	// storage := store.NewMemoryStore(ID)
-	enabledBackends := make([]backends.Backend, 0)
+	// sentry integration
+	if sentryDSN != "" {
+		if err := initSentry(sentryDSN); err != nil {
+			return fmt.Errorf("failed to init sentry: %v", err)
+		}
+		defer sentry.Flush(2 * time.Second)
 
-	// init backends
-	for backend := range backends.Iterate() {
-		enabled, err := config.Get[bool](enableBackendKey(backend.Name()))
-		if err != nil {
-			return err
+		// Get the Sentry client from the current hub
+		hub := sentry.CurrentHub()
+		client := hub.Client()
+		if client == nil {
+			return fmt.Errorf("sentry client is nil")
 		}
-		if enabled {
-			if logProducer := backend.(types.LogProducer); logProducer != nil {
-				logProducer.SetLogger(logger.WithField("backend", backend.Name()))
-			}
-			logger.Infof("Backend %s enabled", backend.Name())
-			if err := backend.Init(); err != nil {
-				return fmt.Errorf("failed to init backend %s: %w", backend.Name(), err)
-			}
-			enabledBackends = append(enabledBackends, backend)
-		} else {
-			logger.Infof("Backend %s disabled", backend.Name())
-		}
+
+		hook := sentrylogrus.NewLogHookFromClient([]logrus.Level{
+			// choose what levels are forwarded to Sentry
+			logrus.InfoLevel,
+			logrus.WarnLevel,
+			logrus.ErrorLevel,
+			logrus.FatalLevel,
+			logrus.PanicLevel,
+		}, client)
+		hook.SetHubProvider(func() *sentry.Hub {
+			return hub
+		})
+
+		// sentry transaction
+		tx := sentry.StartTransaction(ctx, "situation.run")
+		defer tx.Finish()
+
+		// add scheduler option
+		sv := newSentrySupervisor(tx)
+		opts = append(opts, modules.WithSupervisor(sv))
+		// tx.Status
+		// transaction context
+		ctx = tx.Context()
+
+		// update the logger
+		logger.AddHook(hook)
+		loggerInterface = logger.WithContext(ctx)
 	}
 
-	// init modules and scheduler
+	storage, err := store.NewStorage(db, config.AgentString(), func(err error) {
+		logger.WithField("on", "storage").Warn(err)
+	})
+	if err != nil {
+		logger.Errorf("Failed to create storage: %v", err)
+		return fmt.Errorf("failed to create storage: %v", err)
+	}
+
+	if err := storage.Migrate(ctx); err != nil {
+		logger.Errorf("Failed to migrate: %v", err)
+		return fmt.Errorf("failed to migrate: %v", err)
+	}
+
+	newCtx := modules.SituationContext(ctx, config.AgentString(), storage, loggerInterface)
+
+	// sceduler opts
+	opts = append(opts,
+		modules.WithLogger(loggerInterface),
+		modules.IgnoreMissingDeps(ignoreMissingDeps),
+	)
+
+	// filter modules
 	mods := make([]modules.Module, 0)
 	modules.Walk(func(name string, m modules.Module) {
 		disabled, err := config.Get[bool](disableFlagName(name))
@@ -142,89 +170,15 @@ func run(storage store.Store, logger *logrus.Logger) error {
 			panic(err)
 		}
 		if !disabled {
-			// add logger
-			if logProducer := m.(types.LogProducer); logProducer != nil {
-				logProducer.SetLogger(logger.WithField("module", name))
-			}
-			// add storage
-			if storable := m.(types.StorageDemander); storable != nil {
-				storable.SetStore(storage)
-			}
 			mods = append(mods, m)
-			logger.Infof("Module %s enabled", name)
-		} else {
-			logger.Infof("Module %s disabled", name)
 		}
 	})
-	scheduler := modules.NewScheduler(
-		mods,
-		modules.WithLogger(logger.WithField("module", "[scheduler]")),
-		modules.IgnoreMissingDeps(ignoreMissingDeps),
-	)
 
-	// run
-	start := time.Now()
-	if err := scheduler.Run(); err != nil {
+	// run the scheduler
+	scheduler := modules.NewScheduler(mods, opts...)
+	if err := scheduler.Run(newCtx); err != nil {
 		return err
 	}
-	end := time.Now()
-
-	// prepare payload
-	perfs := perf.Collect()
-	payload := storage.InitPayload()
-	payload.Extra = &models.ExtraInfo{
-		Agent:     ID,
-		Version:   Version,
-		Timestamp: end,
-		Duration:  end.Sub(start),
-		Errors:    modules.BuildModuleErrors(),
-		Perfs:     perfs,
-	}
-
-	// send to backends
-	for _, backend := range enabledBackends {
-		if err := backend.Write(payload); err != nil {
-			logger.Errorf("Failed to write to backend %s: %v", backend.Name(), err)
-		}
-	}
-
-	// for n, run := uint(0), true; run; n, run = n+1, loopCondition(n+1, scans, period) {
-	// 	// scan
-	// 	if err := singleRun(); err != nil {
-	// 		return err
-	// 	}
-	// 	// reset internal store
-	// 	if n > 0 && n%resetPeriod == 0 {
-	// 		store.Clear()
-	// 	}
-	// }
 
 	return nil
 }
-
-// func singleRun() error {
-// 	// run the modules
-// 	scheduler := modules.NewScheduler(modules.G)
-// 	scheduler
-// 	start := time.Now()
-// 	if err := modules.RunModules(); err != nil {
-// 		return err
-// 	}
-// 	end := time.Now()
-
-// 	// collect memory performances after the scan
-// 	perfs := perf.Collect()
-
-// 	// fill the payload
-// 	payload := store.InitPayload()
-// 	payload.Extra = &models.ExtraInfo{
-// 		Agent:     config.GetAgent(),
-// 		Version:   config.Version,
-// 		Timestamp: end,
-// 		Duration:  end.Sub(start),
-// 		Errors:    modules.BuildModuleErrors(),
-// 		Perfs:     perfs,
-// 	}
-
-// 	return backends.Write(payload)
-// }

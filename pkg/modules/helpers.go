@@ -40,10 +40,10 @@ func setDefault[T any](config *puzzle.Config, m Module, key string, value *T, us
 // It panics if two modules have the same name
 func registerModule(module Module) {
 	name := module.Name()
-	if _, exists := modules[name]; exists {
+	if _, exists := mods[name]; exists {
 		panic(fmt.Errorf("two modules have the same name: %s", name))
 	}
-	modules[name] = module
+	mods[name] = module
 	// config.Define(
 	// 	disableModuleKey(module),
 	// 	false,

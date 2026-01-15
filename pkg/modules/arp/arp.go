@@ -12,6 +12,7 @@ type ARPEntry struct {
 	MAC            net.HardwareAddr
 	IP             net.IP
 	State          ARPEntryState
+	VLAN           int
 }
 
 // FilterARPTableByNetwork returns the ARP entries that belong to

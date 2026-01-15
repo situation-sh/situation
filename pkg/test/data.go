@@ -62,8 +62,8 @@ func RandomPackage() *models.Package {
 	}
 }
 
-func RandomNICFlags() *models.NetworkInterfaceFlags {
-	return &models.NetworkInterfaceFlags{
+func RandomNICFlags() models.NetworkInterfaceFlags {
+	return models.NetworkInterfaceFlags{
 		Up:           gofakeit.Bool(),
 		Broadcast:    gofakeit.Bool(),
 		Loopback:     gofakeit.Bool(),
@@ -95,8 +95,8 @@ func RandomCPU() *models.CPU {
 	}
 }
 
-func RandomPartition() *models.Partition {
-	return &models.Partition{
+func RandomPartition() models.Partition {
+	return models.Partition{
 		Name:     gofakeit.LetterN(3) + gofakeit.Digit(),
 		Size:     gofakeit.Uint64(),
 		Type:     gofakeit.LetterN(5),
@@ -106,7 +106,7 @@ func RandomPartition() *models.Partition {
 
 func RandomDisk() *models.Disk {
 	n := gofakeit.IntRange(1, 5)
-	partitions := make([]*models.Partition, n)
+	partitions := make([]models.Partition, n)
 	for i := 0; i < n; i++ {
 		partitions[i] = RandomPartition()
 	}
@@ -132,14 +132,14 @@ func RandomGPU() *models.GPU {
 
 func RandomMachine() *models.Machine {
 	return &models.Machine{
-		InternalID:          gofakeit.IntRange(1, 10000),
+		// InternalID:          gofakeit.IntRange(1, 10000),
 		Hostname:            gofakeit.NounCommon(),
 		HostID:              gofakeit.UUID(),
 		Arch:                gofakeit.RandomString([]string{"amd64", "386", "aarch64"}),
 		Platform:            gofakeit.RandomString([]string{"windows", "linux"}),
 		Distribution:        gofakeit.NounCommon(),
 		DistributionVersion: gofakeit.AppVersion(),
-		ParentMachine:       -1,
+		ParentMachine:       nil,
 		CPU:                 RandomCPU(),
 		NICS:                []*models.NetworkInterface{RandomNIC(), RandomNIC()},
 		Disks:               []*models.Disk{RandomDisk()},
@@ -155,10 +155,11 @@ func RandomMachine() *models.Machine {
 
 func RandomHostMachine() *models.Machine {
 	m := RandomMachine()
-	u, err := uuid.Parse(gofakeit.UUID())
-	if err == nil {
-		m.Agent = &u
-	}
+	m.Agent = gofakeit.UUID()
+	// u, err := uuid.Parse(gofakeit.UUID())
+	// if err == nil {
+	// 	m.Agent = &u
+	// }
 	return m
 }
 

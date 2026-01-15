@@ -66,9 +66,9 @@ func schemaAction(ctx context.Context, cmd *cli.Command) error {
 
 	schema := reflector.Reflect(&models.Payload{})
 	// we manually add these definition since the User prameter of the Application is an interface{}
-	schema.Definitions["LinuxID"] = reflector.Reflect(&models.LinuxID{}).Definitions["LinuxID"]
-	schema.Definitions["LinuxUser"] = reflector.Reflect(&models.LinuxUser{}).Definitions["LinuxUser"]
-	schema.Definitions["WindowsUser"] = reflector.Reflect(&models.WindowsUser{}).Definitions["WindowsUser"]
+	// schema.Definitions["LinuxID"] = reflector.Reflect(&models.LinuxID{}).Definitions["LinuxID"]
+	// schema.Definitions["LinuxUser"] = reflector.Reflect(&models.LinuxUser{}).Definitions["LinuxUser"]
+	// schema.Definitions["WindowsUser"] = reflector.Reflect(&models.WindowsUser{}).Definitions["WindowsUser"]
 
 	data, _ := json.MarshalIndent(schema, "", "  ")
 	// data = data[0:]

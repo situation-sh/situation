@@ -39,9 +39,9 @@ MODULE_FILES := $(shell find ./pkg/modules -path "*.go")
 
 
 # Put the version in the config file
-GO_LDFLAGS_SET_VERSION := -X "$(MODULE)/config.Version=$(VERSION)"
+GO_LDFLAGS_SET_VERSION := -X "$(MODULE)/agent/config.Version=$(VERSION)"
 # Put the conmmit in the config file
-GO_LDFLAGS_SET_COMMIT  := -X "$(MODULE)/config.Commit=$(COMMIT)"
+GO_LDFLAGS_SET_COMMIT  := -X "$(MODULE)/agent/config.Commit=$(COMMIT)"
 # if cgo link statically
 GO_LDFLAGS_STATIC_LINK := -linkmode external -extldflags "-static"
 # default ld flags

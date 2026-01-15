@@ -1,28 +1,26 @@
 package modules
 
 import (
+	"context"
 	"sort"
-
-	"github.com/sirupsen/logrus"
-	"github.com/situation-sh/situation/pkg/store"
 )
 
 // internal map of modules
-var modules = make(map[string]Module)
+var mods = make(map[string]Module)
 
 // Module is the generic module interface to implement plugins to
 // the agent
 type Module interface {
 	Name() string
 	Dependencies() []string
-	Run() error
+	Run(ctx context.Context) error
 }
 
 // GetModuleNames return the list of all the available modules
 func GetModuleNames() []string {
-	list := make([]string, len(modules))
+	list := make([]string, len(mods))
 	i := 0
-	for name := range modules {
+	for name := range mods {
 		list[i] = name
 		i++
 	}
@@ -32,30 +30,33 @@ func GetModuleNames() []string {
 }
 
 func GetModuleByName(name string) Module {
-	return modules[name]
+	return mods[name]
 }
 
 func Walk(fun func(name string, mod Module)) {
-	for name, mod := range modules {
+	for name, mod := range mods {
 		fun(name, mod)
 	}
 }
 
-type Storage struct {
-	store store.Store
-}
+// type Storage struct {
+// 	// store store.Store
+// 	db *bun.DB
+// }
 
-func (s *Storage) SetStore(st store.Store) {
-	s.store = st
-}
+// func (s Storage)
 
-type Logger struct {
-	logger logrus.FieldLogger
-}
+// func (s *Storage) SetStore(st store.Store) {
+// 	s.store = st
+// }
 
-func (l *Logger) SetLogger(logger logrus.FieldLogger) {
-	l.logger = logger
-}
+// type Logger struct {
+// 	logger logrus.FieldLogger
+// }
+
+// func (l *Logger) SetLogger(logger logrus.FieldLogger) {
+// 	l.logger = logger
+// }
 
 // func (l *Logger) GetLogger() logrus.FieldLogger {
 // 	if l.logger != nil {
@@ -66,8 +67,11 @@ func (l *Logger) SetLogger(logger logrus.FieldLogger) {
 // }
 
 type BaseModule struct {
-	Storage
-	Logger
+	// Storage
+	// Logger
+	// logger logrus.FieldLogger
+	// db     *bun.DB
+	// ctx    context.Context
 }
 
 // func isDisabled(m Module) bool {
@@ -98,4 +102,58 @@ type BaseModule struct {
 // func RunModules() error {
 // 	scheduler := NewScheduler(GetEnabledModules())
 // 	return scheduler.Run()
+// }
+
+// func (m *BaseModule) SetLogger(logger logrus.FieldLogger) {
+// 	m.logger = logger
+// }
+
+// func (m *BaseModule) SetDB(db *bun.DB) {
+// 	m.db = db
+// }
+
+// func (m *BaseModule) SetValue(key any, val any) {
+// 	m.ctx = context.WithValue(m.ctx, key, val)
+// }
+
+// func (m *BaseModule) GetAgent() string {
+// 	v, ok := m.ctx.Value("agent").(string)
+// 	if !ok {
+// 		return ""
+// 	}
+// 	return v
+// }
+
+// func (m *BaseModule) GetHost() (*models.Machine, error) {
+// 	agent := m.GetAgent()
+// 	if agent == "" {
+// 		return nil, fmt.Errorf("no agent in context")
+// 	}
+// 	machine := new(models.Machine)
+// 	err := m.db.NewSelect().
+// 		Model(&machine).
+// 		Where("agent = ?", agent).
+// 		Scan(m.ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return machine, nil
+// }
+
+// func (m *BaseModule) UpsertHost(machine *models.Machine) (*models.Machine, error) {
+// 	agent := m.GetAgent()
+// 	if agent == "" {
+// 		return nil, fmt.Errorf("no agent in context")
+// 	}
+// 	machine.Agent = agent
+// 	// machine := new(models.Machine)
+// 	err := m.db.NewInsert().
+// 		Model(&machine).
+// 		On("CONFLICT (agent) DO UPDATE").
+// 		Set()
+// 	Scan(m.ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return machine, nil
 // }

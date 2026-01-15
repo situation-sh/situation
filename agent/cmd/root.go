@@ -9,22 +9,22 @@ import (
 
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
+	"github.com/situation-sh/situation/agent/config"
 
 	"github.com/urfave/cli/v3"
 )
 
-var logLevel uint = 1
+var logLevel uint = 4
 
 var app = &cli.Command{
 	Name:    "situation",
 	Usage:   "Just run it",
-	Version: Version,
+	Version: config.Version,
 	Authors: []any{mail.Address{Name: "Alban Siffer", Address: "alban@situation.sh"}},
 	Flags: []cli.Flag{
 		&cli.UintFlag{
 			Name:        "log-level",
 			Usage:       "Log level (0: Panic, 1: Fatal, 2: Error, 3: Warn, 4: Info, 5: Debug)",
-			Value:       logLevel,
 			Destination: &logLevel,
 			Aliases:     []string{"l"},
 			Local:       false,
@@ -45,13 +45,14 @@ var app = &cli.Command{
 		&openapiCmd,
 	},
 	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-		return ctx, initLog()
+		configureLogrus()
+		return ctx, nil
 	},
 }
 
-func initLog() error {
+func configureLogrus() {
 	// Log as JSON instead of the default ASCII formatter.
-	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
+	logrus.SetFormatter(&logrus.TextFormatter{})
 	// logrus.SetFormatter(&ModuleFormatter{})
 	// ensure log level is between 0 and 5
 	if logLevel > 5 {
@@ -69,7 +70,6 @@ func initLog() error {
 
 	// DebugLevel by default
 	logrus.SetLevel(logrus.Level(logLevel))
-	return nil
 }
 
 // Execute executes the root command.

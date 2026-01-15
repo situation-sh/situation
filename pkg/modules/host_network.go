@@ -5,12 +5,14 @@
 package modules
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strings"
 
 	netroute "github.com/libp2p/go-netroute"
 	"github.com/situation-sh/situation/pkg/models"
+	"github.com/situation-sh/situation/pkg/utils"
 )
 
 var (
@@ -44,50 +46,48 @@ func (m *HostNetworkModule) Dependencies() []string {
 	return []string{"host-basic"}
 }
 
-func (m *HostNetworkModule) Run() error {
-	
-	machine := m.store.GetHost()
-	if machine == nil {
-		return fmt.Errorf("cannot retrieve host machine")
-	}
+func (m *HostNetworkModule) Run(ctx context.Context) error {
+	logger := getLogger(ctx, m)
+	storage := getStorage(ctx)
+
+	hostID := storage.GetHostID(ctx)
+
+	nics := make([]models.NetworkInterface, 0)
+	subnets := make([]models.Subnetwork, 0)
+	subnetNICMapper := make(map[string]bool)
 
 	ifaces, err := getInterfaces()
 	if err != nil {
 		return fmt.Errorf("error while getting network interfaces: %v", err)
 	}
 
-	// check previous network interfaces
-	if len(machine.NICS) > 0 {
-		return fmt.Errorf("some network interfaces have already been discovered: %+v",
-			machine.NICS)
-	}
-
-	// retrieve main gateway
-	index := -1
-	piface, gw, err := gateway()
-	if err == nil {
-		index = piface.Index
-	}
-
 	// create nics
 	for _, iface := range ifaces {
-		nic := models.NetworkInterface{}
+		nic := models.NetworkInterface{MachineID: hostID}
 		// name
 		nic.Name = iface.Name
 		// mac
-		nic.MAC = iface.HardwareAddr
+		nic.MAC = iface.HardwareAddr.String()
 
 		// flags (NEW!)
 		nic.SetFlags(iface.Flags)
 
 		// logging
-		entry := m.logger.WithField("name", nic.Name).WithField("mac", nic.MAC)
-
-		// gateway
-		if index == iface.Index {
-			nic.Gateway = gw
+		entry := logger.
+			WithField("name", nic.Name).
+			WithField("mac", nic.MAC)
+		// nic gw
+		_, gwIP, err := gatewayWithSrc(iface.HardwareAddr, nil)
+		if err == nil {
+			nic.Gateway = gwIP.String()
 			entry = entry.WithField("gateway", nic.Gateway)
 		}
+
+		// gateway
+		// if index == iface.Index {
+		// 	nic.Gateway = gw.String()
+		// 	entry = entry.WithField("gateway", nic.Gateway)
+		// }
 
 		entry.Info("Network Interface found on host")
 
@@ -105,35 +105,117 @@ func (m *HostNetworkModule) Run() error {
 				continue
 			}
 
+			ms := utils.MaskSize(ipnet)
+			s := models.Subnetwork{
+				NetworkCIDR: ipnet.String(),
+				NetworkAddr: ipnet.IP.String(),
+				MaskSize:    ms,
+			}
+
+			// define subnet gateway if applicable
+			_, gwIP, err := gatewayWithSrc(iface.HardwareAddr, ip)
+			if err == nil && ipnet.Contains(gwIP) {
+				s.Gateway = gwIP.String()
+			}
+
+			if nic.IP == "" {
+				nic.IP = ip.String()
+			} else {
+				nic.IP += "," + ip.String()
+			}
+			// logger.
+			// 	WithField("name", nic.Name).
+			// 	WithField("ip", nic.IP).
+			// 	// WithField("mask_size", nic.MaskSize).
+			// 	Info("IP address found on host")
+
 			if ip4 := ip.To4(); ip4 != nil {
 				// IPv4 case
-				// ignore if IP has already been assigned
-				if nic.IP == nil {
-					nic.IP = ip4
-					nic.MaskSize, _ = ipnet.Mask.Size()
-					m.logger.WithField("name", nic.Name).
-						WithField("ip", nic.IP).
-						WithField("mask_size", nic.MaskSize).
-						Info("IPv4 address found on host")
-				}
+				logger.
+					WithField("name", nic.Name).
+					WithField("ip", ip).
+					Info("IPv4 address found on host")
+
+				s.IPVersion = 4
 			} else {
 				// IPv6 case
-				// ignore if IP6 has already been assigned
-				if nic.IP6 == nil {
-					nic.IP6 = ip
-					nic.Mask6Size, _ = ipnet.Mask.Size()
-					m.logger.WithField("name", nic.Name).
-						WithField("ip6", nic.IP6).
-						WithField("mask6_size", nic.Mask6Size).
-						Info("IPv6 address found on host")
-				}
+				logger.
+					WithField("name", nic.Name).
+					WithField("ip", ip).
+					Info("IPv6 address found on host")
+
+				s.IPVersion = 6
 			}
+
+			// ignore 127.0.0.1 || fe80:
+			if ip.IsLoopback() || ip.IsLinkLocalUnicast() {
+				continue
+
+			}
+
+			// otherwise map
+			subnets = append(subnets, s)
+			key := fmt.Sprintf("%v,%v", s.NetworkCIDR, nic.MAC)
+			subnetNICMapper[key] = true
 		}
 
 		// add the NIC
-		machine.NICS = append(machine.NICS, &nic)
+		nics = append(nics, nic)
+		// machine.NICS = append(machine.NICS, &nic)
 	}
-	return nil
+
+	// create subnets
+	// sout := make([]models.Subnetwork, 0)
+	err = storage.DB().
+		NewInsert().
+		Model(&subnets).
+		On("CONFLICT DO UPDATE").
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Scan(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to insert new subnets: %v", err)
+	}
+
+	// fmt.Println("NICS to insert:", nics)
+	// nout := make([]models.NetworkInterface, 0)
+	err = storage.DB().NewInsert().
+		Model(&nics).
+		On("CONFLICT DO UPDATE").
+		Set("mac = EXCLUDED.mac").
+		Set("ip = EXCLUDED.ip").
+		Set("gateway = EXCLUDED.gateway").
+		Set("flags = EXCLUDED.flags").
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Scan(ctx)
+
+	// update nics with subnetID
+	links := make([]models.NetworkInterfaceSubnet, 0)
+	for _, subnet := range subnets {
+		for _, nic := range nics {
+			key := fmt.Sprintf("%v,%v", subnet.NetworkCIDR, nic.MAC)
+			if _, ok := subnetNICMapper[key]; ok {
+				link := models.NetworkInterfaceSubnet{
+					NetworkInterfaceID: nic.ID,
+					SubnetworkID:       subnet.ID,
+				}
+				links = append(links, link)
+			}
+		}
+	}
+
+	// insert links
+	if len(links) > 0 {
+		_, err = storage.DB().
+			NewInsert().
+			Model(&links).
+			On("CONFLICT DO NOTHING").
+			Exec(ctx)
+		if err != nil {
+			return fmt.Errorf("unable to insert network interface - subnetwork links: %v", err)
+		}
+	}
+
+	return err
 }
 
 // type NetworkInterface struct {
@@ -220,6 +302,15 @@ func gateway() (*net.Interface, net.IP, error) {
 		return nil, nil, err
 	}
 	iface, gw, _, err := r.Route(GOOGLE)
+	return iface, gw, err
+}
+
+func gatewayWithSrc(hw net.HardwareAddr, src net.IP) (*net.Interface, net.IP, error) {
+	r, err := netroute.New()
+	if err != nil {
+		return nil, nil, err
+	}
+	iface, gw, _, err := r.RouteWithSrc(hw, src, GOOGLE)
 	return iface, gw, err
 }
 

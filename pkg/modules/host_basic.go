@@ -5,11 +5,12 @@
 package modules
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/shirou/gopsutil/v4/host"
-	"github.com/situation-sh/situation/pkg/models"
 )
 
 func init() {
@@ -46,41 +47,58 @@ func (m *HostBasicModule) Dependencies() []string {
 	return nil
 }
 
-func (m *HostBasicModule) Run() error {
+func (m *HostBasicModule) Run(ctx context.Context) error {
+	logger := getLogger(ctx, m)
+	storage := getStorage(ctx)
 
-	machine := m.store.GetHost()
+	machine := storage.GetorCreateHost(ctx)
 	if machine == nil {
-		machine = models.NewMachine()
+		return fmt.Errorf("unable to create or retrieve host machine")
 	}
+	// prepare a query to update the machine
+	query := storage.PreUpdateMachine(machine).Where("id = ?", machine.ID)
+
 	if h, err := os.Hostname(); err == nil {
-		machine.Hostname = h
-		m.logger.WithField("hostname", machine.Hostname).Info("Get hostname")
+		query = query.Set("hostname = ?", h)
+		// machine.Hostname = h
+		logger.WithField("hostname", machine.Hostname).Info("Get hostname")
 	} else {
-		m.logger.Errorf("Error while retrieving host hostname: %v", err)
+		logger.Errorf("Error while retrieving host hostname: %v", err)
 	}
 
 	if info, err := host.Info(); err == nil {
-		machine.HostID = info.HostID
-		machine.Arch = info.KernelArch
-		machine.Platform = info.OS
-		machine.Distribution = info.Platform
-		machine.DistributionVersion = info.PlatformVersion
+		// machine.HostID = info.HostID
+		// machine.Arch = info.KernelArch
+		// machine.Platform = info.OS
+		// machine.Distribution = info.Platform
+		// machine.DistributionVersion = info.PlatformVersion
+		query = query.
+			Set("distribution = ?", info.Platform).
+			Set("distribution_version = ?", info.PlatformVersion).
+			Set("host_id = ?", info.HostID).
+			Set("arch = ?", info.KernelArch).
+			Set("platform = ?", info.OS)
 		// here the returned uptime is in seconds
 		if info.Uptime <= 0x7fffffffffffffff {
-			machine.Uptime = time.Duration(info.Uptime) * time.Second
+			// machine.Uptime = time.Duration(info.Uptime) * time.Second
+			query = query.Set("uptime = ?", time.Duration(info.Uptime)*time.Second)
 		}
 
 		// logging
-		entry := m.logger.WithField("arch", machine.Arch)
-		entry = entry.WithField("platform", machine.Platform)
-		entry = entry.WithField("distribution", machine.Distribution)
-		entry = entry.WithField("distribution_version", machine.DistributionVersion)
-		entry.Info("Get other Host infos")
+		logger.WithField("arch", machine.Arch).
+			WithField("platform", machine.Platform).
+			WithField("distribution", machine.Distribution).
+			WithField("distribution_version", machine.DistributionVersion).
+			Info("Get other Host infos")
 	} else {
-		m.logger.Errorf("Error while retrieving host infos: %v", err)
+		logger.Errorf("Error while retrieving host infos: %v", err)
+		return err
 	}
 
-	m.store.SetHost(machine)
+	// write to the db
+	_, err := query.Exec(ctx)
+
+	// store.SetHost(machine)
 	// // config.SubConfig("").Print()
 	// // retrieve the agent from the config
 	// u, err := uuid.FromBytes(config.ID[:])
@@ -88,8 +106,8 @@ func (m *HostBasicModule) Run() error {
 	// 	m.logger.Error(err)
 	// }
 	// machine.Agent = &u
-	m.logger.WithField("agent", machine.Agent).Info("Retrieve agent uuid")
+	// m.logger.WithField("agent", machine.Agent).Info("Retrieve agent uuid")
 	// insert the new machine!
-	m.store.InsertMachine(machine)
-	return nil
+	// m.store.InsertMachine(machine)
+	return err
 }

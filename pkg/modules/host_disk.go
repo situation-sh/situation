@@ -5,6 +5,7 @@
 package modules
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/jaypipes/ghw"
@@ -95,18 +96,22 @@ func controllerType(t ghw.StorageController) string {
 	}
 }
 
-func (m *HostDiskModule) Run() error {
+func (m *HostDiskModule) Run(ctx context.Context) error {
+	storage := getStorage(ctx)
+	logger := getLogger(ctx, m)
 
-	machine := m.store.GetHost()
-	if machine == nil {
-		return fmt.Errorf("cannot retrieve host machine")
-	}
+	hostID := storage.GetHostID(ctx)
+	// machine := m.store.GetHost()
+	// if machine == nil {
+	// 	return fmt.Errorf("cannot retrieve host machine")
+	// }
 
 	block, err := ghw.Block(ghw.WithDisableWarnings())
 	if err != nil {
 		return fmt.Errorf("error while retrieving disk information: %v", err)
 	}
 
+	disks := make([]models.Disk, 0)
 	for _, disk := range block.Disks {
 		// ignore some disks
 		if disk.StorageController == ghw.STORAGE_CONTROLLER_UNKNOWN {
@@ -120,9 +125,10 @@ func (m *HostDiskModule) Run() error {
 			Size:       disk.SizeBytes,
 			Type:       diskType(disk.DriveType),
 			Controller: controllerType(disk.StorageController),
-			Partitions: make([]*models.Partition, 0),
+			Partitions: make([]models.Partition, 0),
+			MachineID:  hostID,
 		}
-		m.logger.WithField("name", d.Name).
+		logger.WithField("name", d.Name).
 			WithField("model", d.Model).
 			WithField("size (MiB)", d.Size/(1024*1024)).
 			WithField("type", d.Type).
@@ -138,15 +144,27 @@ func (m *HostDiskModule) Run() error {
 				Type:     part.Type,
 				ReadOnly: part.IsReadOnly,
 			}
-			d.Partitions = append(d.Partitions, &p)
-			m.logger.WithField("name", p.Name).
+			d.Partitions = append(d.Partitions, p)
+			logger.WithField("name", p.Name).
 				WithField("size (MiB)", p.Size/(1024*1024)).
 				WithField("type", p.Type).
 				WithField("read_only", p.ReadOnly).
 				Info("Here is a partition")
 		}
 
-		machine.Disks = append(machine.Disks, &d)
+		disks = append(disks, d)
 	}
-	return nil
+
+	_, err = storage.DB().NewInsert().
+		Model(&disks).
+		On("CONFLICT (machine_id, name) DO UPDATE").
+		Set("model = EXCLUDED.model").
+		Set("size = EXCLUDED.size").
+		Set("type = EXCLUDED.type").
+		Set("controller = EXCLUDED.controller").
+		Set("partitions = EXCLUDED.partitions").
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Exec(ctx)
+
+	return err
 }

@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"errors"
 	"net"
+	"sync"
 )
 
 // CopyIP returns a new buffer containing
@@ -10,6 +12,11 @@ func CopyIP(ip net.IP) net.IP {
 	tmp := make([]byte, len(ip))
 	copy(tmp, ip)
 	return tmp
+}
+
+func MaskSize(n *net.IPNet) int {
+	ones, _ := n.Mask.Size()
+	return ones
 }
 
 // BaseNetwork returns the strict CIDR network
@@ -58,6 +65,14 @@ func Iterate(n *net.IPNet) chan net.IP {
 	}()
 
 	return c
+}
+
+func ListIPs(n *net.IPNet) []net.IP {
+	ips := make([]net.IP, 0)
+	for ip := range Iterate(n) {
+		ips = append(ips, ip)
+	}
+	return ips
 }
 
 // ExtractNetworks returns the address (sub-networks actually)
@@ -135,4 +150,71 @@ func IsPublic(ip net.IP) bool {
 		return false
 	}
 	return !ip.IsPrivate() && !ip.IsLoopback() && !ip.IsLinkLocalUnicast() && !ip.IsLinkLocalMulticast() && !ip.IsMulticast() && !ip.IsInterfaceLocalMulticast()
+}
+
+type IPWorkerPool struct {
+	poolSize uint
+	worker   func(ip <-chan net.IP, errChan chan<- error, wg *sync.WaitGroup)
+}
+
+func NewIPWorkerPool(poolSize uint, fun func(net.IP) error) *IPWorkerPool {
+	worker := func(ipChan <-chan net.IP, errChan chan<- error, wg *sync.WaitGroup) {
+		defer wg.Done()
+		for i := range ipChan {
+			if err := fun(i); err != nil {
+				errChan <- err
+			}
+		}
+	}
+	return &IPWorkerPool{
+		poolSize: poolSize,
+		worker:   worker,
+	}
+}
+
+func (wp *IPWorkerPool) Run(ips []net.IP) error {
+	var wg sync.WaitGroup
+
+	ipChan := make(chan net.IP, 2*wp.poolSize)
+	errChan := make(chan error)
+	errResult := make(chan error)
+
+	// Error consumer
+	go func() {
+		var errs error
+		for err := range errChan {
+			errs = errors.Join(errs, err)
+		}
+		errResult <- errs
+	}()
+	// for errChan, we need a buffered channel to avoid deadlocks
+	// since errors are consumed in the end
+	// errChan := make(chan error, len(ips))
+
+	// start workers
+	for i := uint(0); i < wp.poolSize; i++ {
+		wg.Add(1)
+		go wp.worker(ipChan, errChan, &wg)
+	}
+	// send jobs
+	for _, ip := range ips {
+		ipChan <- ip
+	}
+	close(ipChan)
+	// wait for workers to finish
+	wg.Wait()
+	// close errors
+	close(errChan)
+	return <-errResult
+}
+
+func IPVersionFromCIDR(cidr string) int {
+	ip, _, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return 0
+	}
+	if ip.To4() != nil {
+		return 4
+	}
+	return 6
 }
