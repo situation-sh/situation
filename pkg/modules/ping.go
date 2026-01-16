@@ -81,15 +81,19 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 	nics := make([]models.NetworkInterface, 0)
 	for ip := range ipChan {
 		nics = append(nics, models.NetworkInterface{
-			IP: ip.String(),
+			IP:    []string{ip.String()},
+			Flags: models.NetworkInterfaceFlags{Up: true, Running: true},
 		})
 	}
 	_, err := s.DB().
 		NewInsert().
 		Model(&nics).
-		On("CONFLICT (ip, subnetwork_id) DO UPDATE").
+		On("CONFLICT DO UPDATE").
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to insert new NICs for subnetwork %s: %v", network.String(), err)
+	}
 
 	links := make([]models.NetworkInterfaceSubnet, 0)
 	for _, nic := range nics {

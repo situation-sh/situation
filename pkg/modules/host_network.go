@@ -118,10 +118,10 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 				s.Gateway = gwIP.String()
 			}
 
-			if nic.IP == "" {
-				nic.IP = ip.String()
+			if len(nic.IP) == 0 {
+				nic.IP = []string{ip.String()}
 			} else {
-				nic.IP += "," + ip.String()
+				nic.IP = append(nic.IP, ip.String())
 			}
 			// logger.
 			// 	WithField("name", nic.Name).

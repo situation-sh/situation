@@ -116,7 +116,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 					}
 					nic := models.NetworkInterface{
 						MAC:       mac,
-						IP:        entry.IP.String(),
+						IP:        []string{entry.IP.String()},
 						MachineID: machine.ID,
 						Flags:     models.NetworkInterfaceFlags{Up: true},
 					}

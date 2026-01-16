@@ -3,11 +3,14 @@ package models
 import (
 	"encoding/json"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/invopop/jsonschema"
 	"github.com/uptrace/bun"
 )
+
+const IP_SEPARATOR = ","
 
 // NetworkInterfaceFlags give details about a network interface
 // see https://pkg.go.dev/net#Flags
@@ -39,9 +42,9 @@ type NetworkInterface struct {
 	CreatedAt time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
 
-	Name string `bun:"name,nullzero,unique:machine_nic_name" json:"name,omitempty" jsonschema:"description=name of the network interface,example=Ethernet,example=eno1,example=eth0"`
-	MAC  string `bun:"mac,nullzero,unique:subnet_nic_mac" json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d3,example=93:83:e4:15:39:b2,pattern=^([A-F0-9]{2}:){5}[A-F0-9]{2}$"`
-	IP   string `bun:"ip,nullzero,unique:subnet_nic_ip" json:"ip,omitempty" jsonschema:"description=IPv4 address of the interface (single IP assumed),type=string,format=ipv4,example=192.168.8.1,example=10.0.0.17"`
+	Name string   `bun:"name,nullzero,unique:machine_nic_name" json:"name,omitempty" jsonschema:"description=name of the network interface,example=Ethernet,example=eno1,example=eth0"`
+	MAC  string   `bun:"mac,nullzero,unique:subnet_nic_mac" json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d3,example=93:83:e4:15:39:b2,pattern=^([A-F0-9]{2}:){5}[A-F0-9]{2}$"`
+	IP   []string `bun:"ip,nullzero,type:json,unique:subnet_nic_ip" json:"ip,omitempty" jsonschema:"description=IPv4 address of the interface (single IP assumed),type=string,format=ipv4,example=192.168.8.1,example=10.0.0.17"`
 	// MaskSize  int                   `bun:"mask_size" json:"mask_size,omitempty" jsonschema:"description=IPv4 subnetwork mask size,example=24,example=16,minimum=0,maximum=32"`
 	// IP6 string `bun:"ip6,nullzero,unique:subnet_nic_ip6" json:"ip6,omitempty" jsonschema:"description=IPv6 address of the interface (single IP assumed),type=string,format=ipv6,example=fe80::14a:7687:d7bd:f461,example=fe80::13d4:43e1:11e0:3906"`
 	// Mask6Size int                   `bun:"mask6_size" json:"mask6_size,omitempty" jsonschema:"description=IPv6 subnetwork mask size,example=64,minimum=0,maximum=128"`
@@ -63,9 +66,9 @@ type NetworkInterface struct {
 // for unmarshalling purpose. Golang does not allows to easily unmarshal
 // net.IP or net.HardwareAddr
 type networkInterfaceUnmarshallingAlias struct {
-	Name string `json:"name,omitempty" jsonschema:"description=name of the network interface,example=Ethernet,example=eno1,example=eth0"`
-	MAC  string `json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d2,example=93:83:e4:15:39:b2"`
-	IP   string `json:"ip,omitempty" jsonschema:"description=IPv4 address of the interface (single IP assumed),type=string,format=ipv4,example=192.168.8.1,example=10.0.0.17"`
+	Name string   `json:"name,omitempty" jsonschema:"description=name of the network interface,example=Ethernet,example=eno1,example=eth0"`
+	MAC  string   `json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d2,example=93:83:e4:15:39:b2"`
+	IP   []string `json:"ip,omitempty" jsonschema:"description=IPv4 address of the interface (single IP assumed),type=string,format=ipv4,example=192.168.8.1,example=10.0.0.17"`
 	// MaskSize  int                   `json:"mask_size,omitempty" jsonschema:"description=IPv4 subnetwork mask size,example=24,example=16,minimum=0,maximum=32"`
 	// IP6       string                `json:"ip6,omitempty" jsonschema:"description=IPv6 address of the interface (single IP assumed),type=string,format=ipv6,example=fe80::14a:7687:d7bd:f461,example=fe80::13d4:43e1:11e0:3906"`
 	// Mask6Size int                   `json:"mask6_size,omitempty" jsonschema:"description=IPv6 subnetwork mask size,example=64,minimum=0,maximum=128"`
@@ -194,4 +197,16 @@ func (NetworkInterface) JSONSchemaExtend(schema *jsonschema.Schema) {
 	if macSchema, ok := schema.Properties.Get("mac"); ok {
 		macSchema.Pattern = `^([a-fA-F0-9]{2}:){5,7}[a-fA-F0-9]{2}$`
 	}
+}
+
+func (nic *NetworkInterface) IPs() []net.IP {
+	ips := make([]net.IP, 0)
+	for _, ipStr := range nic.IP {
+		ipStr = strings.TrimSpace(ipStr)
+		ip := net.ParseIP(ipStr)
+		if ip != nil {
+			ips = append(ips, ip)
+		}
+	}
+	return ips
 }

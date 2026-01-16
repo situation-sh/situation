@@ -215,20 +215,21 @@ type Fingerprints struct {
 type ApplicationEndpoint struct {
 	bun.BaseModel `bun:"table:application_endpoints"`
 
-	// ID        int64     `bun:"id,pk,autoincrement"`
+	ID        int64     `bun:"id,pk,autoincrement"`
 	CreatedAt time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
 
-	Port         uint16        `bun:"port" json:"port" jsonschema:"description=port number,example=22,example=80,example=443,minimum=1,maximum=65535"`
-	Protocol     string        `bun:"protocol" json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
-	Addr         net.IP        `bun:"addr" json:"addr" jsonschema:"description=IP address the application listens on,example=127.0.0.1,example=fe80::12b8:43e7:11f0:a406"`
-	TLS          *TLS          `bun:"tls,type:json" json:"tls,omitempty" jsonschema:"description=TLS information if the endpoint is using TLS"`
-	Fingerprints *Fingerprints `bun:"fingerprints,type:json" json:"fingerprints,omitempty" jsonschema:"description=application fingerprints"`
+	Port                 uint16        `bun:"port,unique:port_protocol_addr_network_interface_id" json:"port" jsonschema:"description=port number,example=22,example=80,example=443,minimum=1,maximum=65535"`
+	Protocol             string        `bun:"protocol,unique:port_protocol_addr_network_interface_id" json:"protocol" jsonschema:"description=transport layer protocol,example=tcp,example=udp"`
+	Addr                 net.IP        `bun:"addr,unique:port_protocol_addr_network_interface_id" json:"addr" jsonschema:"description=IP address the application listens on,example=127.0.0.1,example=fe80::12b8:43e7:11f0:a406"`
+	TLS                  *TLS          `bun:"tls,type:json" json:"tls,omitempty" jsonschema:"description=TLS information if the endpoint is using TLS"`
+	Fingerprints         *Fingerprints `bun:"fingerprints,type:json" json:"fingerprints,omitempty" jsonschema:"description=application fingerprints"`
+	ApplicationProtocols []string      `bun:"application_protocols,type:json" json:"application_protocols,omitempty" jsonschema:"description=list of application layer protocols detected on this endpoint,example=[\"http\",\"http/2\"]"`
 
-	ApplicationID int64        `bun:"application_id,pk"`
+	ApplicationID int64        `bun:"application_id,nullzero"`
 	Application   *Application `bun:"rel:belongs-to,join:application_id=id"`
 
-	NetworkInterfaceID int64             `bun:"network_interface_id,pk"` // can be null
+	NetworkInterfaceID int64             `bun:"network_interface_id,unique:port_protocol_addr_network_interface_id"` // can be null
 	NetworkInterface   *NetworkInterface `bun:"rel:belongs-to,join:network_interface_id=id"`
 }
 
@@ -356,5 +357,3 @@ func (Flow) JSONSchemaExtend(schema *jsonschema.Schema) {
 // 		Required:             []string{"local_port", "local_addr", "remote_port", "remote_addr", "protocol", "status"},
 // 	}
 // }
-
-

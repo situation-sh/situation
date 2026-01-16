@@ -94,7 +94,6 @@ func generateFlags() []cli.Flag {
 }
 
 func runAction(ctx context.Context, cmd *cli.Command) error {
-	logger := logrus.New()
 	var loggerInterface logrus.FieldLogger = logger
 	// scheduler opts
 	opts := make([]modules.SchedulerOptions, 0)

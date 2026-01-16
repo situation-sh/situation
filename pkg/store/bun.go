@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/situation-sh/situation/pkg/models"
 	"github.com/situation-sh/situation/pkg/utils"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -61,6 +63,14 @@ func NewSQLiteBunStorage(dataSourceName string, agent string, onError func(error
 	sqldb, err := sql.Open(sqliteshim.ShimName, dataSourceName)
 	if err != nil {
 		return nil, err
+	}
+	if strings.Contains(dataSourceName, ":memory:") {
+		// Prevent connection closure from destroying in-memory database
+		// see https://bun.uptrace.dev/guide/drivers.html#important-in-memory-database-configuration
+		sqldb.SetMaxIdleConns(1000) // Keep connections alive
+		sqldb.SetConnMaxLifetime(0) // No connection expiry
+		sqldb.SetMaxOpenConns(1)    // Single connection for consistency
+
 	}
 	db := bun.NewDB(sqldb, sqlitedialect.New())
 	return newStorage(db, agent, onError), nil
@@ -161,19 +171,19 @@ func (s *BunStorage) GetHost(ctx context.Context) *models.Machine {
 }
 
 func (s *BunStorage) GetorCreateHost(ctx context.Context) *models.Machine {
-	machine := new(models.Machine)
-	machine.Agent = s.agent
+	machine := models.Machine{Agent: s.agent}
 	err := s.db.
 		NewInsert().
-		Model(machine).
+		Model(&machine).
 		Ignore().
-		Scan(ctx, machine) // maybe machine is not important here since Scan seems to fill it automatically
+		Returning("*").
+		Scan(ctx, &machine) // maybe machine is not important here since Scan seems to fill it automatically
 	if err != nil {
 		s.onError(err)
 		return nil
 	}
 	s.cache.HostID = machine.ID
-	return machine
+	return &machine
 }
 
 func (s *BunStorage) getHostIDFromCache(ctx context.Context) int64 {
@@ -316,4 +326,51 @@ func (s *BunStorage) GetAllIPv4Networks(ctx context.Context) []models.Subnetwork
 		return nil
 	}
 	return subs
+}
+
+// IsHost returns true if the given machine is the host machine (the one running the agent).
+func (s *BunStorage) IsHost(ctx context.Context, m *models.Machine) bool {
+	return m.ID == s.GetHostID(ctx)
+}
+
+// GetMachineByIP returns the machine that has a NIC with the given IP address.
+// It handles the multi-IP format (comma-separated IPs in NetworkInterface.IP).
+// Returns nil if no machine is found.
+func (s *BunStorage) GetMachineByIP(ctx context.Context, ip net.IP) *models.Machine {
+	if ip == nil {
+		return nil
+	}
+	ipStr := ip.String()
+	machine := new(models.Machine)
+	err := s.db.NewSelect().
+		Model(machine).
+		Join("JOIN network_interfaces ON network_interfaces.machine_id = machine.id").
+		Where("network_interfaces.ip LIKE ?", "%"+ipStr+"%").
+		Relation("NICS").
+		Relation("Packages").
+		Relation("Packages.Applications").
+		Relation("Packages.Applications.Endpoints").
+		Limit(1).
+		Scan(ctx)
+	if err != nil {
+		s.onError(err)
+		return nil
+	}
+	if machine.ID == 0 {
+		return nil
+	}
+	return machine
+}
+
+// ANY generates a dialect-specific ANY expression for the given attribute and value.
+// It shoulw be used in WHERE clauses to check if a value exists in a JSON array column.
+func (s *BunStorage) ANY(attr string, value interface{}) string {
+	switch s.db.Dialect().Name() {
+	case dialect.SQLite:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM json_each(%s) WHERE value = ?)", attr)
+	case dialect.PG:
+		return fmt.Sprintf("? = ANY (%s)", attr)
+	default:
+		return ""
+	}
 }

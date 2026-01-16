@@ -2,17 +2,39 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 )
 
-var begin time.Time
+var logger = &logrus.Logger{
+	Out:       inferOutput(),
+	Formatter: &ModuleFormatter{start: time.Now()},
+	Level:     logrus.InfoLevel,
+}
 
-type ModuleFormatter struct{}
+func inferOutput() io.Writer {
+	if runtime.GOOS == "windows" {
+		// Colored output of logrus does not work for windows
+		// but we can circumvent it with ansi color codes
+		// https://github.com/sirupsen/logrus/issues/172
+		return ansicolor.NewAnsiColorWriter(os.Stderr)
+	} else {
+		return os.Stderr
+		// logrus.SetOutput(output)
+	}
+}
+
+type ModuleFormatter struct {
+	start time.Time
+}
 
 var faint = color.New(color.Faint).SprintFunc()
 
@@ -44,16 +66,16 @@ func getLevelString(level logrus.Level) string {
 }
 
 func (f *ModuleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	d := faint(fmt.Sprintf("%010.6f", entry.Time.Sub(begin).Seconds()))
+	d := faint(fmt.Sprintf("%010.6f", entry.Time.Sub(f.start).Seconds()))
 	// msg := info(entry.Message)
 	level := getLevelString(entry.Level)
 	module := ""
 	if m, ok := entry.Data["module"]; ok {
 		module = fmt.Sprintf("%14s", m)
 	} else {
-		module = fmt.Sprintf("%14s", "")
+		module = fmt.Sprintf("%14s", "system")
 	}
-	base := []string{d, level, faint(module), entry.Message}
+	base := []string{d, level, faint(module), fmt.Sprintf("%-36s", entry.Message)}
 	for k, v := range entry.Data {
 		if k != "module" {
 			q := strconv.Quote(fmt.Sprintf("%v", v))

@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/situation-sh/situation/pkg/models"
 )
 
 func init() {
@@ -45,9 +46,16 @@ func (m *HostCPUModule) Run(ctx context.Context) error {
 	logger := getLogger(ctx, m)
 	storage := getStorage(ctx)
 
-	hostCPU := storage.GetorCreateHostCPU(ctx)
-	if hostCPU == nil {
-		return fmt.Errorf("unable to create or retrieve host CPU")
+	// hostCPU := storage.GetorCreateHostCPU(ctx)
+	// if hostCPU == nil {
+	// 	return fmt.Errorf("unable to create or retrieve host CPU")
+	// }
+	hostID := storage.GetHostID(ctx)
+	if hostID == 0 {
+		return fmt.Errorf("no host found in storage")
+	}
+	hcpu := models.CPU{
+		MachineID: hostID,
 	}
 	// machine := m.store.GetHost()
 	// if machine == nil {
@@ -59,31 +67,33 @@ func (m *HostCPUModule) Run(ctx context.Context) error {
 		return fmt.Errorf("error while retrieving CPU information: %v", err)
 	}
 
-	query := storage.DB().NewUpdate().
-		Model(hostCPU).
-		Where("id = ?", hostCPU.ID).
-		Set("model_name = ?", info[0].ModelName).
-		Set("vendor = ?", info[0].VendorID)
-
-	// hostCPU.ModelName = info[0].ModelName
-	// hostCPU.Vendor = info[0].VendorID
-	logger.
-		WithField("model_name", hostCPU.ModelName).
-		WithField("vendor", hostCPU.Vendor).
-		Info("Got CPU info on host")
+	hcpu.ModelName = info[0].ModelName
+	hcpu.Vendor = info[0].VendorID
 
 	lastCoreID, err := strconv.Atoi(info[len(info)-1].CoreID)
 	if err == nil {
-		// machine.CPU.Cores = lastCoreID + 1
-		query = query.Set("cores = ?", lastCoreID+1)
-		logger.WithField("cores", lastCoreID+1).Info("Get the number of cores")
+		hcpu.Cores = lastCoreID + 1
 	} else {
 		// fallback to the number of InfoStats
-		logger.WithField("cores", len(info)).Warn("Falling back to the number of records")
-		query = query.Set("cores = ?", len(info))
+		hcpu.Cores = len(info)
 	}
 
-	_, err = query.Exec(ctx)
+	logger.
+		WithField("model_name", hcpu.ModelName).
+		WithField("vendor", hcpu.Vendor).
+		WithField("cores", hcpu.Cores).
+		WithField("host_id", hostID).
+		Info("Got CPU info on host")
+
+	_, err = storage.DB().
+		NewInsert().
+		Model(&hcpu).
+		On("CONFLICT DO UPDATE").
+		Set("model_name = EXCLUDED.model_name").
+		Set("vendor = EXCLUDED.vendor").
+		Set("cores = EXCLUDED.cores").
+		Set("updated_at = CURRENT_TIMESTAMP").
+		Exec(ctx)
 
 	return err
 }

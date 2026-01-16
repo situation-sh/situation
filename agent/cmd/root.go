@@ -4,17 +4,14 @@ package cmd
 import (
 	"context"
 	"net/mail"
-	"os"
-	"runtime"
 
-	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/agent/config"
 
 	"github.com/urfave/cli/v3"
 )
 
-var logLevel uint = 4
+var logLevel uint
 
 var app = &cli.Command{
 	Name:    "situation",
@@ -26,6 +23,7 @@ var app = &cli.Command{
 			Name:        "log-level",
 			Usage:       "Log level (0: Panic, 1: Fatal, 2: Error, 3: Warn, 4: Info, 5: Debug)",
 			Destination: &logLevel,
+			Value:       4,
 			Aliases:     []string{"l"},
 			Local:       false,
 		},
@@ -37,39 +35,14 @@ var app = &cli.Command{
 		&refreshIDCmd,
 		&defaultsCmd,
 		&idCmd,
-		&schemaCmd,
 		&updateCmd,
 		&versionCmd,
 		&taskCmd,
-		&serveCmd,
-		&openapiCmd,
 	},
 	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
-		configureLogrus()
+		logger.SetLevel(logrus.Level(logLevel))
 		return ctx, nil
 	},
-}
-
-func configureLogrus() {
-	// Log as JSON instead of the default ASCII formatter.
-	logrus.SetFormatter(&logrus.TextFormatter{})
-	// logrus.SetFormatter(&ModuleFormatter{})
-	// ensure log level is between 0 and 5
-	if logLevel > 5 {
-		logLevel = 5
-	}
-
-	if output := os.Stderr; runtime.GOOS == "windows" {
-		// Colored output of logrus does not work for windows
-		// but we can circumvent it with ansi color codes
-		// https://github.com/sirupsen/logrus/issues/172
-		logrus.SetOutput(ansicolor.NewAnsiColorWriter(output))
-	} else {
-		logrus.SetOutput(output)
-	}
-
-	// DebugLevel by default
-	logrus.SetLevel(logrus.Level(logLevel))
 }
 
 // Execute executes the root command.
