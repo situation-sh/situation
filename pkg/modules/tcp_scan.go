@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	m := &TCPScanModule{Timeout: 1000 * time.Millisecond}
+	m := &TCPScanModule{Timeout: 300 * time.Millisecond}
 	registerModule(m)
 }
 
@@ -68,41 +68,35 @@ type scanResult struct {
 func (m *TCPScanModule) Run(ctx context.Context) error {
 	logger := getLogger(ctx, m)
 	storage := getStorage(ctx)
-
 	hostID := storage.GetHostID(ctx)
 
 	// Get all NICs that are not from the host machine (neighbors)
-	nics := make([]models.NetworkInterface, 0)
-	err := storage.DB().
-		NewSelect().
-		Model((*models.NetworkInterface)(nil)).
-		Where("machine_id != ?", hostID).
-		Scan(ctx, &nics)
+	nics, err := storage.GetNeighorNICS(ctx)
 	if err != nil {
-		logger.WithError(err).Error("Cannot retrieve network interfaces")
+		logger.
+			WithError(err).
+			Error("Cannot retrieve neighbor network interfaces")
 		return err
 	}
 
 	if len(nics) == 0 {
-		logger.Info("No neighbor network interfaces found, skipping TCP scan")
-		// storage.DB().
-		// 	NewSelect().
-		// 	Model((*models.NetworkInterface)(nil)).
-		// 	Scan(ctx, &nics)
-		// fmt.Println(hostID)
+		logger.
+			WithField("host_id", hostID).
+			Warn("No neighbor network interfaces found, skipping TCP scan")
+	} else {
+		logger.
+			WithField("nics", len(nics)).
+			Info("Network interface retrieved")
 	}
-
-	logger.
-		WithField("nics", len(nics)).
-		Info("Network interface retrieved")
 
 	// Build targets list (avoid duplicates)
 	// Use the IPs() method which handles comma-separated IPs
 	targets := make([]scanTarget, 0)
 	targetMap := make(map[string]bool)
 
-	for i := range nics {
-		nic := &nics[i]
+	for _, nic := range nics {
+		// fmt.
+		// nic := &nics[i]
 		for _, ip := range nic.IPs() {
 			for _, port := range top1000 {
 				key := fmt.Sprintf("%s:%d", ip, port)
@@ -119,7 +113,7 @@ func (m *TCPScanModule) Run(ctx context.Context) error {
 	}
 
 	if len(targets) == 0 {
-		logger.Info("No targets to scan")
+		logger.Warn("No targets to scan")
 		return nil
 	}
 
@@ -131,7 +125,7 @@ func (m *TCPScanModule) Run(ctx context.Context) error {
 	results := make(chan scanResult, len(targets))
 
 	// Use the generic WorkerPool to scan targets
-	pool := utils.NewWorkerPool(256, func(t scanTarget) error {
+	pool := utils.NewWorkerPool(1024, func(t scanTarget) error {
 		network := "tcp"
 		address := fmt.Sprintf("%v:%d", t.IP, t.Port)
 		if utils.IPVersion(t.IP) == 6 {
@@ -157,14 +151,12 @@ func (m *TCPScanModule) Run(ctx context.Context) error {
 				// port is closed
 				return nil
 			}
-			fmt.Println(tp.Error())
+			// fmt.Println(tp.Error())
 			return nil
 		default:
 			return err
 		}
 
-		// fmt.Printf("(%T) %v\n", err, err)
-		// return nil // Don't propagate connection errors as they are expected
 	})
 
 	if err := pool.Run(targets); err != nil {
@@ -189,20 +181,20 @@ func (m *TCPScanModule) Run(ctx context.Context) error {
 		endpoints[i] = &models.ApplicationEndpoint{
 			Port:               r.Port,
 			Protocol:           "tcp",
-			Addr:               r.IP,
+			Addr:               r.IP.String(),
 			NetworkInterfaceID: r.NICID,
 		}
 		logger.WithField("ip", r.IP).
 			WithField("port", r.Port).
 			WithField("proto", "tcp").
-			Info("Endpoint found")
+			Debug("Endpoint found")
 	}
 
 	// Insert endpoints, ignoring conflicts (already existing endpoints)
 	_, err = storage.DB().
 		NewInsert().
 		Model(&endpoints).
-		On("CONFLICT (port, protocol, addr, network_interface_id) DO NOTHING").
+		On("CONFLICT DO NOTHING").
 		Exec(ctx)
 	if err != nil {
 		logger.WithError(err).Error("Cannot create endpoints")

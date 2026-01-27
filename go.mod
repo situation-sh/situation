@@ -8,11 +8,10 @@ require (
 	github.com/asiffer/puzzle v0.0.0-20251128150614-4c9bcf5648e6
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
-	github.com/danielgtaylor/huma/v2 v2.34.1
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/fatih/color v1.18.0
-	github.com/getsentry/sentry-go v0.40.0
-	github.com/getsentry/sentry-go/logrus v0.40.0
+	github.com/getsentry/sentry-go v0.41.0
+	github.com/getsentry/sentry-go/logrus v0.41.0
 	github.com/go-ole/go-ole v1.3.0
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/google/uuid v1.6.0
@@ -20,29 +19,24 @@ require (
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jaypipes/ghw v0.21.2
 	github.com/knqyf263/go-rpmdb v0.1.1
-	github.com/lib/pq v1.10.9
 	github.com/libp2p/go-netroute v0.4.0
 	github.com/lorenzosaino/go-sysctl v0.3.1
-	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/minio/selfupdate v0.6.0
-	github.com/praetorian-inc/fingerprintx v1.1.19
-	github.com/prometheus-community/pro-bing v0.7.0
-	github.com/rs/cors v1.11.1
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
 	github.com/shirou/gopsutil/v4 v4.25.12
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/uptrace/bun v1.2.16
 	github.com/uptrace/bun/dialect/pgdialect v1.2.16
 	github.com/uptrace/bun/dialect/sqlitedialect v1.2.16
 	github.com/uptrace/bun/driver/pgdriver v1.2.16
 	github.com/uptrace/bun/driver/sqliteshim v1.2.16
-	github.com/urfave/cli/v3 v3.6.1
+	github.com/urfave/cli/v3 v3.6.2
 	github.com/vishvananda/netlink v1.3.1
-	github.com/vmware/govmomi v0.52.0
 	github.com/winlabs/gowin32 v0.0.0-20240930213947-f504d7e14639
 	golang.org/x/mod v0.32.0
+	golang.org/x/net v0.49.0
 	golang.org/x/sys v0.40.0
-	modernc.org/sqlite v1.43.0
+	modernc.org/sqlite v1.44.3
 )
 
 require (
@@ -72,6 +66,7 @@ require (
 	github.com/mailru/easyjson v0.9.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-sqlite3 v1.14.33 // indirect
 	github.com/mattn/go-zglob v0.0.0-20180803001819-2ea3427bfa53 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/sys/atomicwriter v0.1.0 // indirect
@@ -103,7 +98,6 @@ require (
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067 // indirect
-	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	golang.org/x/time v0.13.0 // indirect
@@ -118,7 +112,7 @@ require (
 	honnef.co/go/tools v0.6.1 // indirect
 	howett.net/plist v1.0.2-0.20250314012144-ee69052608d9 // indirect
 	mellium.im/sasl v0.3.2 // indirect
-	modernc.org/libc v1.67.4 // indirect
+	modernc.org/libc v1.67.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )

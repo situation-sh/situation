@@ -1,7 +1,6 @@
 package test
 
 import (
-	"net"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -39,7 +38,7 @@ func RandomApplicationEndpoint() *models.ApplicationEndpoint {
 	return &models.ApplicationEndpoint{
 		Port:     gofakeit.Uint16(),
 		Protocol: gofakeit.RandomString([]string{"tcp", "udp"}),
-		Addr:     net.ParseIP(gofakeit.IPv4Address()),
+		Addr:     gofakeit.IPv4Address(),
 	}
 }
 
@@ -74,16 +73,12 @@ func RandomNICFlags() models.NetworkInterfaceFlags {
 }
 
 func RandomNIC() *models.NetworkInterface {
-	mac, _ := net.ParseMAC(gofakeit.MacAddress())
 	return &models.NetworkInterface{
-		Name:      gofakeit.LetterN(3) + gofakeit.Digit(),
-		MAC:       mac,
-		IP:        net.ParseIP(gofakeit.IPv4Address()),
-		MaskSize:  24,
-		IP6:       net.ParseIP(gofakeit.IPv6Address()),
-		Mask6Size: 64,
-		Gateway:   net.ParseIP(gofakeit.IPv4Address()),
-		Flags:     RandomNICFlags(),
+		Name:    gofakeit.LetterN(3) + gofakeit.Digit(),
+		MAC:     gofakeit.MacAddress(),
+		IP:      []string{gofakeit.IPv4Address(), gofakeit.IPv6Address()},
+		Gateway: gofakeit.IPv4Address(),
+		Flags:   RandomNICFlags(),
 	}
 }
 
@@ -156,10 +151,6 @@ func RandomMachine() *models.Machine {
 func RandomHostMachine() *models.Machine {
 	m := RandomMachine()
 	m.Agent = gofakeit.UUID()
-	// u, err := uuid.Parse(gofakeit.UUID())
-	// if err == nil {
-	// 	m.Agent = &u
-	// }
 	return m
 }
 

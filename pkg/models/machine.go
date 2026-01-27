@@ -1,7 +1,6 @@
 package models
 
 import (
-	"net"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -26,6 +25,7 @@ type Machine struct {
 	Platform            string        `bun:"platform" json:"platform,omitempty" jsonschema:"description=system base platform,example=linux,example=windows,example=docker"`
 	Distribution        string        `bun:"distribution" json:"distribution,omitempty" jsonschema:"description=OS name (or base image),example=fedora,example=Microsoft Windows 10 Home,example=postgres"`
 	DistributionVersion string        `bun:"distribution_version" json:"distribution_version,omitempty" jsonschema:"description=OS version (or image version),example=36,example=10.0.19044 Build 19044,example=latest"`
+	DistributionFamily  string        `bun:"distribution_family" json:"distribution_family,omitempty" jsonschema:"description=OS family,example=debian,example=fedora,example=rhel,example=suse,example=Standalone Workstation,example=Server,example=Server (Domain Controller)"`
 	Uptime              time.Duration `bun:"uptime" json:"uptime,omitempty" jsonschema:"description=machine uptime in nanoseconds,example=22343000000000,example=13521178203519"`
 	// ParentMachine       int           `bun:"parent_machine" json:"parent_machine,omitempty" jsonschema:"description=internal reference of the parent machine (docker or VM cases especially),example=53127"`
 	Agent string `bun:"agent,unique,nullzero" json:"agent,omitempty" jsonschema:"description=collector identifier (agent case)"`
@@ -55,6 +55,9 @@ type Machine struct {
 
 	// Has-many relationship
 	GPUS []*GPU `bun:"rel:has-many,join:id=machine_id" json:"gpus" jsonschema:"description=list of GPU"`
+
+	// Has-many relationship
+	Applications []*Application `bun:"rel:has-many,join:id=machine_id" json:"applications" jsonschema:"description=list of applications"`
 }
 
 // NewMachine inits a new Machine structure
@@ -118,88 +121,88 @@ func NewMachine() *Machine {
 // given its name. It creates it if it does exists (a boolean is returned
 // to tells if the app has been created or not). It also looks at the package
 // files if the app has not been found.
-func (m *Machine) GetOrCreateApplicationByName(name string) (*Application, bool) {
-	var pkg *Package = nil
+// func (m *Machine) GetOrCreateApplicationByName(name string) (*Application, bool) {
+// 	var pkg *Package = nil
 
-	for _, p := range m.Packages {
-		for _, s := range p.Applications {
-			if s.Name == name {
-				return s, false
-			}
-		}
-	}
+// 	for _, p := range m.Packages {
+// 		for _, s := range p.Applications {
+// 			if s.Name == name {
+// 				return s, false
+// 			}
+// 		}
+// 	}
 
-	app := NewApplication()
-	app.Name = name
+// 	app := NewApplication()
+// 	app.Name = name
 
-	// NEW: look into the package file (kind of fallback)
-	for _, p := range m.Packages {
-		for _, file := range p.Files {
-			if file == name {
-				pkg = p
-				break
-			}
-		}
-	}
+// 	// NEW: look into the package file (kind of fallback)
+// 	for _, p := range m.Packages {
+// 		for _, file := range p.Files {
+// 			if file == name {
+// 				pkg = p
+// 				break
+// 			}
+// 		}
+// 	}
 
-	if pkg == nil {
-		pkg = NewPackage()
-		m.Packages = append(m.Packages, pkg)
-	}
+// 	if pkg == nil {
+// 		pkg = NewPackage()
+// 		m.Packages = append(m.Packages, pkg)
+// 	}
 
-	pkg.Applications = append(pkg.Applications, app)
-	return app, true
-}
+// 	pkg.Applications = append(pkg.Applications, app)
+// 	return app, true
+// }
 
 // GetOrCreateApplicationByEndpoint returns the app running on this machine
 // given its port, protocol and address. It creates it if it does exists
 // (a boolean is returned to tells if the app has been created or not)
-func (m *Machine) GetOrCreateApplicationByEndpoint(port uint16, protocol string, addr net.IP) (*Application, bool) {
-	for _, p := range m.Packages {
-		for _, s := range p.Applications {
-			for _, e := range s.Endpoints {
-				if e.Port == port && e.Protocol == protocol && e.Addr.Equal(addr) {
-					return s, false
-				}
-			}
-		}
-	}
-	// create the endpoint
-	endpoint := ApplicationEndpoint{
-		Port:     port,
-		Protocol: protocol,
-		Addr:     addr,
-	}
-	app := NewApplication()
-	app.Endpoints = append(app.Endpoints, &endpoint)
-	// app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
+// func (m *Machine) GetOrCreateApplicationByEndpoint(port uint16, protocol string, addr net.IP) (*Application, bool) {
+// 	for _, p := range m.Packages {
+// 		for _, s := range p.Applications {
+// 			for _, e := range s.Endpoints {
+// 				if e.Port == port && e.Protocol == protocol && e.Addr.Equal(addr) {
+// 					return s, false
+// 				}
+// 			}
+// 		}
+// 	}
+// 	// create the endpoint
+// 	endpoint := ApplicationEndpoint{
+// 		Port:     port,
+// 		Protocol: protocol,
+// 		Addr:     addr,
+// 	}
+// 	app := NewApplication()
+// 	app.Endpoints = append(app.Endpoints, &endpoint)
+// 	// app := Application{Endpoints: []*ApplicationEndpoint{&endpoint}}
 
-	pkg := NewPackage()
-	pkg.Applications = append(pkg.Applications, app)
-	// pkg := Package{Applications: []*Application{&app}}
-	m.Packages = append(m.Packages, pkg)
-	// m.Applications = append(m.Applications,
-	// 	&Application{Endpoints: []*ApplicationEndpoint{&endpoint}})
-	return app, true
-}
+// 	pkg := NewPackage()
+// 	pkg.Applications = append(pkg.Applications, app)
+// 	// pkg := Package{Applications: []*Application{&app}}
+// 	m.Packages = append(m.Packages, pkg)
+// 	// m.Applications = append(m.Applications,
+// 	// 	&Application{Endpoints: []*ApplicationEndpoint{&endpoint}})
+// 	return app, true
+// }
 
 // GetApplicationByPID returns a local app given its processus ID
-func (m *Machine) GetApplicationByPID(pid uint) *Application {
-	for _, p := range m.Applications() {
-		if p.PID == pid {
-			return p
-		}
-	}
-	return nil
-}
+// func (m *Machine) GetApplicationByPID(pid uint) *Application {
+// 	for _, p := range m.Applications() {
+// 		if p.PID == pid {
+// 			return p
+// 		}
+// 	}
+// 	return nil
+// }
 
-func (m *Machine) Applications() []*Application {
-	out := make([]*Application, 0)
-	for _, p := range m.Packages {
-		out = append(out, p.Applications...)
-	}
-	return out
-}
+// func (m *Machine) Applications() []*Application {
+// 	out := make([]*Application, 0)
+// 	for _, p := range m.Packages {
+// 		out = append(out, p.Applications...)
+// 	}
+// 	return out
+// }
 
 func (m *Machine) GetPackageByApplicationPath(path string) *Package {
 	for _, p := range m.Packages {
@@ -218,28 +221,28 @@ func (m *Machine) GetPackageByApplicationPath(path string) *Package {
 // It returns whether the package has been merged
 // (otherwise it means that it already exists or
 // should not be created)
-func (m *Machine) InsertPackage(pkg *Package) (*Package, bool) {
-	for _, p := range m.Packages {
-		if p.Equal(pkg) {
-			// we already have the package
-			return p, false
-		}
-		for _, app := range p.Applications {
-			for _, f := range pkg.Files {
-				// matching based on application path
-				if app.Name == f {
-					p.Name = pkg.Name
-					p.Version = pkg.Version
-					p.Vendor = pkg.Vendor
-					p.Manager = pkg.Manager
-					copy(p.Files, pkg.Files)
-					return p, true
-				}
-			}
-		}
-	}
-	// otherwise we append the package to the machine
-	// or we can do nothing (not to pollute)
-	// m.Packages = append(m.Packages, pkg)
-	return nil, false
-}
+// func (m *Machine) InsertPackage(pkg *Package) (*Package, bool) {
+// 	for _, p := range m.Packages {
+// 		if p.Equal(pkg) {
+// 			// we already have the package
+// 			return p, false
+// 		}
+// 		for _, app := range p.Applications {
+// 			for _, f := range pkg.Files {
+// 				// matching based on application path
+// 				if app.Name == f {
+// 					p.Name = pkg.Name
+// 					p.Version = pkg.Version
+// 					p.Vendor = pkg.Vendor
+// 					p.Manager = pkg.Manager
+// 					copy(p.Files, pkg.Files)
+// 					return p, true
+// 				}
+// 			}
+// 		}
+// 	}
+// 	// otherwise we append the package to the machine
+// 	// or we can do nothing (not to pollute)
+// 	// m.Packages = append(m.Packages, pkg)
+// 	return nil, false
+// }

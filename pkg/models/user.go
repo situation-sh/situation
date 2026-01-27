@@ -43,9 +43,9 @@ type UserApplication struct {
 	CreatedAt time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
 	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
 
-	UserID        int64        `bun:"user_id,notnull"`
+	UserID        int64        `bun:"user_id,notnull,unique:user_application"`
 	User          *User        `bun:"rel:belongs-to,join:user_id=id"`
-	ApplicationID int64        `bun:"application_id,notnull"`
+	ApplicationID int64        `bun:"application_id,notnull,unique:user_application"`
 	Application   *Application `bun:"rel:belongs-to,join:application_id=id"`
 
 	Linux string `bun:"linux" json:"linux,omitempty" jsonschema:"description=Linux-specific data for this user-application relation,example=suid:0"`

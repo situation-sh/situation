@@ -169,7 +169,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 	err = storage.DB().
 		NewInsert().
 		Model(&subnets).
-		On("CONFLICT DO UPDATE").
+		On("CONFLICT (network_cidr) DO UPDATE").
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Scan(ctx)
 	if err != nil {
@@ -180,7 +180,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 	// nout := make([]models.NetworkInterface, 0)
 	err = storage.DB().NewInsert().
 		Model(&nics).
-		On("CONFLICT DO UPDATE").
+		On("CONFLICT (machine_id, name) DO UPDATE").
 		Set("mac = EXCLUDED.mac").
 		Set("ip = EXCLUDED.ip").
 		Set("gateway = EXCLUDED.gateway").

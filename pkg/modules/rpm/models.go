@@ -117,8 +117,7 @@ func reassembleFiles(basenames []string, dirnames []string, dirindexes []uint32)
 }
 
 func (p *Pkg) Parse() *models.Package {
-	pkg := models.NewPackage()
-	pkg.Manager = "rpm"
+	pkg := models.Package{Manager: "rpm"}
 
 	// out := make(map[string]interface{})
 	nIndex := binary.BigEndian.Uint32(p.Blob[:4])
@@ -176,5 +175,5 @@ func (p *Pkg) Parse() *models.Package {
 		pkg.Files = utils.KeepLeaves(reassembleFiles(basenames, dirnames, dirindexes))
 	}
 
-	return pkg
+	return &pkg
 }

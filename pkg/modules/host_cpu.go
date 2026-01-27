@@ -88,7 +88,7 @@ func (m *HostCPUModule) Run(ctx context.Context) error {
 	_, err = storage.DB().
 		NewInsert().
 		Model(&hcpu).
-		On("CONFLICT DO UPDATE").
+		On("CONFLICT (machine_id) DO UPDATE").
 		Set("model_name = EXCLUDED.model_name").
 		Set("vendor = EXCLUDED.vendor").
 		Set("cores = EXCLUDED.cores").

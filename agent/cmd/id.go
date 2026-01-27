@@ -9,10 +9,9 @@ import (
 )
 
 var idCmd = cli.Command{
-	Name:    "id",
-	Aliases: []string{"agent"},
-	Usage:   "Print the identifier of the agent",
-	Action:  idAction,
+	Name:   "id",
+	Usage:  "Print the identifier of the agent",
+	Action: idAction,
 }
 
 func idAction(ctx context.Context, cmd *cli.Command) error {

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
@@ -222,5 +223,38 @@ func Ping4(target net.IP, source net.IP, timeout time.Duration, onRecv func(net.
 		return err
 	}
 	onRecv(target)
+	return nil
+}
+
+// PingSubnet4 pings all provided IPs concurrently.
+// On Windows, the ICMP API handles reply isolation internally,
+// so we can safely run concurrent Ping4 calls.
+func PingSubnet4(targets []net.IP, source net.IP, timeout time.Duration, onRecv func(net.IP)) error {
+	if len(targets) == 0 {
+		return nil
+	}
+
+	// Use a semaphore to limit concurrency
+	const maxConcurrent = 64
+	sem := make(chan struct{}, maxConcurrent)
+	var wg sync.WaitGroup
+
+	for _, target := range targets {
+		if target[len(target)-1] == 0xff {
+			continue // skip broadcast
+		}
+
+		wg.Add(1)
+		sem <- struct{}{} // acquire
+
+		go func(t net.IP) {
+			defer wg.Done()
+			defer func() { <-sem }() // release
+
+			_ = Ping4(t, source, timeout, onRecv)
+		}(target)
+	}
+
+	wg.Wait()
 	return nil
 }

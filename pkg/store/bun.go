@@ -1,14 +1,11 @@
 package store
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/situation-sh/situation/pkg/models"
-	"github.com/situation-sh/situation/pkg/utils"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -17,10 +14,12 @@ import (
 	"github.com/uptrace/bun/driver/sqliteshim"
 )
 
+// Cache holds cached values for performance optimization.
 type Cache struct {
 	HostID int64 // ID of the host machine in the db
 }
 
+// BunStorage is the main storage implementation using Bun ORM.
 type BunStorage struct {
 	db      *bun.DB
 	agent   string
@@ -47,6 +46,7 @@ func newStorage(db *bun.DB, agent string, onError func(error)) *BunStorage {
 	}
 }
 
+// NewStorage creates a new BunStorage instance, auto-detecting the database type.
 func NewStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
 	// Simple heuristic to choose between SQLite and Postgres
 	switch detectDBType(dataSourceName) {
@@ -59,6 +59,7 @@ func NewStorage(dataSourceName string, agent string, onError func(error)) (*BunS
 	}
 }
 
+// NewSQLiteBunStorage creates a new BunStorage instance using SQLite.
 func NewSQLiteBunStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
 	sqldb, err := sql.Open(sqliteshim.ShimName, dataSourceName)
 	if err != nil {
@@ -76,12 +77,19 @@ func NewSQLiteBunStorage(dataSourceName string, agent string, onError func(error
 	return newStorage(db, agent, onError), nil
 }
 
+// NewPostgresBunStorage creates a new BunStorage instance using PostgreSQL.
 func NewPostgresBunStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dataSourceName)))
 	db := bun.NewDB(sqldb, pgdialect.New())
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
+	return newStorage(db, agent, onError), nil
+}
+
+func newPostgresBunStorageNoPing(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
+	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dataSourceName)))
+	db := bun.NewDB(sqldb, pgdialect.New())
 	return newStorage(db, agent, onError), nil
 }
 
@@ -118,258 +126,45 @@ func detectDBType(dsn string) string {
 	return ""
 }
 
+// DB returns the underlying bun.DB instance.
 func (s *BunStorage) DB() *bun.DB {
 	return s.db
 }
 
-func (s *BunStorage) Migrate(ctx context.Context) error {
-	allModels := []interface{}{
-		(*models.Subnetwork)(nil),
-		(*models.Machine)(nil),
-		(*models.CPU)(nil),
-		(*models.GPU)(nil),
-		(*models.Disk)(nil),
-		(*models.NetworkInterface)(nil),
-		(*models.NetworkInterfaceSubnet)(nil),
-		(*models.Package)(nil),
-		(*models.Application)(nil),
-		(*models.ApplicationEndpoint)(nil),
-		(*models.User)(nil),
-		(*models.UserApplication)(nil),
-	}
-
-	for _, model := range allModels {
-		_, err := s.db.NewCreateTable().
-			Model(model).
-			IfNotExists().
-			Exec(ctx)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-
-}
-
-func (s *BunStorage) GetHost(ctx context.Context) *models.Machine {
-	machine := new(models.Machine)
-	err := s.db.NewSelect().
-		Model(machine).
-		Where("machine.agent = ?", s.agent).
-		Relation("CPU").
-		Relation("GPU").
-		Relation("Disks").
-		Relation("Packages").
-		Relation("NICS").
-		Scan(ctx)
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	return machine
-}
-
-func (s *BunStorage) GetorCreateHost(ctx context.Context) *models.Machine {
-	machine := models.Machine{Agent: s.agent}
-	err := s.db.
-		NewInsert().
-		Model(&machine).
-		Ignore().
-		Returning("*").
-		Scan(ctx, &machine) // maybe machine is not important here since Scan seems to fill it automatically
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	s.cache.HostID = machine.ID
-	return &machine
-}
-
-func (s *BunStorage) getHostIDFromCache(ctx context.Context) int64 {
-	if s.cache.HostID != 0 {
-		return s.cache.HostID
-	}
-	// Fallback to DB query
-	s.GetorCreateHost(ctx)
-	return s.cache.HostID
-}
-
-func (s *BunStorage) GetHostID(ctx context.Context) int64 {
-	return s.getHostIDFromCache(ctx)
-}
-
-func (s *BunStorage) GetorCreateHostCPU(ctx context.Context) *models.CPU {
-	cpu := new(models.CPU)
-	cpu.MachineID = s.getHostIDFromCache(ctx)
-
-	err := s.db.NewInsert().
-		Model(cpu).
-		Ignore().
-		Scan(ctx, cpu)
-
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	return cpu
-}
-
-// PreUpsert prepares an upsert query for a machine with
-func (s *BunStorage) PreUpsertHost(m *models.Machine) *bun.InsertQuery {
-	return s.db.
-		NewInsert().
-		Model(m).
-		On("CONFLICT (agent) DO UPDATE").
-		Set("updated_at = CURRENT_TIMESTAMP")
-}
-
-func (s *BunStorage) PreUpdateMachine(m *models.Machine) *bun.UpdateQuery {
-	return s.db.
-		NewUpdate().
-		Model(m).
-		Set("updated_at = CURRENT_TIMESTAMP")
-}
-
-func (s *BunStorage) GetMachineNICs(ctx context.Context, machineID int64) []models.NetworkInterface {
-	// var model *models.NetworkInterface = nil
-	nics := make([]models.NetworkInterface, 0)
-	// err := s.db.
-	// 	NewSelect().
-	// 	Model((*models.NetworkInterface)(nil)).
-	// 	Relation("Subnetworks").
-	// 	Scan(ctx, &nics)
-
-	_, err := s.db.
-		NewSelect().
-		Model((*models.NetworkInterface)(nil)).
-		Where("machine_id = ?", machineID).
-		Relation("Machine").
-		Relation("Subnetworks").
-		Exec(ctx)
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	return nics
-}
-
-func (s *BunStorage) GetNICByMAC(ctx context.Context, mac string) *models.NetworkInterface {
-	var nic models.NetworkInterface
-	err := s.db.
-		NewSelect().
-		Model(&nic).
-		Where("mac = ?", mac).
-		Relation("Machine").
-		Relation("Subnetwork").
-		Limit(1).
-		Scan(ctx, &nic)
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	return &nic
-}
-
-func (s *BunStorage) GetNICByMACOnSubnet(ctx context.Context, mac string, subnetID int64) *models.NetworkInterface {
-	var nic models.NetworkInterface
-	_, err := s.db.
-		NewSelect().
-		Model(&nic).
-		Where("mac = ?", mac).
-		Where("subnetwork_id = ?", subnetID).
-		Relation("Machine").
-		Relation("Subnetworks").
-		Limit(1).
-		Exec(ctx)
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	return &nic
-}
-
-func (s *BunStorage) NewEmptyMachine(ctx context.Context) *models.Machine {
-	m := new(models.Machine)
-	if err := s.db.NewInsert().Model(m).Scan(ctx, m); err != nil {
-		s.onError(err)
-		return nil
-	}
-	return m
-}
-
-func (s *BunStorage) GetOrCreateSubnetwork(ctx context.Context, cidr string) *models.Subnetwork {
-	subnet := new(models.Subnetwork)
-	subnet.NetworkCIDR = cidr
-	subnet.IPVersion = utils.IPVersionFromCIDR(cidr)
-	err := s.db.
-		NewInsert().
-		Model(subnet).
-		On("CONFLICT (network_cidr) DO UPDATE").
-		Set("updated_at = CURRENT_TIMESTAMP").
-		Scan(ctx, subnet)
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	return subnet
-}
-
-func (s *BunStorage) GetAllIPv4Networks(ctx context.Context) []models.Subnetwork {
-	subs := make([]models.Subnetwork, 0)
-	err := s.db.NewSelect().
-		Model((*models.Subnetwork)(nil)).
-		Where("ip_version = ?", 4).
-		Scan(ctx, &subs)
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	return subs
-}
-
-// IsHost returns true if the given machine is the host machine (the one running the agent).
-func (s *BunStorage) IsHost(ctx context.Context, m *models.Machine) bool {
-	return m.ID == s.GetHostID(ctx)
-}
-
-// GetMachineByIP returns the machine that has a NIC with the given IP address.
-// It handles the multi-IP format (comma-separated IPs in NetworkInterface.IP).
-// Returns nil if no machine is found.
-func (s *BunStorage) GetMachineByIP(ctx context.Context, ip net.IP) *models.Machine {
-	if ip == nil {
-		return nil
-	}
-	ipStr := ip.String()
-	machine := new(models.Machine)
-	err := s.db.NewSelect().
-		Model(machine).
-		Join("JOIN network_interfaces ON network_interfaces.machine_id = machine.id").
-		Where("network_interfaces.ip LIKE ?", "%"+ipStr+"%").
-		Relation("NICS").
-		Relation("Packages").
-		Relation("Packages.Applications").
-		Relation("Packages.Applications.Endpoints").
-		Limit(1).
-		Scan(ctx)
-	if err != nil {
-		s.onError(err)
-		return nil
-	}
-	if machine.ID == 0 {
-		return nil
-	}
-	return machine
-}
-
 // ANY generates a dialect-specific ANY expression for the given attribute and value.
-// It shoulw be used in WHERE clauses to check if a value exists in a JSON array column.
-func (s *BunStorage) ANY(attr string, value interface{}) string {
+// It should be used in WHERE clauses to check if a value exists in a JSON array column.
+func (s *BunStorage) ANY(attr string) string {
 	switch s.db.Dialect().Name() {
 	case dialect.SQLite:
 		return fmt.Sprintf("EXISTS (SELECT 1 FROM json_each(%s) WHERE value = ?)", attr)
 	case dialect.PG:
 		return fmt.Sprintf("? = ANY (%s)", attr)
+	default:
+		return ""
+	}
+}
+
+// OVERLAP generates a dialect-specific array overlap expression for checking if any value
+// from an array matches any value in a JSON array column.
+// Use with ARRAY() to format the values: Where(s.OVERLAP("ip"), s.ARRAY(ips))
+func (s *BunStorage) OVERLAP(attr string) string {
+	switch s.db.Dialect().Name() {
+	case dialect.SQLite:
+		return fmt.Sprintf("EXISTS (SELECT 1 FROM json_each(%s) AS j, json_each(?) AS v WHERE j.value = v.value)", attr)
+	case dialect.PG:
+		return fmt.Sprintf("%s && ?::varchar[]", attr)
+	default:
+		return ""
+	}
+}
+
+// ARRAY formats a string slice as a dialect-specific array literal for use with OVERLAP.
+func (s *BunStorage) ARRAY(values []string) string {
+	switch s.db.Dialect().Name() {
+	case dialect.SQLite:
+		return "[\"" + strings.Join(values, "\",\"") + "\"]"
+	case dialect.PG:
+		return "{" + strings.Join(values, ",") + "}"
 	default:
 		return ""
 	}

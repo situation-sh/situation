@@ -59,14 +59,10 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 
 	onRecv := func(addr net.IP) {
 		ipChan <- addr
-		logger.WithField("ip", addr).Infof("Host found")
+		logger.WithField("ip", addr).Debug("Host found")
 	}
-	pool := utils.NewIPWorkerPool(64, func(ip net.IP) error {
-		// return singlePing(ip, onRecv, logger)
-		return ping.Ping4(ip, source, 500*time.Millisecond, onRecv)
-	})
 
-	if err := pool.Run(ips); err != nil {
+	if err := ping.PingSubnet4(ips, source, 1000*time.Millisecond, onRecv); err != nil {
 		logger.
 			WithField("network", network).
 			WithError(err).
@@ -74,45 +70,72 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 	}
 	close(ipChan)
 
-	subnet := s.GetOrCreateSubnetwork(ctx, network.String())
-	if subnet == nil {
-		return fmt.Errorf("unable to create or retrieve subnetwork %s", network.String())
-	}
-	nics := make([]models.NetworkInterface, 0)
+	// Collect discovered IPs
+	discoveredIPs := make([]string, 0)
 	for ip := range ipChan {
-		nics = append(nics, models.NetworkInterface{
-			IP:    []string{ip.String()},
-			Flags: models.NetworkInterfaceFlags{Up: true, Running: true},
+		discoveredIPs = append(discoveredIPs, ip.String())
+	}
+
+	if len(discoveredIPs) == 0 {
+		return nil
+	}
+
+	// Find existing NICs that have any of these IPs on this subnet
+	existingNICs, err := s.GetNICsByIPsOnSubnet(ctx, discoveredIPs, subnetID)
+	if err != nil {
+		return fmt.Errorf("unable to query NICs by IPs: %v", err)
+	}
+
+	// Build a set of IPs that already exist
+	existingIPSet := make(map[string]bool)
+	for _, nic := range existingNICs {
+		for _, ip := range nic.IP {
+			existingIPSet[ip] = true
+		}
+	}
+
+	// Only create NICs for IPs that don't already exist
+	newNICs := make([]*models.NetworkInterface, 0)
+	for _, ip := range discoveredIPs {
+		if !existingIPSet[ip] {
+			newNICs = append(newNICs, &models.NetworkInterface{
+				IP:    []string{ip},
+				Flags: models.NetworkInterfaceFlags{Up: true, Running: true},
+			})
+		}
+	}
+
+	// Insert new NICs if any
+	if len(newNICs) > 0 {
+		err = s.DB().
+			NewInsert().
+			Model(&newNICs).
+			Scan(ctx)
+		if err != nil {
+			return fmt.Errorf("unable to insert new NICs for subnetwork %s: %v", network.String(), err)
+		}
+	}
+
+	// Create links for new NICs only
+	links := make([]models.NetworkInterfaceSubnet, 0)
+	for _, nic := range newNICs {
+		links = append(links, models.NetworkInterfaceSubnet{
+			NetworkInterfaceID: nic.ID,
+			SubnetworkID:       subnetID,
 		})
 	}
-	_, err := s.DB().
-		NewInsert().
-		Model(&nics).
-		On("CONFLICT DO UPDATE").
-		Set("updated_at = CURRENT_TIMESTAMP").
-		Exec(ctx)
-	if err != nil {
-		return fmt.Errorf("unable to insert new NICs for subnetwork %s: %v", network.String(), err)
-	}
 
-	links := make([]models.NetworkInterfaceSubnet, 0)
-	for _, nic := range nics {
-		link := models.NetworkInterfaceSubnet{
-			NetworkInterfaceID: nic.ID,
-			SubnetworkID:       subnet.ID,
+	if len(links) > 0 {
+		_, err = s.DB().
+			NewInsert().
+			Model(&links).
+			On("CONFLICT DO NOTHING").
+			Exec(ctx)
+		if err != nil {
+			return fmt.Errorf("unable to insert NIC-subnet links for subnetwork %s: %v", network.String(), err)
 		}
-		links = append(links, link)
 	}
-	_, err = s.DB().
-		NewInsert().
-		Model(&links).
-		On("CONFLICT DO NOTHING").
-		Exec(ctx)
 
-	if err != nil {
-		// fmt.Println("nics:", nics)
-		return fmt.Errorf("unable to insert new NICs for subnetwork %s: %v", network.String(), err)
-	}
 	return nil
 }
 

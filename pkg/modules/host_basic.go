@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/v4/host"
+	"github.com/situation-sh/situation/pkg/models"
 )
 
 func init() {
@@ -51,17 +52,21 @@ func (m *HostBasicModule) Run(ctx context.Context) error {
 	logger := getLogger(ctx, m)
 	storage := getStorage(ctx)
 
-	machine := storage.GetorCreateHost(ctx)
+	machine := storage.GetOrCreateHost(ctx)
 	if machine == nil {
 		return fmt.Errorf("unable to create or retrieve host machine")
 	}
 	// prepare a query to update the machine
-	query := storage.PreUpdateMachine(machine).Where("id = ?", machine.ID)
+	query := storage.DB().
+		NewUpdate().
+		Model((*models.Machine)(nil)).
+		Where("id = ?", machine.ID).
+		Set("updated_at = CURRENT_TIMESTAMP")
 
 	if h, err := os.Hostname(); err == nil {
 		query = query.Set("hostname = ?", h)
 		// machine.Hostname = h
-		logger.WithField("hostname", machine.Hostname).Info("Get hostname")
+		logger.WithField("hostname", h).Info("Get hostname")
 	} else {
 		logger.Errorf("Error while retrieving host hostname: %v", err)
 	}
@@ -75,6 +80,7 @@ func (m *HostBasicModule) Run(ctx context.Context) error {
 		query = query.
 			Set("distribution = ?", info.Platform).
 			Set("distribution_version = ?", info.PlatformVersion).
+			Set("distribution_family = ?", info.PlatformFamily).
 			Set("host_id = ?", info.HostID).
 			Set("arch = ?", info.KernelArch).
 			Set("platform = ?", info.OS)
@@ -84,19 +90,20 @@ func (m *HostBasicModule) Run(ctx context.Context) error {
 			query = query.Set("uptime = ?", time.Duration(info.Uptime)*time.Second)
 		}
 
-		// logging
-		logger.WithField("arch", machine.Arch).
-			WithField("platform", machine.Platform).
-			WithField("distribution", machine.Distribution).
-			WithField("distribution_version", machine.DistributionVersion).
-			Info("Get other Host infos")
 	} else {
 		logger.Errorf("Error while retrieving host infos: %v", err)
 		return err
 	}
 
 	// write to the db
-	_, err := query.Exec(ctx)
+	err := query.Returning("*").Scan(ctx, machine)
+	// logging
+	logger.WithField("arch", machine.Arch).
+		WithField("platform", machine.Platform).
+		WithField("distribution", machine.Distribution).
+		WithField("distribution_family", machine.DistributionFamily).
+		WithField("distribution_version", machine.DistributionVersion).
+		Info("Get other Host infos")
 
 	// store.SetHost(machine)
 	// // config.SubConfig("").Print()

@@ -19,7 +19,7 @@ type CPU struct {
 	Cores     int    `bun:"cores" json:"cores,omitempty" jsonschema:"description=number of cores,example=2,example=6"`
 
 	// Belongs-to relationship
-	MachineID int64    `bun:"machine_id,notnull"`
+	MachineID int64    `bun:"machine_id,notnull,unique"`
 	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
 }
 
