@@ -23,7 +23,7 @@
 # 
 # 
 
-MODULE     := github.com/situation-sh/situation
+MODULE     := $(shell go list -m)
 VERSION    := 0.20.0
 COMMIT     := $(shell git rev-parse HEAD)
 
@@ -42,10 +42,12 @@ MODULE_FILES := $(shell find ./pkg/modules -path "*.go")
 GO_LDFLAGS_SET_VERSION := -X "$(MODULE)/agent/config.Version=$(VERSION)"
 # Put the conmmit in the config file
 GO_LDFLAGS_SET_COMMIT  := -X "$(MODULE)/agent/config.Commit=$(COMMIT)"
+# Put the conmmit in the config file
+GO_LDFLAGS_SET_MODULE  := -X "$(MODULE)/agent/config.Module=$(MODULE)"
 # if cgo link statically
 GO_LDFLAGS_STATIC_LINK := -linkmode external -extldflags "-static"
 # default ld flags
-GO_LDFLAGS_BASE        := $(GO_LDFLAGS_SET_VERSION) $(GO_LDFLAGS_SET_COMMIT)
+GO_LDFLAGS_BASE        := $(GO_LDFLAGS_SET_VERSION) $(GO_LDFLAGS_SET_COMMIT) $(GO_LDFLAGS_SET_MODULE)
 # Omit the symbol table and debug information.
 GO_LDFLAGS_STRIP       := -s
 # Omit the DWARF symbol table
@@ -56,7 +58,7 @@ GO_LDFLAGS_PROD        := $(GO_LDFLAGS_STRIP) $(GO_LDFLAGS_STRIP_DWARF)
 GO_LDFLAGS             ?= -ldflags '$(GO_LDFLAGS_BASE) $(GO_LDFLAGS_PROD)'
 
 # build command
-BUILD      := CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GO_LDFLAGS)
+BUILD      := CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GO_LDFLAGS) -trimpath
 BUILD_TEST := CGO_ENABLED=$(CGO_ENABLED) $(GO) test $(GO_LDFLAGS) -c
 
 # name of the final binary
@@ -70,7 +72,16 @@ DOCKER := podman
 TEST_MODULE ?= host-basic
 
 # utils
-dash-split = $(word $2,$(subst -, ,$1))
+split = $(word $2,$(subst -, ,$(basename $1)))
+# Extract GOOS from filename (e.g., amd64-windows.exe -> windows)
+goos = $(call split,$1,2)
+# Extract GOARCH from filename (armv*l/armhf/armel -> arm)
+goarch = $(if $(filter armv%l armhf armel,$(call split,$1,1)),arm,$(call split,$1,1))
+# Extract GOARM from filename (armv5l->5, armv6l->6, armv7l->7, armhf->7, armel->5)
+goarm = $(strip \
+  $(if $(filter armhf,$(call split,$1,1)),7, \
+  $(if $(filter armel,$(call split,$1,1)),5, \
+  $(patsubst armv%l,%,$(filter armv%l,$(call split,$1,1))))))
 
 
 .DEFAULT_GOAL := $(BIN_PREFIX)-$(GOARCH)-$(GOOS)
@@ -103,19 +114,24 @@ go.mod:
 	$(GO) mod init $(MODULE)
 	$(GO) mod tidy
 
-all: $(BIN_PREFIX)-$(GOARCH)-linux $(BIN_PREFIX)-$(GOARCH)-windows.exe
+all: $(BIN_PREFIX)-amd64-linux \
+	 $(BIN_PREFIX)-arm64-linux \
+	 $(BIN_PREFIX)-armv5l-linux \
+	 $(BIN_PREFIX)-armv6l-linux \
+	 $(BIN_PREFIX)-armv7l-linux \
+	 $(BIN_PREFIX)-amd64-windows.exe
 
 build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testing-amd64-windows.exe
 
 # final binary files
 $(BIN_PREFIX)-%: $(SRC_FILES)
 	@mkdir -p $(@D)
-	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD) -o $@ agent/main.go
+	GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) GOARM=$(call goarm,$*) $(BUILD) -o $@ agent/main.go
 
 # binaries for module testing purpose
 $(BIN_PREFIX)-module-testing-%: $(MODULE_FILES)
 	@mkdir -p $(@D)
-	GOARCH=$(call dash-split,$(basename $*),1) GOOS=$(call dash-split,$(basename $*),2) $(BUILD_TEST) -o $@ $(MODULE)/modules
+	GOARM=$(call goarm,$*) GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) $(BUILD_TEST) -o $@ $(MODULE)/modules
 
 remote-module-testing-%: module-testing
 	ID=$$(head /dev/random|md5sum|head -c 8); \

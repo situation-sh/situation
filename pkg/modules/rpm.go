@@ -10,7 +10,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	_ "modernc.org/sqlite"
 
@@ -118,11 +117,11 @@ func (m *RPMModule) Run(ctx context.Context) error {
 		p.InstallTimeUnix = ins.Parse()
 		p.MachineID = host.ID
 
-		logger.WithField("name", p.Name).
-			WithField("version", p.Version).
-			WithField("install", time.Unix(p.InstallTimeUnix, 0)).
-			WithField("files", len(p.Files)).
-			Debug("Package found")
+		// logger.WithField("name", p.Name).
+		// 	WithField("version", p.Version).
+		// 	WithField("install", time.Unix(p.InstallTimeUnix, 0)).
+		// 	WithField("files", len(p.Files)).
+		// 	Debug("Package found")
 
 		pkgs = append(pkgs, p)
 		// here we can have issues if the packages already exist

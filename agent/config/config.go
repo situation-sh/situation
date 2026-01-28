@@ -13,6 +13,7 @@ var (
 	Agent   [16]byte = DefaultAgent()
 	Version          = "0.0.0"
 	Commit           = ""
+	Module           = ""
 )
 
 func DefaultAgent() [16]byte {

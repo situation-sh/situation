@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
+	"github.com/situation-sh/situation/agent/config"
 )
 
 var logger = &logrus.Logger{
@@ -65,22 +67,50 @@ func getLevelString(level logrus.Level) string {
 	}
 }
 
-func (f *ModuleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	d := faint(fmt.Sprintf("%010.6f", entry.Time.Sub(f.start).Seconds()))
-	// msg := info(entry.Message)
-	level := getLevelString(entry.Level)
-	module := ""
+type kv struct {
+	key   string
+	value any
+}
+
+func extractData(entry *logrus.Entry) (string, string, []kv) {
+	others := make([]kv, 0)
+	module := "system"
 	if m, ok := entry.Data["module"]; ok {
-		module = fmt.Sprintf("%14s", m)
-	} else {
-		module = fmt.Sprintf("%14s", "system")
+		module = fmt.Sprintf("%s", m)
 	}
-	base := []string{d, level, faint(module), fmt.Sprintf("%-36s", entry.Message)}
 	for k, v := range entry.Data {
 		if k != "module" {
-			q := strconv.Quote(fmt.Sprintf("%v", v))
-			base = append(base, fmt.Sprintf("%s%s", faint(k+"="), q))
+			others = append(others, kv{key: k, value: v})
 		}
+	}
+	sort.Slice(others, func(i, j int) bool {
+		return others[i].key < others[j].key
+	})
+	loc := ""
+	if entry.Caller != nil {
+		loc = fmt.Sprintf("%s:%d", strings.TrimPrefix(entry.Caller.File, config.Module+"/"), entry.Caller.Line)
+		// others = append(others, kv{key: "loc", value: loc})
+		// others = append(others, kv{key: "file", value: strings.TrimPrefix(entry.Caller.File, config.Module+"/")})
+		// others = append(others, kv{key: "line", value: entry.Caller.Line})
+	}
+	return module, loc, others
+}
+
+func (f *ModuleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+
+	d := faint(fmt.Sprintf("%010.6f", entry.Time.Sub(f.start).Seconds()))
+
+	level := getLevelString(entry.Level)
+	module, loc, data := extractData(entry)
+
+	base := []string{d, level}
+	if loc != "" {
+		base = append(base, fmt.Sprintf("%-31s", loc))
+	}
+	base = append(base, faint(fmt.Sprintf("%13s", module)), fmt.Sprintf("%-36s", entry.Message))
+	for _, kv := range data {
+		q := strconv.Quote(fmt.Sprintf("%v", kv.value))
+		base = append(base, fmt.Sprintf("%s%s", faint(kv.key+"="), q))
 	}
 	s := strings.Join(append(base, "\n"), " ")
 	return []byte(s), nil

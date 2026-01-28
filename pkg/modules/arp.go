@@ -63,6 +63,12 @@ func (m *ARPModule) Run(ctx context.Context) error {
 	// then we bind all these neighbors to the same subnetwork if it is not
 	// the case yetS
 	for _, nic := range storage.GetMachineNICs(ctx, hostID) {
+		logger.
+			WithField("name", nic.Name).
+			WithField("mac", nic.MAC).
+			WithField("ip", nic.IP).
+			WithField("subnets", len(nic.Subnetworks)).
+			Debug("Looking at NIC subnetworks")
 		for _, network := range nic.Subnetworks {
 			if network == nil {
 				continue
@@ -145,7 +151,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 		err = storage.DB().
 			NewInsert().
 			Model(&newNICS). // id are scanned automatically (https://bun.uptrace.dev/guide/query-insert.html#bulk-insert)
-			On("CONFLICT DO UPDATE").
+			On("CONFLICT (id) DO UPDATE").
 			Set("updated_at = CURRENT_TIMESTAMP").
 			Set("mac = EXCLUDED.mac").
 			Set("ip = EXCLUDED.ip").
@@ -158,7 +164,6 @@ func (m *ARPModule) Run(ctx context.Context) error {
 			return err
 		}
 
-		// fmt.Println("nicSubnetMapper:", nicSubnetMapper)
 		// create links between NICs and subnetworks
 		links := make([]models.NetworkInterfaceSubnet, 0)
 		for _, nic := range newNICS {
@@ -174,18 +179,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 					links = append(links, link)
 				}
 			}
-			// for _, network := range nic.Subnetworks {
-			// 	// key := fmt.Sprintf("%v,%v", network.NetworkCIDR, nic.MAC)
-			// 	key := fmt.Sprintf("%v,%v", nic.MAC, network.ID)
-			// 	fmt.Println("key:", key)
-			// 	if _, ok := nicSubnetMapper[key]; ok {
-			// 		link := models.NetworkInterfaceSubnet{
-			// 			NetworkInterfaceID: nic.ID,
-			// 			SubnetworkID:       network.ID,
-			// 		}
-			// 		links = append(links, link)
-			// 	}
-			// }
+
 		}
 		// fmt.Println("LINKS:", links)
 		if len(links) == 0 {

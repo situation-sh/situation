@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/situation-sh/situation/pkg/models"
 	"github.com/uptrace/bun"
@@ -25,6 +26,7 @@ type BunStorage struct {
 	agent   string
 	onError func(error)
 	cache   Cache
+	dialect dialect.Name
 }
 
 func newStorage(db *bun.DB, agent string, onError func(error)) *BunStorage {
@@ -43,6 +45,7 @@ func newStorage(db *bun.DB, agent string, onError func(error)) *BunStorage {
 		agent:   agent,
 		onError: onError,
 		cache:   Cache{HostID: -1},
+		dialect: db.Dialect().Name(),
 	}
 }
 
@@ -79,7 +82,11 @@ func NewSQLiteBunStorage(dataSourceName string, agent string, onError func(error
 
 // NewPostgresBunStorage creates a new BunStorage instance using PostgreSQL.
 func NewPostgresBunStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
-	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dataSourceName)))
+	connector := pgdriver.NewConnector(
+		pgdriver.WithDSN(dataSourceName),
+		pgdriver.WithDialTimeout(6*time.Second),
+	)
+	sqldb := sql.OpenDB(connector)
 	db := bun.NewDB(sqldb, pgdialect.New())
 	if err := db.Ping(); err != nil {
 		return nil, err

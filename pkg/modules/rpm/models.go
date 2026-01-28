@@ -79,8 +79,8 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 		return out
 	case RPM_STRING_TYPE:
 		n := uint32(0)
-		lens := len(store)
-		if lens <= 0xffffffff {
+		lens := int64(len(store))
+		if lens <= int64(0xffffffff) {
 			n = uint32(lens)
 		}
 		i := off

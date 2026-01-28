@@ -12,6 +12,7 @@ import (
 
 	netroute "github.com/libp2p/go-netroute"
 	"github.com/situation-sh/situation/pkg/models"
+	"github.com/situation-sh/situation/pkg/store"
 	"github.com/situation-sh/situation/pkg/utils"
 )
 
@@ -46,28 +47,53 @@ func (m *HostNetworkModule) Dependencies() []string {
 	return []string{"host-basic"}
 }
 
+func buildMACHostNICMap(ctx context.Context, storage *store.BunStorage) map[string]*models.NetworkInterface {
+	hostNICs := storage.GetHostNICs(ctx)
+	macNICMap := make(map[string]*models.NetworkInterface)
+	for _, nic := range hostNICs {
+		mac := strings.ToLower(nic.MAC)
+		macNICMap[mac] = nic
+	}
+	return macNICMap
+}
+
+func hashNICSubnet(ns *models.NetworkInterfaceSubnet) string {
+	return fmt.Sprintf("%v-%v", ns.NetworkInterface.MAC, ns.Subnetwork.NetworkCIDR)
+}
+
 func (m *HostNetworkModule) Run(ctx context.Context) error {
 	logger := getLogger(ctx, m)
 	storage := getStorage(ctx)
 
 	hostID := storage.GetHostID(ctx)
+	macNICMap := buildMACHostNICMap(ctx, storage)
 
-	nics := make([]models.NetworkInterface, 0)
-	subnets := make([]models.Subnetwork, 0)
-	subnetNICMapper := make(map[string]bool)
+	nics := make([]*models.NetworkInterface, 0)
+	subnets := make([]*models.Subnetwork, 0)
+	// subnetNICMapper := make(map[string]bool)
+	uniqueLinks := make(map[string]*models.NetworkInterfaceSubnet)
 
 	ifaces, err := getInterfaces()
 	if err != nil {
 		return fmt.Errorf("error while getting network interfaces: %v", err)
 	}
 
+	// var nic *models.NetworkInterface
 	// create nics
 	for _, iface := range ifaces {
-		nic := models.NetworkInterface{MachineID: hostID}
+		nic := &models.NetworkInterface{MachineID: hostID}
+		// try to find existing nic by MAC address
+		mac := iface.HardwareAddr.String()
+		if n, exists := macNICMap[mac]; exists {
+			nic = n
+		} else {
+			// create a new one
+
+		}
 		// name
 		nic.Name = iface.Name
 		// mac
-		nic.MAC = iface.HardwareAddr.String()
+		nic.MAC = mac
 
 		// flags (NEW!)
 		nic.SetFlags(iface.Flags)
@@ -76,18 +102,12 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 		entry := logger.
 			WithField("name", nic.Name).
 			WithField("mac", nic.MAC)
-		// nic gw
+		// main nic gateway (to go outside)
 		_, gwIP, err := gatewayWithSrc(iface.HardwareAddr, nil)
 		if err == nil {
 			nic.Gateway = gwIP.String()
 			entry = entry.WithField("gateway", nic.Gateway)
 		}
-
-		// gateway
-		// if index == iface.Index {
-		// 	nic.Gateway = gw.String()
-		// 	entry = entry.WithField("gateway", nic.Gateway)
-		// }
 
 		entry.Info("Network Interface found on host")
 
@@ -99,6 +119,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 		}
 
 		for _, addr := range addrs {
+			// addr is *net.IPNet or *net.IPAddr
 			ip, ipnet, err := net.ParseCIDR(addr.String())
 			// ignore
 			if err != nil {
@@ -106,7 +127,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 			}
 
 			ms := utils.MaskSize(ipnet)
-			s := models.Subnetwork{
+			s := &models.Subnetwork{
 				NetworkCIDR: ipnet.String(),
 				NetworkAddr: ipnet.IP.String(),
 				MaskSize:    ms,
@@ -123,49 +144,49 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 			} else {
 				nic.IP = append(nic.IP, ip.String())
 			}
-			// logger.
-			// 	WithField("name", nic.Name).
-			// 	WithField("ip", nic.IP).
-			// 	// WithField("mask_size", nic.MaskSize).
-			// 	Info("IP address found on host")
 
+			entry := logger.
+				WithField("name", nic.Name).
+				WithField("ip", ip)
 			if ip4 := ip.To4(); ip4 != nil {
 				// IPv4 case
-				logger.
-					WithField("name", nic.Name).
-					WithField("ip", ip).
-					Info("IPv4 address found on host")
-
+				entry.Info("IPv4 address found on host")
 				s.IPVersion = 4
 			} else {
 				// IPv6 case
-				logger.
-					WithField("name", nic.Name).
-					WithField("ip", ip).
-					Info("IPv6 address found on host")
-
+				entry.Info("IPv6 address found on host")
 				s.IPVersion = 6
 			}
 
 			// ignore 127.0.0.1 || fe80:
 			if ip.IsLoopback() || ip.IsLinkLocalUnicast() {
 				continue
-
 			}
 
 			// otherwise map
 			subnets = append(subnets, s)
-			key := fmt.Sprintf("%v,%v", s.NetworkCIDR, nic.MAC)
-			subnetNICMapper[key] = true
+
+			//
+			link := &models.NetworkInterfaceSubnet{
+				NetworkInterface: nic,
+				Subnetwork:       s,
+			}
+			key := hashNICSubnet(link)
+			// fmt.Println(key)
+			if _, exists := uniqueLinks[key]; !exists {
+				uniqueLinks[key] = link
+			}
+			// links[hashNICSubnet(link)] = link
+			// key := hashNICSubnet()
+			// key := fmt.Sprintf("%v,%v", s.NetworkCIDR, nic.MAC)
+			// subnetNICMapper[key] = true
 		}
 
 		// add the NIC
 		nics = append(nics, nic)
-		// machine.NICS = append(machine.NICS, &nic)
 	}
 
 	// create subnets
-	// sout := make([]models.Subnetwork, 0)
 	err = storage.DB().
 		NewInsert().
 		Model(&subnets).
@@ -178,29 +199,72 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 
 	// fmt.Println("NICS to insert:", nics)
 	// nout := make([]models.NetworkInterface, 0)
-	err = storage.DB().NewInsert().
-		Model(&nics).
-		On("CONFLICT (machine_id, name) DO UPDATE").
-		Set("mac = EXCLUDED.mac").
-		Set("ip = EXCLUDED.ip").
-		Set("gateway = EXCLUDED.gateway").
-		Set("flags = EXCLUDED.flags").
-		Set("updated_at = CURRENT_TIMESTAMP").
-		Scan(ctx)
+	toCreate := make([]*models.NetworkInterface, 0)
+	toUpdate := make([]*models.NetworkInterface, 0)
+	for _, nic := range nics {
+		if nic.ID <= 0 {
+			toCreate = append(toCreate, nic)
+		} else {
+			toUpdate = append(toUpdate, nic)
+		}
+	}
+
+	// insert new nics (handle conflict on ip if NIC was replaced but kept same IP)
+	if len(toCreate) > 0 {
+		err = storage.DB().
+			NewInsert().
+			Model(&toCreate).
+			On("CONFLICT (ip) DO UPDATE").
+			Set("name = EXCLUDED.name").
+			Set("mac = EXCLUDED.mac").
+			Set("gateway = EXCLUDED.gateway").
+			Set("flags = EXCLUDED.flags").
+			Set("machine_id = EXCLUDED.machine_id").
+			Set("updated_at = CURRENT_TIMESTAMP").
+			Returning("*").
+			Scan(ctx)
+		if err != nil {
+			return fmt.Errorf("unable to insert new NICs: %v", err)
+		}
+	}
+
+	// update existing nics
+	if len(toUpdate) > 0 {
+		err = storage.DB().
+			NewUpdate().
+			Model(&toUpdate).
+			Bulk(). // see https://bun.uptrace.dev/guide/query-update.html#bulk-update
+			Scan(ctx)
+		for _, nic := range toUpdate {
+			fmt.Printf("%+v\n", nic)
+		}
+		if err != nil {
+			return fmt.Errorf("unable to update existing NICs: %v", err)
+		}
+	}
+
+	// err = storage.DB().NewInsert().
+	// 	Model(&nics).
+	// 	On("CONFLICT (id) DO UPDATE").
+	// 	Set("name = EXCLUDED.name").
+	// 	Set("mac = EXCLUDED.mac").
+	// 	Set("ip = EXCLUDED.ip").
+	// 	Set("gateway = EXCLUDED.gateway").
+	// 	Set("flags = EXCLUDED.flags").
+	// 	Set("updated_at = CURRENT_TIMESTAMP").
+	// 	Scan(ctx)
 
 	// update nics with subnetID
-	links := make([]models.NetworkInterfaceSubnet, 0)
-	for _, subnet := range subnets {
-		for _, nic := range nics {
-			key := fmt.Sprintf("%v,%v", subnet.NetworkCIDR, nic.MAC)
-			if _, ok := subnetNICMapper[key]; ok {
-				link := models.NetworkInterfaceSubnet{
-					NetworkInterfaceID: nic.ID,
-					SubnetworkID:       subnet.ID,
-				}
-				links = append(links, link)
-			}
-		}
+	links := make([]*models.NetworkInterfaceSubnet, 0)
+	for _, link := range uniqueLinks {
+		link.SubnetworkID = link.Subnetwork.ID
+		link.NetworkInterfaceID = link.NetworkInterface.ID
+		links = append(links, link)
+		logger.
+			WithField("mac", link.NetworkInterface.MAC).
+			WithField("name", link.NetworkInterface.Name).
+			WithField("subnet", link.Subnetwork.NetworkCIDR).
+			Debug("Linking NIC to Subnet")
 	}
 
 	// insert links
@@ -213,6 +277,11 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("unable to insert network interface - subnetwork links: %v", err)
 		}
+		logger.
+			WithField("links", len(links)).
+			Info("Inserted NIC <-> Subnet links")
+	} else {
+		logger.Warn("No NIC <-> Subnet links to insert")
 	}
 
 	return err

@@ -57,7 +57,7 @@ type NetworkInterface struct {
 	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
 
 	// Has-many relationship
-	Subnetworks []*Subnetwork `bun:"m2m:network_interface_subnets,join:Subnetwork=NetworkInterface"`
+	Subnetworks []*Subnetwork `bun:"m2m:network_interface_subnets,join:NetworkInterface=Subnetwork"`
 
 	// Many-to-many relationship via ApplicationEndpoint join table
 	Applications []*Application `bun:"m2m:application_endpoints,join:NetworkInterface=Application" json:"applications,omitempty" jsonschema:"description=list of applications associated with this network interface"`

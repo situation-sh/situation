@@ -6,14 +6,12 @@ package modules
 
 import (
 	"context"
+	"fmt"
 	"net"
-	"os"
 	"strings"
 
-	"github.com/cakturk/go-netstat/netstat"
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/situation-sh/situation/pkg/models"
-	"github.com/situation-sh/situation/pkg/store"
 )
 
 func init() {
@@ -53,200 +51,137 @@ func (m *FingerprintModule) Run(ctx context.Context) error {
 	storage := getStorage(ctx)
 	agent := getAgent(ctx)
 
-	// Collect local fingerprint data
-	query, err := collectFingerprintQuery(agent)
-	if err != nil {
-		logger.WithError(err).Warn("Failed to collect local fingerprint")
-		return err
-	}
-
-	logger.
-		WithField("host_id", query.HostID).
-		WithField("macs", query.MACs).
-		WithField("ips", query.IPs).
-		WithField("hostname", query.Hostname).
-		WithField("ports", len(query.Ports)).
-		Debug("Local fingerprint collected")
-
-	// Try to find a matching machine in the database
-	match, err := storage.FindMachineByFingerprint(ctx, query)
-	if err != nil {
-		logger.WithError(err).Warn("Failed to search for fingerprint match")
-		// Don't fail the module, just continue without matching
-	}
-
-	if match != nil {
-		logger.
-			WithField("machine_id", match.Machine.ID).
-			WithField("score", match.Score).
-			WithField("definitive", match.IsDefinitive).
-			WithField("matched_on", match.MatchedOn).
-			Info("Found matching machine in database, claiming it")
-
-		// Claim this machine by setting the agent (if not already set)
-		if match.Machine.Agent != agent {
-			_, err := storage.DB().
+	machine := models.Machine{Agent: agent}
+	// first try with host ID
+	if info, err := host.Info(); err == nil {
+		err = storage.DB().
+			NewSelect().
+			Model(&machine).
+			Where("host_id = ?", info.HostID).
+			Scan(ctx)
+		if err == nil && machine.ID != 0 {
+			storage.SetHostID(machine.ID)
+			// update the machine with the given agent
+			machine.Agent = agent
+			_, err = storage.DB().
 				NewUpdate().
-				Model((*models.Machine)(nil)).
-				Where("id = ?", match.Machine.ID).
+				Model(&machine).
+				Where("id = ?", machine.ID).
 				Set("agent = ?", agent).
 				Set("updated_at = CURRENT_TIMESTAMP").
 				Exec(ctx)
+			// here we prefer return an error if the update fails
+			return err
 
-			if err != nil {
-				logger.WithError(err).Error("Failed to claim machine")
-				return err
-			}
+		} else {
+			logger.
+				WithError(err).
+				Debug("Fail to get machine by host ID")
 		}
-
-		// Update cache so other modules use the correct host ID
-		storage.SetHostID(match.Machine.ID)
-
-		logger.
-			WithField("machine_id", match.Machine.ID).
-			WithField("agent", agent).
-			WithField("score", match.Score).
-			Info("Successfully claimed existing machine")
 	} else {
-		logger.Info("No matching machine found, a new host will be created")
+		logger.
+			WithError(err).
+			Warn("Fail to retrieve host infos")
 	}
 
-	return nil
-}
+	// then try with agent ID
+	err := storage.DB().
+		NewSelect().
+		Model(&machine).
+		Where("agent = ?", agent).
+		Scan(ctx)
+	if err == nil && machine.ID != 0 {
+		logger.
+			WithField("machine_id", machine.ID).
+			Info("Found machine by agent ID, claiming it")
 
-// collectFingerprintQuery gathers identifiers from the local machine
-func collectFingerprintQuery(agent string) (*store.FingerprintQuery, error) {
-	query := &store.FingerprintQuery{
-		Agent: agent,
-		MACs:  make([]string, 0),
-		IPs:   make([]string, 0),
-		Ports: make([]uint16, 0),
+		// update cache so other modules use the correct host ID
+		storage.SetHostID(machine.ID)
+	} else {
+		logger.
+			WithError(err).
+			Debug("Fail to get machine by agent ID")
 	}
 
-	// Get hostname
-	if h, err := os.Hostname(); err == nil {
-		query.Hostname = h
-	}
-
-	// Get HostID (system UUID)
-	if info, err := host.Info(); err == nil {
-		query.HostID = info.HostID
-	}
-
-	// Get network interfaces
+	// now try with nics
 	ifaces, err := net.Interfaces()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, iface := range ifaces {
-		// Skip interfaces that are down
-		if (iface.Flags & net.FlagUp) == 0 {
-			continue
-		}
-
-		// Skip loopback
-		if (iface.Flags & net.FlagLoopback) != 0 {
-			continue
-		}
-
-		// Skip virtual interfaces (veth, virbr, etc.)
-		if strings.HasPrefix(iface.Name, "veth") ||
-			strings.HasPrefix(iface.Name, "virbr") ||
-			strings.Contains(iface.Name, "qemu") {
-			continue
-		}
-
-		// Collect MAC address
-		if len(iface.HardwareAddr) > 0 {
-			mac := iface.HardwareAddr.String()
-			if mac != "" {
-				query.MACs = append(query.MACs, mac)
+	if err == nil {
+		for _, iface := range ifaces {
+			mac := strings.ToLower(iface.HardwareAddr.String())
+			if mac == "" {
+				// do not try to detect without MAC
+				continue
 			}
-		}
-
-		// Collect IP addresses
-		addrs, err := iface.Addrs()
-		if err != nil {
-			continue
-		}
-
-		for _, addr := range addrs {
-			ip, _, err := net.ParseCIDR(addr.String())
+			addrs, err := iface.Addrs()
 			if err != nil {
+				// do not try to detect without addresses
+				continue
+			}
+			ips := make([]string, 0)
+			for _, addr := range addrs {
+				if ip, _, err := net.ParseCIDR(addr.String()); err == nil {
+					// skip loopback and link-local addresses
+					if ip.IsLoopback() || ip.IsLinkLocalUnicast() {
+						continue
+					}
+					ips = append(ips, ip.String())
+				}
+			}
+			if len(ips) == 0 {
+				// do not try to detect without IP
 				continue
 			}
 
-			// Skip loopback and link-local addresses
-			if ip.IsLoopback() || ip.IsLinkLocalUnicast() {
-				continue
-			}
+			nics := storage.GetNICByMACAndIPs(ctx, mac, ips)
+			if len(nics) == 1 {
+				// single candidate found (ouf!)
+				nic := nics[0]
+				if nic.Machine == nil || nic.Machine.ID == 0 {
+					// create empty machine
+					err = storage.DB().
+						NewInsert().
+						Model(&machine).
+						Scan(ctx)
+					if err != nil {
+						// we prefer returning an error here
+						return fmt.Errorf("fail to create host machine: %v", err)
+					}
+					logger.WithField("id", machine.ID).Info("Host machine created")
 
-			query.IPs = append(query.IPs, ip.String())
+					storage.SetHostID(machine.ID)
+
+					// link nic to machine
+					nic.Machine = &machine
+					nic.MachineID = machine.ID
+					_, err = storage.DB().
+						NewUpdate().
+						Model(nic).
+						Where("id = ?", nic.ID).
+						Set("machine_id = ?", machine.ID).
+						Set("updated_at = CURRENT_TIMESTAMP").
+						Exec(ctx)
+					if err != nil {
+						return fmt.Errorf("fail to link nic to machine: %v", err)
+					}
+					logger.
+						WithField("mac", nic.MAC).
+						WithField("ips", nic.IP).
+						WithField("machine_id", machine.ID).
+						Info("Host machine linked to NIC")
+					return nil
+
+				}
+			} else if len(nics) == 0 {
+				// no candidate found
+				// host-basic will create it later
+				logger.
+					WithField("mac", mac).
+					WithField("ips", ips).
+					Warn("no matching network interfaces found in database")
+			}
 		}
 	}
 
-	// Get listening ports (TCP and UDP)
-	query.Ports = collectListeningPorts()
-
-	return query, nil
-}
-
-// collectListeningPorts returns a list of TCP/UDP ports the machine is listening on
-func collectListeningPorts() []uint16 {
-	ports := make(map[uint16]bool)
-
-	// Filter for listening sockets only
-	listenFilter := func(e *netstat.SockTabEntry) bool {
-		return e.State == netstat.Listen
-	}
-
-	// Collect TCP listening ports
-	if entries, err := netstat.TCPSocks(listenFilter); err == nil {
-		for _, entry := range entries {
-			if entry.LocalAddr.Port > 0 {
-				ports[entry.LocalAddr.Port] = true
-			}
-		}
-	}
-
-	// Collect TCP6 listening ports
-	if entries, err := netstat.TCP6Socks(listenFilter); err == nil {
-		for _, entry := range entries {
-			if entry.LocalAddr.Port > 0 {
-				ports[entry.LocalAddr.Port] = true
-			}
-		}
-	}
-
-	// IGNORE UDP for the moment
-	// UDP doesn't have "listen" state, but we can get bound ports
-	// by accepting all entries (UDP sockets are always "unconnected" when listening)
-	// udpFilter := func(e *netstat.SockTabEntry) bool {
-	// 	return true
-	// }
-
-	// if entries, err := netstat.UDPSocks(udpFilter); err == nil {
-	// 	for _, entry := range entries {
-	// 		if entry.LocalAddr.Port > 0 {
-	// 			ports[entry.LocalAddr.Port] = true
-	// 		}
-	// 	}
-	// }
-
-	// if entries, err := netstat.UDP6Socks(udpFilter); err == nil {
-	// 	for _, entry := range entries {
-	// 		if entry.LocalAddr.Port > 0 {
-	// 			ports[entry.LocalAddr.Port] = true
-	// 		}
-	// 	}
-	// }
-
-	// Convert map to slice
-	result := make([]uint16, 0, len(ports))
-	for port := range ports {
-		result = append(result, port)
-	}
-
-	return result
+	logger.Warn("No matching machine found")
+	return nil
 }

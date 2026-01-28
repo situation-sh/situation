@@ -120,10 +120,10 @@ func buildLocalIPToNICsMap(ctx context.Context, storage *store.BunStorage, machi
 	localNICS := storage.GetMachineNICs(ctx, machineID)
 	for _, nic := range localNICS {
 		for _, ip := range nic.IP {
-			ipMapper[ip] = append(ipMapper[ip], &nic)
+			ipMapper[ip] = append(ipMapper[ip], nic)
 		}
-		ipMapper["0.0.0.0"] = append(ipMapper["0.0.0.0"], &nic)
-		ipMapper["::"] = append(ipMapper["::"], &nic)
+		ipMapper["0.0.0.0"] = append(ipMapper["0.0.0.0"], nic)
+		ipMapper["::"] = append(ipMapper["::"], nic)
 	}
 	return ipMapper
 }
@@ -431,12 +431,14 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 		apps = append(apps, app)
 	}
 	// create or update applications
-	err = storage.DB().NewInsert().Model(&apps).
-		On("CONFLICT (machine_id, name, pid) DO UPDATE").
-		Set("updated_at = CURRENT_TIMESTAMP").
-		Scan(ctx)
-	if err != nil {
-		return fmt.Errorf("fail to insert applications: %w", err)
+	if len(apps) > 0 {
+		err = storage.DB().NewInsert().Model(&apps).
+			On("CONFLICT (machine_id, name, pid) DO UPDATE").
+			Set("updated_at = CURRENT_TIMESTAMP").
+			Scan(ctx)
+		if err != nil {
+			return fmt.Errorf("fail to insert applications: %w", err)
+		}
 	}
 
 	// put user-apps in a slice
@@ -450,12 +452,14 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 		userApps = append(userApps, ua)
 	}
 	// create or update user-apps
-	err = storage.DB().NewInsert().Model(&userApps).
-		On("CONFLICT (user_id, application_id) DO UPDATE").
-		Set("updated_at = CURRENT_TIMESTAMP").
-		Scan(ctx)
-	if err != nil {
-		return fmt.Errorf("fail to insert user-applications: %w", err)
+	if len(userApps) > 0 {
+		err = storage.DB().NewInsert().Model(&userApps).
+			On("CONFLICT (user_id, application_id) DO UPDATE").
+			Set("updated_at = CURRENT_TIMESTAMP").
+			Scan(ctx)
+		if err != nil {
+			return fmt.Errorf("fail to insert user-applications: %w", err)
+		}
 	}
 
 	// put endpoints in a slice
@@ -466,12 +470,14 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 		endpoints = append(endpoints, endpoint)
 	}
 	// create or update endpoints
-	err = storage.DB().NewInsert().Model(&endpoints).
-		On("CONFLICT (port, protocol, addr, network_interface_id) DO UPDATE").
-		Set("updated_at = CURRENT_TIMESTAMP").
-		Scan(ctx)
-	if err != nil {
-		return fmt.Errorf("fail to insert application endpoints: %w", err)
+	if len(endpoints) > 0 {
+		err = storage.DB().NewInsert().Model(&endpoints).
+			On("CONFLICT (port, protocol, addr, network_interface_id) DO UPDATE").
+			Set("updated_at = CURRENT_TIMESTAMP").
+			Scan(ctx)
+		if err != nil {
+			return fmt.Errorf("fail to insert application endpoints: %w", err)
+		}
 	}
 
 	// set endpoint IDs in flows and deduplicate

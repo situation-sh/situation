@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/situation-sh/situation/pkg/models"
@@ -45,7 +44,7 @@ func (m *HostBasicModule) Name() string {
 }
 
 func (m *HostBasicModule) Dependencies() []string {
-	return nil
+	return []string{"fingerprint"}
 }
 
 func (m *HostBasicModule) Run(ctx context.Context) error {
@@ -87,7 +86,8 @@ func (m *HostBasicModule) Run(ctx context.Context) error {
 		// here the returned uptime is in seconds
 		if info.Uptime <= 0x7fffffffffffffff {
 			// machine.Uptime = time.Duration(info.Uptime) * time.Second
-			query = query.Set("uptime = ?", time.Duration(info.Uptime)*time.Second)
+			// query = query.Set("uptime = ?", time.Duration(info.Uptime)*time.Second)
+			query = query.Set("uptime = ?", info.Uptime) // put directly into seconds
 		}
 
 	} else {

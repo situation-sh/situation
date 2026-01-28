@@ -40,6 +40,10 @@ var app = &cli.Command{
 		&taskCmd,
 	},
 	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
+		level := logrus.Level(logLevel)
+		if level == logrus.DebugLevel {
+			logger.SetReportCaller(true)
+		}
 		logger.SetLevel(logrus.Level(logLevel))
 		return ctx, nil
 	},

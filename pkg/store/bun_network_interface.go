@@ -7,8 +7,8 @@ import (
 )
 
 // GetMachineNICs returns all network interfaces for a given machine.
-func (s *BunStorage) GetMachineNICs(ctx context.Context, machineID int64) []models.NetworkInterface {
-	nics := make([]models.NetworkInterface, 0)
+func (s *BunStorage) GetMachineNICs(ctx context.Context, machineID int64) []*models.NetworkInterface {
+	nics := make([]*models.NetworkInterface, 0)
 	err := s.db.
 		NewSelect().
 		Model(&nics).
@@ -215,4 +215,38 @@ func (s *BunStorage) GetNeighorNICS(ctx context.Context) ([]*models.NetworkInter
 		Where("machine_id IS NULL OR machine_id <> ?", hostID).
 		Scan(ctx)
 	return nics, err
+}
+
+func (s *BunStorage) GetHostNICs(ctx context.Context) []*models.NetworkInterface {
+	hostID := s.GetHostID(ctx)
+	nics := make([]*models.NetworkInterface, 0)
+	err := s.db.
+		NewSelect().
+		Model(&nics).
+		Where("machine_id = ?", hostID).
+		Relation("Machine").
+		Relation("Subnetworks").
+		Scan(ctx)
+	if err != nil {
+		s.onError(err)
+		return nil
+	}
+	return nics
+}
+
+func (s *BunStorage) GetNICByMACAndIPs(ctx context.Context, mac string, ips []string) []*models.NetworkInterface {
+	nics := make([]*models.NetworkInterface, 0)
+	err := s.db.
+		NewSelect().
+		Model(&nics).
+		Where("mac = ?", mac).
+		Where(s.OVERLAP("ip"), s.ARRAY(ips)).
+		Relation("Machine").
+		Relation("Subnetworks").
+		Scan(ctx)
+	if err != nil {
+		s.onError(err)
+		return nil
+	}
+	return nics
 }
