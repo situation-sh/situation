@@ -1,6 +1,6 @@
 module github.com/situation-sh/situation
 
-go 1.25.1
+go 1.25.6
 
 tool github.com/jondot/goweight
 
@@ -10,8 +10,8 @@ require (
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/fatih/color v1.18.0
-	github.com/getsentry/sentry-go v0.41.0
-	github.com/getsentry/sentry-go/logrus v0.41.0
+	github.com/getsentry/sentry-go v0.42.0
+	github.com/getsentry/sentry-go/logrus v0.42.0
 	github.com/go-ole/go-ole v1.3.0
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/google/uuid v1.6.0
