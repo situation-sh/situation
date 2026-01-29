@@ -1,7 +1,6 @@
 package arp
 
 import (
-	"fmt"
 	"net"
 	"testing"
 )
@@ -11,7 +10,7 @@ func TestGetARPTable(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Printf("%+v\n", table)
+	t.Logf("%+v\n", table)
 }
 
 func TestFilterARPTableByNetwork(t *testing.T) {

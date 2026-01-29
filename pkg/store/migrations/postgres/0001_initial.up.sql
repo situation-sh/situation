@@ -1,180 +1,25 @@
-CREATE TABLE IF NOT EXISTS "subnetworks" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "network_cidr" VARCHAR NOT NULL,
-    "network_addr" text NOT NULL,
-    "mask_size" BIGINT NOT NULL,
-    "ip_version" BIGINT NOT NULL,
-    "gateway" text,
-    "vlan_id" BIGINT,
-    PRIMARY KEY ("id"),
-    UNIQUE ("network_cidr")
-);
-CREATE TABLE IF NOT EXISTS "machines" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "hostname" VARCHAR,
-    "host_id" VARCHAR,
-    "arch" VARCHAR,
-    "platform" VARCHAR,
-    "distribution" VARCHAR,
-    "distribution_version" VARCHAR,
-    "distribution_family" VARCHAR,
-    "uptime" BIGINT,
-    "agent" VARCHAR,
-    "cpe" VARCHAR,
-    "chassis" VARCHAR,
-    "parent_machine_id" BIGINT,
-    PRIMARY KEY ("id"),
-    UNIQUE ("agent")
-);
-CREATE TABLE IF NOT EXISTS "cpus" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "model_name" VARCHAR,
-    "vendor" VARCHAR,
-    "cores" BIGINT,
-    "machine_id" BIGINT NOT NULL,
-    PRIMARY KEY ("id"),
-    UNIQUE ("machine_id")
-);
-CREATE TABLE IF NOT EXISTS "gpus" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "index" BIGINT,
-    "product" VARCHAR,
-    "vendor" VARCHAR,
-    "driver" VARCHAR,
-    "machine_id" BIGINT NOT NULL,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "machine_gpu_index" UNIQUE ("index", "machine_id")
-);
-CREATE TABLE IF NOT EXISTS "disks" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "name" VARCHAR,
-    "model" VARCHAR,
-    "size" BIGINT,
-    "type" VARCHAR,
-    "controller" VARCHAR,
-    "partitions" json,
-    "machine_id" BIGINT NOT NULL,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "machine_disk_name" UNIQUE ("name", "machine_id")
-);
-CREATE TABLE IF NOT EXISTS "network_interfaces" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "name" VARCHAR,
-    "mac" VARCHAR,
-    "mac_vendor" VARCHAR,
-    "ip" VARCHAR [],
-    "gateway" VARCHAR,
-    "flags" json,
-    "machine_id" BIGINT,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "machine_nic_name" UNIQUE ("name", "machine_id"),
-    CONSTRAINT "subnet_nic_ip" UNIQUE ("ip"),
-    CONSTRAINT "subnet_nic_mac" UNIQUE ("mac")
-);
-CREATE INDEX IF NOT EXISTS "network_interface_ip" ON "network_interfaces" ("ip");
-CREATE INDEX IF NOT EXISTS "network_interface_mac" ON "network_interfaces" ("mac");
-CREATE TABLE IF NOT EXISTS "network_interface_subnets" (
-    "network_interface_id" BIGINT NOT NULL,
-    "subnetwork_id" BIGINT NOT NULL,
-    PRIMARY KEY ("network_interface_id", "subnetwork_id")
-);
-CREATE TABLE IF NOT EXISTS "packages" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "name" VARCHAR,
-    "version" VARCHAR,
-    "vendor" VARCHAR,
-    "manager" VARCHAR,
-    "install_time_unix" BIGINT,
-    "files" JSONB,
-    "machine_id" BIGINT NOT NULL,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "name_version_machine_id" UNIQUE ("name", "version", "machine_id")
-);
-CREATE TABLE IF NOT EXISTS "applications" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "name" VARCHAR,
-    "args" JSONB,
-    "pid" BIGINT,
-    "version" VARCHAR,
-    "protocol" VARCHAR,
-    "config" json,
-    "cpe" VARCHAR,
-    "machine_id" BIGINT NOT NULL,
-    "package_id" BIGINT,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "machine_app_name_pid" UNIQUE ("name", "pid", "machine_id")
-);
-CREATE TABLE IF NOT EXISTS "application_endpoints" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "port" integer,
-    "protocol" VARCHAR,
-    "addr" VARCHAR,
-    "tls" json,
-    "fingerprints" json,
-    "application_protocols" JSONB,
-    "application_id" BIGINT,
-    "network_interface_id" BIGINT,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "port_protocol_addr_network_interface_id" UNIQUE (
-        "port",
-        "protocol",
-        "addr",
-        "network_interface_id"
-    )
-);
-CREATE TABLE IF NOT EXISTS "users" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "uid" VARCHAR NOT NULL,
-    "gid" VARCHAR,
-    "name" VARCHAR,
-    "username" VARCHAR,
-    "domain" VARCHAR,
-    "machine_id" BIGINT NOT NULL,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "machine_user" UNIQUE ("uid", "machine_id")
-);
-CREATE TABLE IF NOT EXISTS "user_applications" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "user_id" BIGINT NOT NULL,
-    "application_id" BIGINT NOT NULL,
-    "linux" VARCHAR,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "user_application" UNIQUE ("user_id", "application_id")
-);
-CREATE TABLE IF NOT EXISTS "flows" (
-    "id" BIGSERIAL NOT NULL,
-    "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp,
-    "src_application_id" BIGINT,
-    "src_network_interface_id" BIGINT,
-    "src_addr" VARCHAR,
-    "dst_endpoint_id" BIGINT,
-    PRIMARY KEY ("id"),
-    CONSTRAINT "flow_src_dst" UNIQUE (
-        "src_application_id",
-        "src_addr",
-        "dst_endpoint_id"
-    )
-);
+CREATE TABLE IF NOT EXISTS "subnetworks" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "network_cidr" VARCHAR NOT NULL, "network_addr" text NOT NULL, "mask_size" BIGINT NOT NULL, "ip_version" BIGINT NOT NULL, "gateway" text, "vlan_id" BIGINT, PRIMARY KEY ("id"), UNIQUE ("network_cidr"));
+
+CREATE TABLE IF NOT EXISTS "machines" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "hostname" VARCHAR, "host_id" VARCHAR, "arch" VARCHAR, "platform" VARCHAR, "distribution" VARCHAR, "distribution_version" VARCHAR, "distribution_family" VARCHAR, "uptime" BIGINT, "agent" VARCHAR, "cpe" VARCHAR, "chassis" VARCHAR, "parent_machine_id" BIGINT, PRIMARY KEY ("id"), UNIQUE ("agent"));
+
+CREATE TABLE IF NOT EXISTS "cpus" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "model_name" VARCHAR, "vendor" VARCHAR, "cores" BIGINT, "machine_id" BIGINT NOT NULL, PRIMARY KEY ("id"), UNIQUE ("machine_id"));
+
+CREATE TABLE IF NOT EXISTS "gpus" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "index" BIGINT, "product" VARCHAR, "vendor" VARCHAR, "driver" VARCHAR, "machine_id" BIGINT NOT NULL, PRIMARY KEY ("id"), CONSTRAINT "machine_gpu_index" UNIQUE ("index", "machine_id"));
+
+CREATE TABLE IF NOT EXISTS "disks" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "name" VARCHAR, "model" VARCHAR, "size" BIGINT, "type" VARCHAR, "controller" VARCHAR, "partitions" json, "machine_id" BIGINT NOT NULL, PRIMARY KEY ("id"), CONSTRAINT "machine_disk_name" UNIQUE ("name", "machine_id"));
+
+CREATE TABLE IF NOT EXISTS "network_interfaces" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "name" VARCHAR, "mac" VARCHAR, "mac_vendor" VARCHAR, "ip" VARCHAR[], "gateway" VARCHAR, "flags" json, "machine_id" BIGINT, PRIMARY KEY ("id"), CONSTRAINT "machine_nic_name" UNIQUE ("name", "machine_id"));
+
+CREATE TABLE IF NOT EXISTS "network_interface_subnets" ("network_interface_id" BIGINT NOT NULL, "subnetwork_id" BIGINT NOT NULL, "mac_cidr" VARCHAR NOT NULL, PRIMARY KEY ("network_interface_id", "subnetwork_id"), UNIQUE ("mac_cidr"));
+
+CREATE TABLE IF NOT EXISTS "packages" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "name" VARCHAR, "version" VARCHAR, "vendor" VARCHAR, "manager" VARCHAR, "install_time_unix" BIGINT, "files" JSONB, "machine_id" BIGINT NOT NULL, PRIMARY KEY ("id"), CONSTRAINT "name_version_machine_id" UNIQUE ("name", "version", "machine_id"));
+
+CREATE TABLE IF NOT EXISTS "applications" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "name" VARCHAR, "args" JSONB, "pid" BIGINT, "version" VARCHAR, "protocol" VARCHAR, "config" json, "cpe" VARCHAR, "machine_id" BIGINT NOT NULL, "package_id" BIGINT, PRIMARY KEY ("id"), CONSTRAINT "machine_app_name_pid" UNIQUE ("name", "pid", "machine_id"));
+
+CREATE TABLE IF NOT EXISTS "application_endpoints" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "port" integer, "protocol" VARCHAR, "addr" VARCHAR, "tls" json, "fingerprints" json, "application_protocols" JSONB, "application_id" BIGINT, "network_interface_id" BIGINT, PRIMARY KEY ("id"), CONSTRAINT "port_protocol_addr_network_interface_id" UNIQUE ("port", "protocol", "addr", "network_interface_id"));
+
+CREATE TABLE IF NOT EXISTS "users" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "uid" VARCHAR NOT NULL, "gid" VARCHAR, "name" VARCHAR, "username" VARCHAR, "domain" VARCHAR, "machine_id" BIGINT NOT NULL, PRIMARY KEY ("id"), CONSTRAINT "machine_user" UNIQUE ("uid", "machine_id"));
+
+CREATE TABLE IF NOT EXISTS "user_applications" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "user_id" BIGINT NOT NULL, "application_id" BIGINT NOT NULL, "linux" VARCHAR, PRIMARY KEY ("id"), CONSTRAINT "user_application" UNIQUE ("user_id", "application_id"));
+
+CREATE TABLE IF NOT EXISTS "flows" ("id" BIGSERIAL NOT NULL, "created_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "updated_at" TIMESTAMPTZ NOT NULL DEFAULT current_timestamp, "src_application_id" BIGINT, "src_network_interface_id" BIGINT, "src_addr" VARCHAR, "dst_endpoint_id" BIGINT, PRIMARY KEY ("id"), CONSTRAINT "flow_src_dst" UNIQUE ("src_application_id", "src_addr", "dst_endpoint_id"));

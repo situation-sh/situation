@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"sort"
 
@@ -102,4 +103,27 @@ func (s *BunStorage) FindPackageByApplicationName(ctx context.Context, hostId in
 	}
 
 	return &pkg, nil
+}
+
+func (s *BunStorage) BuildFileAppMap(ctx context.Context) (map[string][]*models.Application, error) {
+	appMap := make(map[string][]*models.Application)
+	hostID := s.GetHostID(ctx)
+	if hostID <= 0 {
+		return appMap, fmt.Errorf("no host found")
+	}
+
+	hostApps := make([]*models.Application, 0)
+	err := s.db.
+		NewSelect().
+		Model(&hostApps).
+		Where("machine_id = ?", hostID).
+		Scan(ctx)
+	if err != nil {
+		return appMap, fmt.Errorf("fail to fetch host apps: %v", err)
+	}
+
+	for _, app := range hostApps {
+		appMap[app.Name] = append(appMap[app.Name], app)
+	}
+	return appMap, nil
 }

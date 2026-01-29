@@ -80,7 +80,7 @@ func (s *BunStorage) GetNICByIPOnSubnet(ctx context.Context, ip string, subnetID
 }
 
 // GetNICByMACOrIPOnSubnet returns a network interface by its MAC or IP address on a specific subnet.
-func (s *BunStorage) GetNICByMACOrIPOnSubnet(ctx context.Context, mac string, ip string, subnetID int64) *models.NetworkInterface {
+func (s *BunStorage) GetNICByMACOrIPOnSubnet(ctx context.Context, mac string, ip string, subnetID int64) (*models.NetworkInterface, error) {
 	var nic models.NetworkInterface
 	err := s.db.
 		NewSelect().
@@ -92,10 +92,9 @@ func (s *BunStorage) GetNICByMACOrIPOnSubnet(ctx context.Context, mac string, ip
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
-		s.onError(err)
-		return nil
+		return nil, err
 	}
-	return &nic
+	return &nic, err
 }
 
 // GetNICsByIPs returns all network interfaces that have at least one IP

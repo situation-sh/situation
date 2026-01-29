@@ -73,12 +73,16 @@ func (s *BunStorage) Migrate(ctx context.Context) error {
 
 	// select the right migrations subdirectory
 	var fsys fs.FS
-	var err error
-	if s.db.Dialect().Name() == dialect.PG {
-		fsys, err = fs.Sub(postgresMigrations, "migrations/postgres")
-	} else {
+	var err error = nil
+	switch s.db.Dialect().Name() {
+	case dialect.SQLite:
 		fsys, err = fs.Sub(sqliteMigrations, "migrations/sqlite")
+	case dialect.PG:
+		fsys, err = fs.Sub(postgresMigrations, "migrations/postgres")
+	default:
+		return fmt.Errorf("unsupported database dialect: %s", s.db.Dialect().Name())
 	}
+
 	if err != nil {
 		return fmt.Errorf("failed to get migrations subdirectory: %w", err)
 	}
@@ -86,6 +90,7 @@ func (s *BunStorage) Migrate(ctx context.Context) error {
 	if err := migrations.Discover(fsys); err != nil {
 		return fmt.Errorf("failed to discover migrations: %w", err)
 	}
+
 	migrator := migrate.NewMigrator(s.db, migrations)
 	if err := migrator.Init(ctx); err != nil {
 		return fmt.Errorf("failed to init migrator: %w", err)

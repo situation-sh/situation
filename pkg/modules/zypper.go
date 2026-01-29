@@ -8,12 +8,9 @@ package modules
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	rpmdb "github.com/knqyf263/go-rpmdb/pkg"
 	"github.com/situation-sh/situation/pkg/models"
-	"github.com/situation-sh/situation/pkg/utils"
 )
 
 const (
@@ -49,6 +46,29 @@ func (m *ZypperModule) Dependencies() []string {
 	return []string{"host-basic", "netstat"}
 }
 
+func (m *ZypperModule) Run(ctx context.Context) error {
+	logger := getLogger(ctx, m)
+	storage := getStorage(ctx)
+
+	pm, err := NewAbstractPackageManager(ctx, ZYPPER_BASED_FAMILIES, logger, storage)
+	switch e := err.(type) {
+	case nil:
+		// continue
+	case *notApplicableError:
+		// module not applicable, skip
+		return nil
+	default:
+		return e
+	}
+
+	generator, err := m.packageGenerator()
+	if err != nil {
+		return err
+	}
+
+	return pm.Run(generator)
+}
+
 func parseZypperPackage(pkg *rpmdb.PackageInfo) *models.Package {
 	p := models.Package{
 		Name:            pkg.Name,
@@ -71,49 +91,118 @@ func parseZypperPackage(pkg *rpmdb.PackageInfo) *models.Package {
 	return &p
 }
 
-func (m *ZypperModule) Run(ctx context.Context) error {
-	logger := getLogger(ctx, m)
-	storage := getStorage(ctx)
-	// machine := m.store.GetHost()
-	// if !utils.Includes([]string{"sles", "opensuse-leap", "opensuse-tumbleweed"}, machine.Distribution) {
-	// 	msg := fmt.Sprintf("The distribution %s is not supported", machine.Distribution)
-	// 	m.logger.Warn(msg)
-	// 	return &notApplicableError{msg: msg}
-	// }
-	host := storage.GetOrCreateHost(ctx)
-	if host == nil || host.ID == 0 {
-		return fmt.Errorf("no host found in storage")
-	}
-
-	if host.DistributionFamily != "" && !utils.Includes(ZYPPER_BASED_FAMILIES, host.DistributionFamily) {
-		logger.
-			WithField("distribution_family", host.DistributionFamily).
-			Warn("Module skipped for this distribution")
-		return nil
-	}
-
+func (m *ZypperModule) packageGenerator() (<-chan *models.Package, error) {
 	db, err := rpmdb.Open(zypperDefaultPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pkgs, err := db.ListPackages()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	all := make([]*models.Package, 0)
-	for _, pkg := range pkgs {
-		p := parseZypperPackage(pkg)
-		logger.WithField("name", p.Name).
-			WithField("version", p.Version).
-			WithField("install", time.Unix(p.InstallTimeUnix, 0)).
-			WithField("files", len(p.Files)).
-			Debug("Package found")
+	c := make(chan *models.Package)
 
-		all = append(all, p)
-	}
+	go func() {
+		for _, pkg := range pkgs {
+			p := parseZypperPackage(pkg)
+			c <- p
+		}
+		close(c)
+	}()
 
-	err = storage.InsertPackages(ctx, all)
-	return err
+	return c, nil
 }
+
+// machine := m.store.GetHost()
+// if !utils.Includes([]string{"sles", "opensuse-leap", "opensuse-tumbleweed"}, machine.Distribution) {
+// 	msg := fmt.Sprintf("The distribution %s is not supported", machine.Distribution)
+// 	m.logger.Warn(msg)
+// 	return &notApplicableError{msg: msg}
+// }
+// host := storage.GetOrCreateHost(ctx)
+// if host == nil || host.ID == 0 {
+// 	return fmt.Errorf("no host found in storage")
+// }
+
+// if host.DistributionFamily != "" && !utils.Includes(ZYPPER_BASED_FAMILIES, host.DistributionFamily) {
+// 	logger.
+// 		WithField("distribution_family", host.DistributionFamily).
+// 		Warn("Module skipped for this distribution")
+// 	return nil
+// }
+
+// appsToUpdate := make([]*models.Application, 0)
+// fileAppMap, err := storage.BuildFileAppMap(ctx)
+// if err != nil {
+// 	// only warn here
+// 	logger.Warn(err)
+// }
+
+// db, err := rpmdb.Open(zypperDefaultPath)
+// if err != nil {
+// 	return err
+// }
+
+// pkgs, err := db.ListPackages()
+// if err != nil {
+// 	return err
+// }
+
+// all := make([]*models.Package, 0)
+// for _, pkg := range pkgs {
+// 	p := parseZypperPackage(pkg)
+// 	logger.WithField("name", p.Name).
+// 		WithField("version", p.Version).
+// 		WithField("install", time.Unix(p.InstallTimeUnix, 0)).
+// 		WithField("files", len(p.Files)).
+// 		Debug("Package found")
+
+// 	// look at the files and update apps accordingly
+// 	for _, f := range p.Files {
+// 		if _, exists := fileAppMap[f]; exists {
+// 			for _, app := range fileAppMap[f] {
+// 				// link package to app (not the ID yet)
+// 				app.Package = p
+// 				appsToUpdate = append(appsToUpdate, app)
+// 				logger.
+// 					WithField("app", app.Name).
+// 					WithField("file", f).
+// 					Debug("Linking application to package")
+// 			}
+// 		}
+// 	}
+
+// 	all = append(all, p)
+// }
+
+// err = storage.InsertPackages(ctx, pkgs)
+// if err != nil {
+// 	return err
+// }
+
+// if len(appsToUpdate) > 0 {
+// 	// update apps ID
+// 	for _, app := range appsToUpdate {
+// 		if app.Package != nil && app.Package.ID != 0 {
+// 			app.PackageID = app.Package.ID
+// 		}
+// 	}
+
+// 	_, err = storage.DB().
+// 		NewUpdate().
+// 		Model(&appsToUpdate).
+// 		Column("package_id").
+// 		Bulk().
+// 		Exec(ctx)
+
+// 	logger.
+// 		WithField("apps", len(appsToUpdate)).
+// 		Info("Applications linked to packages")
+
+// 	return err
+// }
+
+// return nil
+// }

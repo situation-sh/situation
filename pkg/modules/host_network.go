@@ -86,9 +86,6 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 		mac := iface.HardwareAddr.String()
 		if n, exists := macNICMap[mac]; exists {
 			nic = n
-		} else {
-			// create a new one
-
 		}
 		// name
 		nic.Name = iface.Name
@@ -204,7 +201,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 	for _, nic := range nics {
 		if nic.ID <= 0 {
 			toCreate = append(toCreate, nic)
-		} else {
+		} else if !utils.Includes(toUpdate, nic) {
 			toUpdate = append(toUpdate, nic)
 		}
 	}
@@ -214,14 +211,14 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 		err = storage.DB().
 			NewInsert().
 			Model(&toCreate).
-			On("CONFLICT (ip) DO UPDATE").
-			Set("name = EXCLUDED.name").
-			Set("mac = EXCLUDED.mac").
-			Set("gateway = EXCLUDED.gateway").
-			Set("flags = EXCLUDED.flags").
-			Set("machine_id = EXCLUDED.machine_id").
-			Set("updated_at = CURRENT_TIMESTAMP").
-			Returning("*").
+			// On("CONFLICT (ip) DO UPDATE").
+			// Set("name = EXCLUDED.name").
+			// Set("mac = EXCLUDED.mac").
+			// Set("gateway = EXCLUDED.gateway").
+			// Set("flags = EXCLUDED.flags").
+			// Set("machine_id = EXCLUDED.machine_id").
+			// Set("updated_at = CURRENT_TIMESTAMP").
+			// Returning("*").
 			Scan(ctx)
 		if err != nil {
 			return fmt.Errorf("unable to insert new NICs: %v", err)
@@ -233,11 +230,12 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 		err = storage.DB().
 			NewUpdate().
 			Model(&toUpdate).
+			Column("name", "mac", "ip", "flags", "gateway", "machine_id").
 			Bulk(). // see https://bun.uptrace.dev/guide/query-update.html#bulk-update
 			Scan(ctx)
-		for _, nic := range toUpdate {
-			fmt.Printf("%+v\n", nic)
-		}
+		// for _, nic := range toUpdate {
+		// 	fmt.Printf("%+v\n", nic)
+		// }
 		if err != nil {
 			return fmt.Errorf("unable to update existing NICs: %v", err)
 		}
@@ -259,6 +257,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 	for _, link := range uniqueLinks {
 		link.SubnetworkID = link.Subnetwork.ID
 		link.NetworkInterfaceID = link.NetworkInterface.ID
+		link.MACSubnet = fmt.Sprintf("%s/%d", link.NetworkInterface.MAC, link.Subnetwork.ID)
 		links = append(links, link)
 		logger.
 			WithField("mac", link.NetworkInterface.MAC).

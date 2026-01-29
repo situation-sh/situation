@@ -56,6 +56,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 	}
 
 	newNICS := make([]*models.NetworkInterface, 0)
+	toupdateNICS := make([]*models.NetworkInterface, 0)
 	nicSubnetMapper := make(map[string]int64) // key: mac+subnetID, value: nicID
 	// fmt.Println(storage.GetMachineNICs(ctx, hostID))
 
@@ -110,7 +111,15 @@ func (m *ARPModule) Run(ctx context.Context) error {
 				// var obj *models.NetworkInterface
 				mac := entry.MAC.String()
 				ip := entry.IP.String()
-				obj := storage.GetNICByMACOrIPOnSubnet(ctx, mac, ip, network.ID)
+				obj, err := storage.GetNICByMACOrIPOnSubnet(ctx, mac, ip, network.ID)
+				if err != nil {
+					logger.
+						WithField("mac", mac).
+						WithField("ip", ip).
+						WithField("subnet", network.NetworkCIDR).
+						WithError(err).
+						Debug("no candidate found")
+				}
 
 				if obj != nil {
 					if obj.MAC != mac {
@@ -119,18 +128,19 @@ func (m *ARPModule) Run(ctx context.Context) error {
 					if !utils.Includes(obj.IP, ip) {
 						obj.IP = append(obj.IP, ip)
 					}
-					newNICS = append(newNICS, obj)
+					toupdateNICS = append(toupdateNICS, obj)
+					// here the nic is already in the right subnetwork
 				} else {
 					// here we do not have the nic yet
 					nic := models.NetworkInterface{
 						MAC:   mac,
-						IP:    []string{entry.IP.String()},
+						IP:    []string{ip},
 						Flags: models.NetworkInterfaceFlags{Up: true},
 					}
 
 					newNICS = append(newNICS, &nic)
+
 					key := fmt.Sprintf("%v,%v", mac, ip)
-					// fmt.Println("key0:", key)
 					nicSubnetMapper[key] = network.ID
 
 					logger.WithField("mac", entry.MAC).
@@ -142,6 +152,24 @@ func (m *ARPModule) Run(ctx context.Context) error {
 
 		}
 	}
+	if len(toupdateNICS) > 0 {
+		logger.
+			WithField("nics", len(toupdateNICS)).
+			Info("Updating existing NICs from ARP table")
+		_, err = storage.DB().
+			NewUpdate().
+			Model(&toupdateNICS).
+			Column("mac", "ip").
+			Bulk().
+			Exec(ctx)
+		if err != nil {
+			logger.
+				WithError(err).
+				WithField("nics", len(toupdateNICS)).
+				Error("Cannot update existing NICs")
+			return err
+		}
+	}
 
 	if len(newNICS) > 0 {
 		logger.
@@ -151,10 +179,10 @@ func (m *ARPModule) Run(ctx context.Context) error {
 		err = storage.DB().
 			NewInsert().
 			Model(&newNICS). // id are scanned automatically (https://bun.uptrace.dev/guide/query-insert.html#bulk-insert)
-			On("CONFLICT (id) DO UPDATE").
-			Set("updated_at = CURRENT_TIMESTAMP").
-			Set("mac = EXCLUDED.mac").
-			Set("ip = EXCLUDED.ip").
+			// On("CONFLICT (id, ip) DO UPDATE").
+			// Set("updated_at = CURRENT_TIMESTAMP").
+			// Set("mac = EXCLUDED.mac").
+			// Set("ip = EXCLUDED.ip").
 			Scan(ctx)
 		if err != nil {
 			logger.
@@ -175,6 +203,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 					link := models.NetworkInterfaceSubnet{
 						NetworkInterfaceID: nic.ID,
 						SubnetworkID:       subnetID,
+						MACSubnet:          fmt.Sprintf("%s/%d", nic.MAC, subnetID),
 					}
 					links = append(links, link)
 				}
@@ -183,7 +212,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 		}
 		// fmt.Println("LINKS:", links)
 		if len(links) == 0 {
-			logger.Warn("No NIC - subnetwork links to insert")
+			logger.Warn("No NIC <-> subnetwork links to insert")
 			return nil
 		}
 
@@ -195,13 +224,13 @@ func (m *ARPModule) Run(ctx context.Context) error {
 		if err != nil {
 			logger.WithError(err).
 				WithField("links", len(links)).
-				Error("Cannot insert new NIC - subnetwork links")
+				Error("Cannot insert new NIC <-> subnetwork links")
 			return err
 		}
 		logger.
 			WithField("nics", len(newNICS)).
 			WithField("links", len(links)).
-			Info("Inserted new NICs and NIC - subnetwork links")
+			Info("Inserted NIC <-> subnetwork links")
 
 	} else {
 		logger.Info("No new NICs found from ARP table")

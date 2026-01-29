@@ -15,6 +15,9 @@ type NetworkInterfaceSubnet struct {
 
 	SubnetworkID int64       `bun:"subnetwork_id,pk"`
 	Subnetwork   *Subnetwork `bun:"rel:belongs-to,join:subnetwork_id=id"`
+
+	// dummy columns for constraints only
+	MACSubnet string `bun:"mac_cidr,unique,notnull,nullzero"`
 }
 
 type Subnetwork struct {

@@ -122,6 +122,7 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 		links = append(links, models.NetworkInterfaceSubnet{
 			NetworkInterfaceID: nic.ID,
 			SubnetworkID:       subnetID,
+			MACSubnet:          fmt.Sprintf("%s/%d", nic.MAC, subnetID),
 		})
 	}
 
@@ -167,7 +168,7 @@ func (m *PingModule) Run(ctx context.Context) error {
 		switch ones := network.MaskSize; {
 		case ones < 20:
 			// ignore to large network (here /20 at most)
-			logger.Warnf("Ignoring %s (network is too wide)", ipnet)
+			logger.WithField("subnet", ipnet).Warn("Ignoring network (too wide)")
 			continue
 		case ones > 24:
 			// if the network is restricted. We try to
@@ -180,7 +181,7 @@ func (m *PingModule) Run(ctx context.Context) error {
 
 		}
 
-		logger.Infof("Pinging %s", ipnet)
+		logger.WithField("subnet", ipnet).Info("Pinging subnet")
 		if err := pingSubnetwork(ctx, ipnet, network.ID, nil, logger, storage); err != nil {
 			logger.
 				WithField("network", network).

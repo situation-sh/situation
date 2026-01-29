@@ -3,7 +3,6 @@
 package arp
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/situation-sh/situation/pkg/utils"
@@ -50,7 +49,6 @@ func GetARPTable() ([]ARPEntry, error) {
 		neighs, err := netlink.NeighList(attr.Index, 0)
 		if err != nil {
 			// just print the error and continue
-			fmt.Println(err)
 			continue
 		}
 		for _, neigh := range neighs {
