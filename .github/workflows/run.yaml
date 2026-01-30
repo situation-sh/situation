@@ -43,19 +43,25 @@ jobs:
         with:
           name: situation-linux
           path: bin
-      - name: Export binary name
+      - name: Prepare binary
         run: |
-          echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - name: Run the binary
-        run: |
-          chmod +x ${{ env.SITUATION }}
-          ${{ env.SITUATION }} --file --file-path=linux.json
+          cp bin/situation-*-amd64-linux ./situation
+          chmod +x ./situation
+      - name: Run
+        run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
+      # - name: Export binary name
+      #   run: |
+      #     echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
+      #     cat $GITHUB_ENV
+      # - name: Run the binary
+      #   run: |
+      #     chmod +x ${{ env.SITUATION }}
+      #     ${{ env.SITUATION }} --file --file-path=linux.json
       - name: Upload linux results
         uses: actions/upload-artifact@v4
         with:
           name: linux-results
-          path: linux.json
+          path: db.sqlite
           retention-days: 1
 
   windows:
@@ -67,16 +73,19 @@ jobs:
         with:
           name: situation-windows
           path: bin
-      - name: Export binary name
+      # - name: Export binary name
+      #   run: |
+      #     echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
+      #     Get-Content $env:GITHUB_ENV
+      - name: Prepare binary
         run: |
-          echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
-          Get-Content $env:GITHUB_ENV
+          cp bin/situation-*-amd64-windows.exe ./situation.exe
       - name: Run the binary
         run: |
-          & $env:SITUATION --file --file-path=windows.json
+          .\situation.exe run --log-level=5 --db=db.sqlite --fail-fast
       - name: Upload windows results
         uses: actions/upload-artifact@v4
         with:
           name: windows-results
-          path: windows.json
+          path: db.sqlite
           retention-days: 1

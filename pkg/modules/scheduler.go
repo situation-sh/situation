@@ -13,6 +13,7 @@ type Scheduler struct {
 	logger            logrus.FieldLogger
 	ignoreMissingDeps bool
 	supervisor        SchedulerSupervisor
+	failfast          bool
 }
 
 type SchedulerSupervisor interface {
@@ -50,6 +51,12 @@ func WithSupervisor(supervisor SchedulerSupervisor) SchedulerOptions {
 	}
 }
 
+func FailFast() SchedulerOptions {
+	return func(s *Scheduler) {
+		s.failfast = true
+	}
+}
+
 // NewScheduler inits a scheduler
 func NewScheduler(modules []Module, options ...SchedulerOptions) *Scheduler {
 	s := Scheduler{
@@ -57,6 +64,7 @@ func NewScheduler(modules []Module, options ...SchedulerOptions) *Scheduler {
 		logger:            dummyLogger(),
 		ignoreMissingDeps: false,
 		supervisor:        &DummySchedulerSupervisor{},
+		failfast:          false,
 	}
 	for _, m := range modules {
 		s.modules[m.Name()] = m
@@ -202,6 +210,9 @@ func (s *Scheduler) Run(ctx context.Context) error {
 
 		err := t.Run(ctx)
 		if err != nil {
+			if s.failfast {
+				return err
+			}
 			s.logger.
 				WithField("module", t.Name()).
 				WithError(err).

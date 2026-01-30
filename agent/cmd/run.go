@@ -22,6 +22,7 @@ var (
 	ignoreMissingDeps bool   = false
 	db                string = ":memory:"
 	sentryDSN         string = ""
+	failfast          bool   = false
 )
 
 var runCmd = cli.Command{
@@ -66,6 +67,11 @@ func populateConfig() {
 		&sentryDSN,
 		puzzle.WithDescription("Sentry DSN for tracing"),
 		puzzle.WithEnvName("SENTRY_DSN"),
+	)
+	config.DefineVar(
+		"fail-fast",
+		&failfast,
+		puzzle.WithDescription("Return directly when a module fails"),
 	)
 
 	// config from modules
@@ -157,11 +163,14 @@ func runAction(ctx context.Context, cmd *cli.Command) error {
 
 	newCtx := modules.SituationContext(ctx, config.AgentString(), storage, loggerInterface)
 
-	// sceduler opts
+	// scheduler opts
 	opts = append(opts,
 		modules.WithLogger(loggerInterface),
 		modules.IgnoreMissingDeps(ignoreMissingDeps),
 	)
+	if failfast {
+		opts = append(opts, modules.FailFast())
+	}
 
 	// filter modules
 	mods := make([]modules.Module, 0)
