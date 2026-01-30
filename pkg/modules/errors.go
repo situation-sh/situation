@@ -2,13 +2,15 @@ package modules
 
 import "fmt"
 
-type mustBeRunAsRootError struct {
-	uid string
-}
+// import "fmt"
 
-func (err *mustBeRunAsRootError) Error() string {
-	return fmt.Sprintf("It must be run as root (current uid: %s)", err.uid)
-}
+// type mustBeRunAsRootError struct {
+// 	uid string
+// }
+
+// func (err *mustBeRunAsRootError) Error() string {
+// 	return fmt.Sprintf("It must be run as root (current uid: %s)", err.uid)
+// }
 
 // notApplicableError is raised when a module is not applicable
 // to a given target

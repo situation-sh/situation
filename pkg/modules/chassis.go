@@ -46,7 +46,7 @@ func (m *ChassisModule) Run(ctx context.Context) error {
 
 	if !isSocketAvailable() {
 		logger.Warn("dbus system bus is not available, skipping")
-		return &notApplicableError{"dbus system bus is not available"}
+		return nil
 	}
 
 	hostID := storage.GetHostID(ctx)
