@@ -80,11 +80,14 @@ func (a *AbstractPackageManager) Run(generator <-chan *models.Package) error {
 		packages = append(packages, p)
 	}
 
+	if len(packages) == 0 {
+		logger.Warn("no package found")
+		return nil
+	}
+
 	err = storage.InsertPackages(ctx, packages)
 	if err != nil {
-		return err
-	} else {
-		logger.WithField("packages", len(packages)).Info("Packages found")
+		return fmt.Errorf("unable to insert new packages: %v", err)
 	}
 
 	if len(appsToUpdate) > 0 {
