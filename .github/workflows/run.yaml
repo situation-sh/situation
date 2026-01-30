@@ -37,6 +37,24 @@ jobs:
   linux:
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          [
+            "debian:10",
+            "debian:12",
+            "ubuntu:22.04",
+            "ubuntu:24.04",
+            "fedora:40",
+            "fedora:42",
+            "rockylinux:8.9",
+            "rockylinux:9.3",
+            "alpine:3.18",
+            "alpine:3.21",
+            "opensuse/leap:15.6",
+          ]
+    container:
+      image: ${{ matrix.image }}
     steps:
       - name: Download linux binary
         uses: actions/download-artifact@v4

@@ -15,7 +15,6 @@ import (
 
 const (
 	zypperDefaultPath = "/var/lib/rpm/Packages.db"
-	ZYPPER
 )
 
 var ZYPPER_BASED_FAMILIES = []string{"suse"}
