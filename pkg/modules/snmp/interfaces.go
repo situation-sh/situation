@@ -28,7 +28,7 @@ type snmpInterface struct {
 }
 
 // gateway outputs the more generic IPv4 nexthop
-func (s *snmpInterface) gateway() net.IP {
+func (s *snmpInterface) gateway() string {
 
 	for _, route := range s.Routes {
 		// only IPv4 for this function
@@ -37,32 +37,24 @@ func (s *snmpInterface) gateway() net.IP {
 		}
 
 		if route.Type == 4 { // remote route
-			return route.NextHop
+			return route.NextHop.String()
 		}
 	}
 
-	return nil
+	return ""
 }
 
 func (s *snmpInterface) toNetworkInterface() *models.NetworkInterface {
 	nic := models.NetworkInterface{
 		Name:    s.Name,
-		MAC:     s.MAC,
-		IP:      nil,
-		IP6:     nil,
+		MAC:     s.MAC.String(),
+		IP:      make([]string, 0),
 		Gateway: s.gateway(),
 	}
 
 	// we take the first IPv4 and first IPv6
 	for _, n := range s.IP {
-		isIPv4 := (n.IP.To4() != nil)
-		if isIPv4 && nic.IP == nil { // IPv4
-			nic.IP = n.IP
-			nic.MaskSize, _ = n.Mask.Size()
-		} else if !isIPv4 && nic.IP6 == nil { // IPv6
-			nic.IP6 = n.IP
-			nic.Mask6Size, _ = n.Mask.Size()
-		}
+		nic.IP = append(nic.IP, n.IP.String())
 	}
 	return &nic
 }

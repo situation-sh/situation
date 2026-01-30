@@ -16,8 +16,9 @@ type TLS struct {
 	SignatureAlgorithm string    `json:"signature_algorithm,omitempty" jsonschema:"description=signature algorithm used to sign the certificate,example=SHA256withRSA"`
 	PublicKeyAlgorithm string    `json:"public_key_algorithm,omitempty" jsonschema:"description=public key algorithm used in the certificate,example=RSA,example=ECDSA"`
 	// Signature          string    `json:"signature,omitempty" jsonschema:"description=base64 encoded signature of the certificate"`
-	SHA1Fingerprint   string `json:"sha1_fingerprint,omitempty" jsonschema:"description=SHA1 fingerprint of the certificate,example=3A:5B:7C:8D:9E:0F:1A:2B:3C:4D:5E:6F:7A:8B:9C"`
-	SHA256Fingerprint string `json:"sha256_fingerprint,omitempty" jsonschema:"description=SHA256 fingerprint of the certificate,example=3A:5B:7C:8D:9E:0F:1A:2B:3C:4D"`
+	SHA1Fingerprint   string   `json:"sha1_fingerprint,omitempty" jsonschema:"description=SHA1 fingerprint of the certificate,example=3A:5B:7C:8D:9E:0F:1A:2B:3C:4D:5E:6F:7A:8B:9C"`
+	SHA256Fingerprint string   `json:"sha256_fingerprint,omitempty" jsonschema:"description=SHA256 fingerprint of the certificate,example=3A:5B:7C:8D:9E:0F:1A:2B:3C:4D"`
+	DNSNames          []string `json:"dns_names,omitempty" jsonschema:"description=list of DNS names included in the certificate,example=[\"www.example.com\",\"example.com\"]"`
 }
 
 type JA4 struct {
@@ -45,6 +46,8 @@ type ApplicationEndpoint struct {
 	TLS                  *TLS          `bun:"tls,type:json" json:"tls,omitempty" jsonschema:"description=TLS information if the endpoint is using TLS"`
 	Fingerprints         *Fingerprints `bun:"fingerprints,type:json" json:"fingerprints,omitempty" jsonschema:"description=application fingerprints"`
 	ApplicationProtocols []string      `bun:"application_protocols" json:"application_protocols,omitempty" jsonschema:"description=list of application layer protocols detected on this endpoint,example=[\"http\",\"http/2\"]"`
+
+	SaaS string `bun:"saas,nullzero" json:"saas,omitempty" jsonschema:"description=if the application is identified as a SaaS, the name of the SaaS,example=GitHub,example=Google Workspace"`
 
 	ApplicationID int64        `bun:"application_id,nullzero"`
 	Application   *Application `bun:"rel:belongs-to,join:application_id=id"`
