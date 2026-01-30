@@ -49,14 +49,6 @@ jobs:
           chmod +x ./situation
       - name: Run
         run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
-      # - name: Export binary name
-      #   run: |
-      #     echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
-      #     cat $GITHUB_ENV
-      # - name: Run the binary
-      #   run: |
-      #     chmod +x ${{ env.SITUATION }}
-      #     ${{ env.SITUATION }} --file --file-path=linux.json
       - name: Upload linux results
         uses: actions/upload-artifact@v4
         with:

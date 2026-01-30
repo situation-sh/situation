@@ -189,8 +189,9 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 	}
 
 	if runtime.GOOS == "linux" && u.Uid != "0" {
-		logger.Warnf("On Linux, the %s module must be run as root", m.Name())
-		return &mustBeRunAsRootError{uid: u.Uid}
+		logger.WithField("uid", u.Uid).Warn("The module must be run as root")
+		// logger.Warnf("On Linux, the %s module must be run as root", m.Name())
+		return nil
 	}
 
 	machine := storage.GetOrCreateHost(ctx)

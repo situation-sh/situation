@@ -9,6 +9,7 @@ package modules
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	_ "modernc.org/sqlite"
 
@@ -78,15 +79,15 @@ func (m *RPMModule) packageGenerator() (<-chan *models.Package, error) {
 		return nil, err
 	}
 
-	db, err := sql.Open("sqlite", file)
+	db, err := sql.Open("sqlite", "file:"+file+"?mode=ro&immutable=1")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to open %v: %w", file, err)
 	}
 
 	pkgRows, err := db.Query("SELECT hnum, blob FROM Packages")
 	// pkgRows, err := conn.QueryContext(ctx, "SELECT hnum, blob FROM Packages")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to query database: %w", err)
 	}
 
 	c := make(chan *models.Package)
