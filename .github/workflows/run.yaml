@@ -22,13 +22,13 @@ jobs:
       - name: Build all binaries
         run: make all
       - name: Upload linux binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v6
         with:
           name: situation-linux
           path: bin/situation-*-linux
           retention-days: 1
       - name: Upload windows binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v6
         with:
           name: situation-windows
           path: bin/situation-*-windows.exe
@@ -70,7 +70,7 @@ jobs:
       - name: Run again
         run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
       - name: Upload linux results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.image }}-results
           path: db.sqlite
@@ -95,7 +95,7 @@ jobs:
         run: |
           .\situation.exe run --log-level=5 --db=db.sqlite --fail-fast
       - name: Upload windows results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v6
         with:
           name: windows-results
           path: db.sqlite
