@@ -69,10 +69,13 @@ jobs:
         run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
       - name: Run again
         run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
+      - name: Artifact naming
+        id: artifact-naming
+        run: echo "name=$(echo '${{ matrix.image }}' | sed 's,:,-,g')" >> "$GITHUB_OUTPUT"
       - name: Upload linux results
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ matrix.image }}-results
+          name: ${{ steps.artifact-naming.outputs.name }}-results
           path: db.sqlite
           retention-days: 1
 
