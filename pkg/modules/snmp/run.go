@@ -1,6 +1,7 @@
 package snmp
 
 import (
+	"context"
 	"net"
 	"strings"
 	"sync"
@@ -18,7 +19,7 @@ func checkSNMP(g *gosnmp.GoSNMP) bool {
 	return true
 }
 
-func RunSingle(g *gosnmp.GoSNMP, m *models.Machine, wg *sync.WaitGroup, cerr chan error, logger logrus.FieldLogger, s store.Store) {
+func RunSingle(ctx context.Context, g *gosnmp.GoSNMP, m *models.Machine, wg *sync.WaitGroup, cerr chan error, logger logrus.FieldLogger, s *store.BunStorage) {
 	defer wg.Done()
 	if err := g.Connect(); err != nil {
 		cerr <- err
@@ -42,7 +43,7 @@ func RunSingle(g *gosnmp.GoSNMP, m *models.Machine, wg *sync.WaitGroup, cerr cha
 	// update remote machine by adding a remote port -------------------------
 	// udp/161
 	remoteIP := net.ParseIP(g.Target)
-	remote := s.GetMachineByIP(remoteIP)
+	remote := s.GetMachineByIP(ctx, remoteIP)
 	if remote != nil {
 		remote.GetOrCreateApplicationByEndpoint(
 			g.Port,
@@ -62,13 +63,13 @@ func RunSingle(g *gosnmp.GoSNMP, m *models.Machine, wg *sync.WaitGroup, cerr cha
 		}
 
 		// ignore iface without gateway (it may remove other internal interfaces)
-		if iface.gateway() == nil {
+		if iface.gateway() == "" {
 			continue
 		}
 
 		for _, nic := range m.NICS { // loop over all the machine's nic
 			// check MAC or Name match
-			if nic.Match(nil, iface.MAC) || nic.Name == iface.Name {
+			if nic.MAC == iface.MAC.String() || nic.Name == iface.Name {
 				match = true
 				nic0 := iface.toNetworkInterface()
 				// update
@@ -82,13 +83,13 @@ func RunSingle(g *gosnmp.GoSNMP, m *models.Machine, wg *sync.WaitGroup, cerr cha
 			logger = logger.WithField("name", nic.Name).
 				WithField("mac", nic.MAC)
 
-			if nic.IP != nil {
-				logger = logger.WithField("ip", nic.IP).WithField("mask_size", nic.MaskSize)
+			if len(nic.IP) > 0 {
+				logger = logger.WithField("ip", nic.IP)
 			}
 
-			if nic.IP6 != nil {
-				logger = logger.WithField("ip6", nic.IP6).WithField("mask6_size", nic.Mask6Size)
-			}
+			// if nic.IP6 != nil {
+			// 	logger = logger.WithField("ip6", nic.IP6).WithField("mask6_size", nic.Mask6Size)
+			// }
 			logger.Info("Network Interface found on network")
 		}
 	}

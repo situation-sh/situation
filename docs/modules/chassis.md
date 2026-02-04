@@ -5,9 +5,11 @@ macos: unknown
 root: unknown
 title: Chassis
 summary: "Fills host chassis information"
-date: 2025-09-24
+date: 2026-02-02
 filename: chassis.go
 std_imports:
+  - context
+  - fmt
   - os
 imports:
   - github.com/godbus/dbus/v5

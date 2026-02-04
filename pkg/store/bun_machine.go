@@ -15,7 +15,7 @@ func (s *BunStorage) GetHost(ctx context.Context) *models.Machine {
 		Model(machine).
 		Where("machine.agent = ?", s.agent).
 		Relation("CPU").
-		Relation("GPU").
+		Relation("GPUS").
 		Relation("Disks").
 		Relation("Packages").
 		Relation("NICS").

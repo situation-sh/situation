@@ -15,7 +15,14 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
-// SaaSModule identifies SaaS applications based on endpoints data
+// SaaSModule identifies SaaS applications from discovered endpoints.
+//
+// For each endpoint that has not been classified yet, the module runs a set
+// of pluggable detectors. Each detector matches endpoints by TLS DNS name
+// suffixes or IP address ranges to identify known SaaS providers (e.g.
+// GitHub, Outlook, Teams, SharePoint, Datadog, Sentry, Elastic, Anthropic).
+//
+// The first matching detector wins and the SaaS name is stored on the endpoint.
 type SaaSModule struct {
 	BaseModule
 
@@ -25,7 +32,7 @@ type SaaSModule struct {
 // Bind binds configuration options for the SaaS module
 // -> see config.Configurable interface
 func (m *SaaSModule) Bind(config *puzzle.Config) error {
-	if err := setDefault(config, m, "max_endpoints", &m.MaxEndpoints, "Maximum number of endpoints to process"); err != nil {
+	if err := setDefault(config, m, "max-endpoints", &m.MaxEndpoints, "Maximum number of endpoints to process"); err != nil {
 		return err
 	}
 	return nil

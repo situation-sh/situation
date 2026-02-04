@@ -3,11 +3,12 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: Host GPU
+title: HostGPU
 summary: "Retrieves basic information about GPU: index, vendor and product name."
-date: 2025-09-24
+date: 2026-02-02
 filename: host_gpu.go
 std_imports:
+  - context
   - fmt
 imports:
   - github.com/jaypipes/ghw

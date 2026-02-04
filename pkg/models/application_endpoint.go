@@ -64,3 +64,34 @@ func (ApplicationEndpoint) JSONSchemaExtend(schema *jsonschema.Schema) {
 		}
 	}
 }
+
+// EndpointPolicy defines policies applied to an ApplicationEndpoint
+// such as filtering or forwarding rules
+type EndpointPolicy struct {
+	bun.BaseModel `bun:"table:endpoint_policies"`
+
+	ID        int64     `bun:"id,pk,autoincrement"`
+	CreatedAt time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
+	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+
+	// The endpoint this policy applies to
+	EndpointID int64                `bun:"endpoint_id,notnull,unique:endpoint_action_src"`
+	Endpoint   *ApplicationEndpoint `bun:"rel:belongs-to,join:endpoint_id=id"`
+
+	// What happens to the traffic
+	// "accept", "drop", "reject", "forward"
+	Action string `bun:"action,unique:endpoint_action_src" json:"action"`
+
+	// Where the traffic comes from — use one or the other:
+	// For forwarding: the upstream endpoint (host:8080 -> container:80)
+	SrcEndpointID int64                `bun:"src_endpoint_id,nullzero,unique:endpoint_action_src"`
+	SrcEndpoint   *ApplicationEndpoint `bun:"rel:belongs-to,join:src_endpoint_id=id"`
+	// For filtering: a network source (CIDR), empty = any
+	SrcAddr string `bun:"src_addr,nullzero,unique:endpoint_action_src" json:"src_addr,omitempty"`
+
+	// Rule ordering (lower = matched first, matters for accept+drop combos)
+	Priority int `bun:"priority" json:"priority"`
+
+	// How this was discovered
+	Source string `bun:"source" json:"source"` // "docker", "iptables", "nftables", "ufw"
+}

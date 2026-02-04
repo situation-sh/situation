@@ -3,11 +3,12 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: Host CPU
+title: HostCPU
 summary: "Retrieves host CPU info: model, vendor and the number of cores."
-date: 2025-09-24
+date: 2026-02-02
 filename: host_cpu.go
 std_imports:
+  - context
   - fmt
   - strconv
 imports:

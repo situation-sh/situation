@@ -3,11 +3,13 @@ linux: true
 windows: true
 macos: unknown
 root: unknown
-title: Reverse Lookup
+title: ReverseLookup
 summary: "Tries to get a hostname attached to a local IP address"
-date: 2025-09-24
+date: 2026-02-02
 filename: reverse_lookup.go
 std_imports:
+  - context
+  - fmt
   - net
   - strings
 imports: []
@@ -21,6 +23,8 @@ ReverseLookupModule tries to get a hostname attached to a local IP address
 
 ### Details
 
+
+It basically calls [`net.LookupAddr`]([https://pkg.go.dev/net#LookupAddr](https://pkg.go.dev/net#LookupAddr)) that uses the host resolver to perform a reverse lookup for the given addresses.
 
 ### Dependencies
 

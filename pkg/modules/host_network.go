@@ -26,15 +26,20 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
-// HostNetworkModule retrieves basic newtork information about the host:
-// interfaces along with their mac, ip and mask (IPv4 and IPv6)
+// HostNetworkModule retrieves basic network information about the host:
+// interfaces along with their name, MAC address, IP addresses (IPv4 and IPv6),
+// subnet masks, and default gateway.
 //
-// It uses the [go] standard library.
+// It uses the [net] standard library and [go-netroute] for gateway detection.
 //
 // On Linux, it uses the Netlink API.
 // On Windows, it calls `GetAdaptersAddresses`.
 //
-// [go]: https://pkg.go.dev/net
+// Virtual interfaces (veth, qemu) are filtered out. The module also creates
+// subnetwork records and links each network interface to its subnets.
+//
+// [net]: https://pkg.go.dev/net
+// [go-netroute]: https://github.com/libp2p/go-netroute
 type HostNetworkModule struct {
 	BaseModule
 }
@@ -187,7 +192,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 	err = storage.DB().
 		NewInsert().
 		Model(&subnets).
-		On("CONFLICT (network_cidr) DO UPDATE").
+		On("CONFLICT (network_cidr,tag) DO UPDATE").
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Scan(ctx)
 	if err != nil {

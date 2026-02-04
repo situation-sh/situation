@@ -41,14 +41,15 @@ type NetworkInterface struct {
 	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
 
 	Name      string                `bun:"name,nullzero,unique:machine_nic_name" json:"name,omitempty" jsonschema:"description=name of the network interface,example=Ethernet,example=eno1,example=eth0"`
-	MAC       string                `bun:"mac,nullzero" json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d3,example=93:83:e4:15:39:b2,pattern=^([A-F0-9]{2}:){5}[A-F0-9]{2}$"`
+	MAC       string                `bun:"mac,nullzero,unique:machine_mac_tag" json:"mac,omitempty" jsonschema:"description=L2 MAC address of the interface,example=74:79:27:ea:55:d3,example=93:83:e4:15:39:b2,pattern=^([A-F0-9]{2}:){5}[A-F0-9]{2}$"`
 	MACVendor string                `bun:"mac_vendor,nullzero" json:"mac_vendor,omitempty" jsonschema:"description=vendor of the MAC address,example=Dell,example=Cisco,Systems,example=Intel"`
 	IP        []string              `bun:"ip,nullzero,array" json:"ip,omitempty" jsonschema:"description=IPv4 address of the interface (single IP assumed),type=string,format=ipv4,example=192.168.8.1,example=10.0.0.17"`
 	Gateway   string                `bun:"gateway,nullzero" json:"gateway,omitempty" jsonschema:"description=Gateway IPv4 address (main outgoing endpoint),type=string,format=ipv4,example=192.168.0.1,example=10.0.0.1"`
 	Flags     NetworkInterfaceFlags `bun:"flags,type:json" json:"flags,omitempty" jsonschema:"description=Network interface flags"`
+	Tag       string                `bun:"tag,unique:machine_mac_tag" json:"tag,omitempty" jsonschema:"description=Extra tag to identify the network interface,example=management,example=internal"`
 
 	// Belongs-to relationship
-	MachineID int64    `bun:"machine_id,unique:machine_nic_name,nullzero"` // we accpet null relationship to ease module dev
+	MachineID int64    `bun:"machine_id,unique:machine_nic_name,nullzero,unique:machine_mac_tag" json:"machine_id,omitempty" jsonschema:"description=ID of the machine this network interface belongs to"`
 	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
 
 	// Has-many relationship

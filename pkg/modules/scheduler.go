@@ -39,9 +39,9 @@ func WithLogger(logger logrus.FieldLogger) SchedulerOptions {
 	}
 }
 
-func IgnoreMissingDeps(skip bool) SchedulerOptions {
+func IgnoreMissingDeps() SchedulerOptions {
 	return func(s *Scheduler) {
-		s.ignoreMissingDeps = skip
+		s.ignoreMissingDeps = true
 	}
 }
 

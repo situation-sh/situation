@@ -32,6 +32,7 @@ var trackedModels = []interface{}{
 	(*models.User)(nil),
 	(*models.UserApplication)(nil),
 	(*models.Flow)(nil),
+	(*models.EndpointPolicy)(nil),
 }
 
 // GenerateSchema returns SQL CREATE TABLE statements for all tracked models

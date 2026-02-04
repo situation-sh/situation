@@ -5,21 +5,24 @@ macos: unknown
 root: false
 title: Ping
 summary: "Pings local networks to discover new hosts."
-date: 2025-09-24
+date: 2026-02-02
 filename: ping.go
 std_imports:
+  - context
+  - encoding/binary
   - fmt
   - net
-  - os/user
-  - regexp
-  - strconv
-  - strings
+  - os
   - sync
+  - syscall
   - time
+  - unsafe
 imports:
-  - github.com/lorenzosaino/go-sysctl
-  - github.com/prometheus-community/pro-bing
+  - github.com/asiffer/puzzle
   - github.com/sirupsen/logrus
+  - golang.org/x/net/icmp
+  - golang.org/x/net/ipv4
+  - golang.org/x/sys/windows
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}

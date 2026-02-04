@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS "endpoint_policies";
+
 DROP TABLE IF EXISTS "flows";
 
 DROP TABLE IF EXISTS "user_applications";

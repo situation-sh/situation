@@ -117,13 +117,17 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 	}
 
 	// Create links for new NICs only
-	links := make([]models.NetworkInterfaceSubnet, 0)
+	links := make([]*models.NetworkInterfaceSubnet, 0)
 	for _, nic := range newNICs {
-		links = append(links, models.NetworkInterfaceSubnet{
+		link := models.NetworkInterfaceSubnet{
+			NetworkInterface:   nic,
 			NetworkInterfaceID: nic.ID,
 			SubnetworkID:       subnetID,
-			MACSubnet:          fmt.Sprintf("%s/%d", nic.MAC, subnetID),
-		})
+		}
+		if err := link.SetMACSubnet(); err != nil {
+			return fmt.Errorf("unable to set MACSubnet for NIC-subnet link: %v", err)
+		}
+		links = append(links, &link)
 	}
 
 	if len(links) > 0 {

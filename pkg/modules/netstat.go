@@ -29,16 +29,20 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
-// NetstatModule aims to retrieve infos like the netstat command does
-// It must be run as root to retrieve PID/process information. Without
-// these data, it is rather hard to build reliable links between open
-// ports and programs.
+// NetstatModule retrieves active connections.
+//
+// It enumerates TCP, UDP, TCP6 and UDP6 sockets to discover listening
+// endpoints, running applications (with PID and command line), and
+// network flows between them. It must be run as root on Linux to
+// retrieve PID/process information; without these data it is hard
+// to build reliable links between open ports and programs.
 //
 // This module is then able to create flows between applications according
 // to the tuple (src, srcport, dst, dstport).
 //
-// On windows, the privileges are not checked (because we need to parse
-// the SID or another thing maybe). So the module is always run.
+// On Windows, the privileges are not checked. So the module is always run.
+//
+// [go-netstat]: https://github.com/cakturk/go-netstat
 type NetstatModule struct {
 	BaseModule
 }
@@ -48,7 +52,7 @@ func (m *NetstatModule) Name() string {
 }
 
 func (m *NetstatModule) Dependencies() []string {
-	return []string{"users", "tcp-scan"}
+	return []string{"local-users", "tcp-scan"}
 }
 
 func flowFilter(state netstat.SkState) bool {

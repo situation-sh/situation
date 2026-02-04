@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -30,6 +31,9 @@ func refreshIDAction(ctx context.Context, cmd *cli.Command) error {
 	newId, err := hex.DecodeString(cmd.StringArg("id"))
 	if err != nil {
 		return err
+	}
+	if len(newId) < 16 {
+		return fmt.Errorf("the provided id must have 16 bytes")
 	}
 	logrus.
 		WithField("bytes", newId).
@@ -60,7 +64,7 @@ func refreshIDAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// set a new random ID
-	toWrite := bytes.Replace(raw, config.Agent[:], newId, 1)
+	toWrite := bytes.Replace(raw, config.Agent[:16], newId[:16], 1)
 	// turn toWrite into is.Reader
 	if err := selfupdate.Apply(bytes.NewReader(toWrite), selfupdate.Options{}); err != nil {
 		return err

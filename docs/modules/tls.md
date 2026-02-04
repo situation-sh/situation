@@ -4,10 +4,11 @@ windows: true
 macos: unknown
 root: false
 title: TLS
-summary: "Enrich endpoints with TLS information."
-date: 2025-09-24
+summary: "Enriches TCP endpoints with TLS certificate information."
+date: 2026-02-02
 filename: tls.go
 std_imports:
+  - context
   - crypto/sha1
   - crypto/sha256
   - crypto/tls
@@ -16,18 +17,21 @@ std_imports:
   - net
 imports:
   - github.com/sirupsen/logrus
+  - github.com/uptrace/bun
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-TLSModule enrich endpoints with TLS information.
+TLSModule enriches TCP endpoints with TLS certificate information.
 
 ### Details
 
 
-The module only uses the Go standard library. Currently it only supports TLS over TCP.
+It connects to endpoints on well-known TLS ports (HTTPS, IMAPS, LDAPS, etc.) and performs a TLS handshake to extract the leaf certificate. For each certificate it collects: subject, issuer, validity period, serial number, signature and public key algorithms, SHA-1/SHA-256 fingerprints, and DNS names.
+
+The module only uses the Go standard library. Currently it only supports TLS over TCP.
 
 ### Dependencies
 

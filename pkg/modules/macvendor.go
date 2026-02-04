@@ -14,6 +14,14 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
+// MACVendorModule resolves manufacturer from MAC addresses.
+//
+// It uses a built-in lookup table of IEEE OUI assignments (generated
+// from the official IEEE OUI registry) to match the first 3 octets
+// of each MAC address to a vendor name.
+//
+// The module queries all network interfaces that have a MAC address
+// but no vendor yet, and updates them in bulk.
 type MACVendorModule struct {
 	BaseModule
 }

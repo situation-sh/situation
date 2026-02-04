@@ -34,8 +34,9 @@ GOOS        ?= $(shell go env|grep GOOS  |awk -F '=' '{print $$2}'|sed -e "s/[']
 CGO_ENABLED ?= 0
 
 # files
-SRC_FILES    := $(shell find . -path "*.go" -not -path "./.*")
-MODULE_FILES := $(shell find ./pkg/modules -path "*.go")
+SRC_FILES       := $(shell find . -path "*.go" -not -path "./.*")
+MODULE_FILES    := $(shell find ./pkg/modules -path "*.go")
+MIGRATION_FILES	:= $(shell find ./pkg/store/migrations -path "*.sql")
 
 
 # Put the version in the config file
@@ -124,12 +125,12 @@ all: $(BIN_PREFIX)-amd64-linux \
 build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testing-amd64-windows.exe
 
 # final binary files
-$(BIN_PREFIX)-%: $(SRC_FILES)
+$(BIN_PREFIX)-%: $(SRC_FILES) $(MIGRATION_FILES)
 	@mkdir -p $(@D)
 	GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) GOARM=$(call goarm,$*) $(BUILD) -o $@ agent/main.go
 
 # binaries for module testing purpose
-$(BIN_PREFIX)-module-testing-%: $(MODULE_FILES)
+$(BIN_PREFIX)-module-testing-%: $(MODULE_FILES) 
 	@mkdir -p $(@D)
 	GOARM=$(call goarm,$*) GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) $(BUILD_TEST) -o $@ $(MODULE)/modules
 
@@ -155,7 +156,7 @@ goweight.json:
 	@goweight --json . | jq > $@
 
 modules-doc: $(MODULE_FILES)
-	$(GO) run dev/doc/*.go -d modules -o docs/modules/
+	$(GO) run dev/doc/*.go -d pkg/modules -o docs/modules/
 
 test-modules:
 	$(GO) test -v -cover -run 'TestAllModules' ./modules
@@ -163,7 +164,7 @@ test-modules:
 test: .gocoverprofile.html
 
 .gocoverprofile.txt: $(shell find . -path "*_test.go")
-	$(GO) test -coverprofile=$@ -covermode=atomic $$(go list -v ./...| grep -v modules)
+	$(GO) test -coverprofile=$@ -covermode=atomic $$(go list -v ./...| grep -v pkg/modules)
 
 .gocoverprofile.html: .gocoverprofile.txt
 	$(GO) tool cover -html=$^ -o $@

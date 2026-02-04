@@ -48,6 +48,7 @@ func (m *JA4Module) Run(ctx context.Context) error {
 		NewSelect().
 		Model(&endpoints).
 		Where("tls IS NOT NULL").
+		Where(storage.WithoutJA4()).
 		Scan(ctx)
 	if err != nil {
 		return fmt.Errorf("ja4: failed to retrieve TLS endpoints: %w", err)

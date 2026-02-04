@@ -15,24 +15,30 @@ func init() {
 	registerModule(&LocalUsersModule{})
 }
 
-// LocalUsersModule reads package information from the dpkg package manager.
+// LocalUsersModule lists all local user accounts on the system.
 //
-// This module is relevant for distros that use dpkg, like debian, ubuntu and their
-// derivatives. It only uses the standard library.
+// On **Linux**, the module reads `/etc/passwd` to enumerate user entries.
+// Each UID is then resolved through the standard `os/user` library to
+// retrieve the full user details.
 //
-// It reads `/var/log/dpkg.log` and also files from `/var/lib/dpkg/info/`.
+// On **Windows**, the module calls the Win32 `NetUserEnum` API
+// (from `netapi32.dll`) to enumerate local accounts filtered to normal
+// user accounts. Each username is then resolved with `os/user.Lookup`,
+// and the user's domain is determined by converting the SID via
+// `LookupAccountSid`.
+//
+// The collected users are stored in the database with an upsert strategy
+// based on `(machine_id, uid)`.
 type LocalUsersModule struct {
 	BaseModule
 }
 
 func (m *LocalUsersModule) Name() string {
-	return "users"
+	return "local-users"
 }
 
 func (m *LocalUsersModule) Dependencies() []string {
 	// host-basic is to check the distribution
-	// netstat is to only fill the packages that have a running app
-	// (see models.Machine.InsertPackages)
 	return []string{"host-basic"}
 }
 

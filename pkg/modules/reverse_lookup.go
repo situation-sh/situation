@@ -18,6 +18,9 @@ func init() {
 }
 
 // ReverseLookupModule tries to get a hostname attached to a local IP address
+//
+// It basically calls [`net.LookupAddr`](https://pkg.go.dev/net#LookupAddr)
+// that uses the host resolver to perform a reverse lookup for the given addresses.
 type ReverseLookupModule struct {
 	BaseModule
 }

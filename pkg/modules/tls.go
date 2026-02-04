@@ -44,9 +44,15 @@ func init() {
 	// SetDefault(m, "ports", &m.Ports, "TCP ports to scan for TLS connections")
 }
 
-// TLSModule enrich endpoints with TLS information.
+// TLSModule enriches TCP endpoints with TLS certificate
+// information.
 //
-// The module only uses the Go standard library. Currently it only supports TLS over TCP.
+// It connects to endpoints on well-known TLS ports (HTTPS, IMAPS, LDAPS, etc.)
+// and performs a TLS handshake to extract the leaf certificate. For each
+// certificate it collects: subject, issuer, validity period, serial number,
+// signature and public key algorithms, SHA-1/SHA-256 fingerprints, and DNS names.
+//
+// The module only uses the Go standard library. Currently it only supports TLS over TCP.
 type TLSModule struct {
 	BaseModule
 	Ports []uint16

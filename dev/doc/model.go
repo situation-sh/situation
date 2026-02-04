@@ -112,6 +112,12 @@ func (m *ModuleDoc) SetStatus(key, value string) {
 
 func (m *ModuleDoc) Title() string {
 	base := strings.TrimSuffix(m.Object.Name, "Module")
+
+	// title for special module like SaaS
+	if matched, err := regexp.MatchString("[A-Z][a-z]+[A-Z]", base); err == nil && matched {
+		return base
+	}
+
 	re := regexp.MustCompile("[A-Z][a-z]+")
 	space := byte(32)
 

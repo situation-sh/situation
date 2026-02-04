@@ -131,7 +131,8 @@ func parseModules(p *doc.Package, fset *token.FileSet) []*ModuleDoc {
 	for _, t := range getModuleTypes(p) {
 		name, err := getModuleTypeName(t)
 		if err != nil {
-			log.Fatalf("error while parsing module %s: %v", t.Name, err)
+			log.Warnf("error while parsing module %s: %v", t.Name, err)
+			continue
 		}
 
 		m := NewModuleDoc()

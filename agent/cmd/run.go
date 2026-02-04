@@ -54,7 +54,7 @@ func populateConfig() {
 	config.DefineVar(
 		"ignore-missing-deps",
 		&ignoreMissingDeps,
-		puzzle.WithDescription("Skip modules with missing dependencies"),
+		puzzle.WithDescription("Force modules execution even if some required modules are disabled"),
 	)
 	config.DefineVar(
 		"db",
@@ -166,8 +166,10 @@ func runAction(ctx context.Context, cmd *cli.Command) error {
 	// scheduler opts
 	opts = append(opts,
 		modules.WithLogger(loggerInterface),
-		modules.IgnoreMissingDeps(ignoreMissingDeps),
 	)
+	if ignoreMissingDeps {
+		opts = append(opts, modules.IgnoreMissingDeps())
+	}
 	if failfast {
 		opts = append(opts, modules.FailFast())
 	}
