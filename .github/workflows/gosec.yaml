@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -33,7 +33,7 @@ jobs:
           # we let the report trigger content trigger a failure using the GitHub Security features.
           args: "-no-fail -fmt sarif -out results.sarif ./..."
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           # Path to SARIF file relative to the root of the repository
           sarif_file: results.sarif

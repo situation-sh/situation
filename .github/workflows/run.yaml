@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -22,13 +22,13 @@ jobs:
       - name: Build all binaries
         run: make all
       - name: Upload linux binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: situation-linux
           path: bin/situation-*-linux
           retention-days: 1
       - name: Upload windows binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: situation-windows
           path: bin/situation-*-windows.exe
@@ -57,7 +57,7 @@ jobs:
       image: ${{ matrix.image }}
     steps:
       - name: Download linux binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: situation-linux
           path: bin
@@ -67,8 +67,10 @@ jobs:
           chmod +x ./situation
       - name: Run
         run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
+      - name: Run again
+        run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
       - name: Upload linux results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.image }}-results
           path: db.sqlite
@@ -79,22 +81,21 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Download windows binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: situation-windows
           path: bin
-      # - name: Export binary name
-      #   run: |
-      #     echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
-      #     Get-Content $env:GITHUB_ENV
       - name: Prepare binary
         run: |
           cp bin/situation-*-amd64-windows.exe ./situation.exe
       - name: Run the binary
         run: |
           .\situation.exe run --log-level=5 --db=db.sqlite --fail-fast
+      - name: Run the binary again
+        run: |
+          .\situation.exe run --log-level=5 --db=db.sqlite --fail-fast
       - name: Upload windows results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-results
           path: db.sqlite
