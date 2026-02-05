@@ -21,7 +21,8 @@ import (
 
 // see https://github.com/shirou/gopsutil/blob/master/host/host_linux.go#L215
 var RPM_BASED_FAMILIES = []string{
-	"fedora", "rhel", "suse",
+	"fedora", "rhel",
+	// "suse", ignore because of zypper
 	"neokylin", "anolis",
 }
 
