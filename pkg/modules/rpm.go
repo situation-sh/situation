@@ -27,7 +27,7 @@ var RPM_BASED_FAMILIES = []string{
 }
 
 var MIN_VERSION_SUPPORTED = map[string]string{
-	"rockylinux":    "9",
+	"rocky":         "9",
 	"opensuse-leap": "16",
 }
 
