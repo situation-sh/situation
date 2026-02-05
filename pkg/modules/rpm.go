@@ -72,8 +72,10 @@ func (m *RPMModule) Run(ctx context.Context) error {
 	}
 
 	// extra checks
-	if err := extraChecksForRPMModule(pm.host, logger); err != nil {
+	if ignore, err := rpmMustBeIgnored(pm.host, logger); err != nil {
 		return err
+	} else if ignore {
+		return nil
 	}
 
 	generator, err := m.packageGenerator()
@@ -139,13 +141,13 @@ func (m *RPMModule) packageGenerator() (<-chan *models.Package, error) {
 	return c, nil
 }
 
-func extraChecksForRPMModule(m *models.Machine, logger logrus.FieldLogger) error {
+func rpmMustBeIgnored(m *models.Machine, logger logrus.FieldLogger) (bool, error) {
 	minVersion, tocheck := MIN_VERSION_SUPPORTED[m.Distribution]
 	if tocheck {
 		vMin := version.Must(version.NewVersion(minVersion))
 		hostVersion, err := version.NewVersion(m.DistributionVersion)
 		if err != nil {
-			return fmt.Errorf("cannot parse host distribution version: %w", err)
+			return false, fmt.Errorf("cannot parse host distribution version: %w", err)
 		}
 		if hostVersion.LessThan(vMin) {
 			// ignore the distribution if version is less than the minimum supported
@@ -154,8 +156,8 @@ func extraChecksForRPMModule(m *models.Machine, logger logrus.FieldLogger) error
 				WithField("distribution", m.Distribution).
 				WithField("min_supported_version", minVersion).
 				Info("Module skipped ")
-			return nil
+			return true, nil
 		}
 	}
-	return nil
+	return false, nil
 }
