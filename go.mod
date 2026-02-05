@@ -16,6 +16,7 @@ require (
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/gosnmp/gosnmp v1.43.2
+	github.com/hashicorp/go-version v1.8.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jaypipes/ghw v0.21.2
 	github.com/knqyf263/go-rpmdb v0.1.1

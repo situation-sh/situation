@@ -24,6 +24,31 @@ func IPVersion(n net.IP) int {
 	return 6
 }
 
+func IPVersionString(n string) int {
+	if ip := net.ParseIP(n); ip != nil {
+		return IPVersion(ip)
+	}
+	return -1
+}
+
+func AnyIPv4(ip []string) bool {
+	for _, s := range ip {
+		if IPVersionString(s) == 4 {
+			return true
+		}
+	}
+	return false
+}
+
+func AnyIPv6(ip []string) bool {
+	for _, s := range ip {
+		if IPVersionString(s) == 6 {
+			return true
+		}
+	}
+	return false
+}
+
 // BaseNetwork returns the strict CIDR network
 // Example 192.168.1.15/24 -> 192.168.1.0/24
 // Seems useless

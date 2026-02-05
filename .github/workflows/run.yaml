@@ -52,6 +52,7 @@ jobs:
             "alpine:3.18",
             "alpine:3.21",
             "opensuse/leap:15.6",
+            "opensuse/leap:16.0",
           ]
     container:
       image: ${{ matrix.image }}

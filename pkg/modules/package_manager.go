@@ -13,7 +13,7 @@ import (
 
 type AbstractPackageManager struct {
 	families []string
-	hostID   int64
+	host     *models.Machine
 	ctx      context.Context
 	logger   logrus.FieldLogger
 	storage  *store.BunStorage
@@ -34,7 +34,7 @@ func NewAbstractPackageManager(ctx context.Context, families []string, logger lo
 
 	return &AbstractPackageManager{
 		families: families,
-		hostID:   host.ID,
+		host:     host,
 		ctx:      ctx,
 		logger:   logger,
 		storage:  storage,
@@ -55,7 +55,7 @@ func (a *AbstractPackageManager) Run(generator <-chan *models.Package) error {
 
 	packages := make([]*models.Package, 0)
 	for p := range generator {
-		p.MachineID = a.hostID
+		p.MachineID = a.host.ID
 		// log the package found
 		logger.WithField("name", p.Name).
 			WithField("version", p.Version).

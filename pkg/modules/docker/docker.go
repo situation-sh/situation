@@ -427,31 +427,35 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 			endpoints := make([]*models.ApplicationEndpoint, 0)
 			policies := make([]*models.EndpointPolicy, 0)
 			for _, port := range container.Ports {
-				endpoint := models.ApplicationEndpoint{
+				// container endpoint
+				ctrEndpoint := models.ApplicationEndpoint{
 					Port:               uint16(port.PrivatePort),
 					Protocol:           port.Type,
 					NetworkInterfaceID: nic.ID,
 					NetworkInterface:   &nic,
 				}
-				endpoints = append(endpoints, &endpoint)
-				// fmt.Printf("Port: %+v\n", port)
+				endpoints = append(endpoints, &ctrEndpoint)
+
 				for _, hostNIC := range p.machine.NICS {
 					for _, addr := range hostNIC.IP {
-						if addr == port.IP {
-							// need to get the local endpoint
-							src := models.ApplicationEndpoint{
+						if (port.IP == "0.0.0.0" && utils.IPVersionString(addr) == 4) ||
+							(port.IP == "::" && utils.IPVersionString(addr) == 6) ||
+							(port.IP == addr) {
+							// host endpoint
+							hostEndpoint := models.ApplicationEndpoint{
 								Addr:               addr,
 								Port:               uint16(port.PublicPort),
 								Protocol:           port.Type,
 								NetworkInterfaceID: hostNIC.ID,
 								NetworkInterface:   hostNIC,
 							}
-							endpoints = append(endpoints, &src)
+							endpoints = append(endpoints, &hostEndpoint)
 
+							// forward rule from host endpoint to container endpoint
 							policy := models.EndpointPolicy{
-								Endpoint:    &endpoint,
+								Endpoint:    &ctrEndpoint,
 								Action:      "forward",
-								SrcEndpoint: &src,
+								SrcEndpoint: &hostEndpoint,
 								Source:      "docker",
 							}
 							policies = append(policies, &policy)
@@ -459,7 +463,34 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 						}
 					}
 				}
+				// }
+				fmt.Printf("Port: %+v\n", port)
 			}
+			// 	for _, hostNIC := range p.machine.NICS {
+			// 		for _, addr := range hostNIC.IP {
+			// 			if addr == port.IP {
+			// 				// need to get the local endpoint
+			// 				src := models.ApplicationEndpoint{
+			// 					Addr:               addr,
+			// 					Port:               uint16(port.PublicPort),
+			// 					Protocol:           port.Type,
+			// 					NetworkInterfaceID: hostNIC.ID,
+			// 					NetworkInterface:   hostNIC,
+			// 				}
+			// 				endpoints = append(endpoints, &src)
+
+			// 				policy := models.EndpointPolicy{
+			// 					Endpoint:    &endpoint,
+			// 					Action:      "forward",
+			// 					SrcEndpoint: &src,
+			// 					Source:      "docker",
+			// 				}
+			// 				policies = append(policies, &policy)
+			// 				break
+			// 			}
+			// 		}
+			// 	}
+			// }
 
 			if len(endpoints) > 0 {
 				err = s.DB().
@@ -520,52 +551,6 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 					WithField("ip", nic.IP).
 					Warn("no application endpoint to insert")
 			}
-			// machine := getOrCreateMachineFromEndpoint(endpoint, containerJSON, network.IPAM, p.machine, logger, s)
-
-			// apps := machine.Applications() // bypass the packages
-			// // here we have a machine
-			// // we must update its app
-			// var app *models.Application
-			// // get the app.
-			// // :warning: we consider a single app by container
-			// if len(apps) > 0 {
-			// 	app = apps[0]
-			// } else {
-			// 	app, _ = machine.GetOrCreateApplicationByName(machine.Distribution)
-			// 	// or create it
-			// 	// app = &models.Application{
-			// 	// 	Name: machine.Distribution,
-			// 	// 	// Version: machine.DistributionVersion,
-			// 	// }
-			// 	// machine.Applications = append(machine.Applications, app)
-			// }
-
-			// add an endpoint for every exposed ports
-			// TODO: Here we have a problem with the IP -> it is the Host IP and
-			// not the container IP. One can set to 0.0.0.0 for the moment until
-			// we find a workaround (we can run netstat in the namespace but it
-			// won't work on windows)
-			// for _, port := range container.Ports {
-			// fmt.Println("IP:", port.IP)
-			// var ip net.IP
-			// if port.IP == "" {
-			// 	ip = net.IPv4zero
-			// } else if port.IP == "::" {
-			// 	ip = net.IPv6zero
-			// } else {
-			// 	ip = net.ParseIP(port.IP)
-			// }
-			// ip := net.IPv4zero
-			// ep, created := app.AddEndpoint(ip, port.PrivatePort, port.Type)
-			// if created {
-			// 	logger.
-			// 		WithField("container", machine.Hostname).
-			// 		WithField("ip", ep.Addr).
-			// 		WithField("port", ep.Port).
-			// 		WithField("proto", ep.Protocol).
-			// 		Info("Application endpoint found")
-			// }
-			// }
 
 		}
 	}
