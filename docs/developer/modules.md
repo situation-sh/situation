@@ -1,7 +1,6 @@
----
-title: Module
-summary: Independent piece of magic
----
+______________________________________________________________________
+
+## title: Module summary: Independent piece of magic
 
 ## Introduction
 
@@ -106,7 +105,6 @@ The `Run()` function does the job. This functions is called during the scan. It 
 
 The configuration is managed by [asiffer/puzzle](https://github.com/asiffer/puzzle). As the example above, you should put the required information into the base module struct, along with a relevant default value. If you want to let the user modify attributes, you should bind your struct attribute with the configuration, through the following helper:
 
-
 ```go
 // SetDefault is a helper that defines default module parameter.
 // The provided values can be overwritten by CLI flags, env variables or anything
@@ -126,7 +124,6 @@ func (m *MyNewModule) Run() error {
     attr := m.Attribute
 }
 ```
-
 
 ## Logging
 
@@ -245,4 +242,4 @@ Currently there are 4 attributes to provide: `LINUX`, `WINDOWS`, `MACOS` and `RO
 `yes`/`ok` (meaning "supported"), `no` (meaning "not supported"), or `?` (meaning "don't know").
 
 !!! warning ""
-    For `ROOT`, `yes`/`ok` means that root privileges are required
+For `ROOT`, `yes`/`ok` means that root privileges are required

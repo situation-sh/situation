@@ -23,6 +23,7 @@ sidebar_title: Reference
 |------|---------|--------------|--------|
 | [arp](arp.md)   | ARPModule reads internal ARP table to find network neighbors.      | [ping](ping.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [chassis](chassis.md)   | ChassisModule fills host chassis information      | [host-basic](host_basic.md)           | {{ linux_ok }}     |
+| [docker](docker.md)   | DockerModule retrieves information about docker containers.      | [host-network](host_network.md), [tcp-scan](tcp_scan.md)           | {{ linux_ok }} {{ windows_ok }} {{ root_required }}     |
 | [dpkg](dpkg.md)   | DPKGModule reads package information from the dpkg package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |
 | [fingerprint](fingerprint.md)   | FingerprintModule attempts to match the local host against machines already discovered in the shared database.      |            | {{ linux_ok }} {{ windows_ok }}     |
 | [host-basic](host_basic.md)   | HostBasicModule retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime      | [fingerprint](fingerprint.md)           | {{ linux_ok }} {{ windows_ok }}     |
@@ -34,7 +35,7 @@ sidebar_title: Reference
 | [local-users](local_users.md)   | LocalUsersModule lists all local user accounts on the system.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [macvendor](macvendor.md)   | MACVendorModule resolves manufacturer from MAC addresses.      | [arp](arp.md)           |      |
 | [msi](msi.md)   | MSIModule creates models.Packages instance from the windows registry      | [host-basic](host_basic.md)           | {{ windows_ok }} {{ root_required }}     |
-| [netstat](netstat.md)   | NetstatModule retrieves active connections.      | , [tcp-scan](tcp_scan.md)           | {{ linux_ok }} {{ windows_ok }} {{ root_required }}     |
+| [netstat](netstat.md)   | NetstatModule retrieves active connections.      | [local-users](local_users.md), [tcp-scan](tcp_scan.md)           | {{ linux_ok }} {{ windows_ok }} {{ root_required }}     |
 | [ping](ping.md)   | PingModule pings local networks to discover new hosts.      | [host-network](host_network.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [reverse-lookup](reverse_lookup.md)   | ReverseLookupModule tries to get a hostname attached to a local IP address      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [rpm](rpm.md)   | RPMModule reads package information from the rpm package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |

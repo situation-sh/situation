@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: HostNetwork
 summary: "Retrieves basic network information about the host: interfaces along with their name, MAC address, IP addresses (IPv4 and IPv6), subnet masks, and default gateway."
-date: 2026-02-02
+date: 2026-02-05
 filename: host_network.go
 std_imports:
   - context

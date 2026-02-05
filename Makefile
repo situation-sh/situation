@@ -129,17 +129,6 @@ $(BIN_PREFIX)-%: $(SRC_FILES) $(MIGRATION_FILES)
 	@mkdir -p $(@D)
 	GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) GOARM=$(call goarm,$*) $(BUILD) -o $@ agent/main.go
 
-# binaries for module testing purpose
-$(BIN_PREFIX)-module-testing-%: $(MODULE_FILES) 
-	@mkdir -p $(@D)
-	GOARM=$(call goarm,$*) GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) $(BUILD_TEST) -o $@ $(MODULE)/modules
-
-remote-module-testing-%: module-testing
-	ID=$$(head /dev/random|md5sum|head -c 8); \
-	$(DOCKER) run -d --rm -it --name "$$ID" $$(echo "$*" | sed -e 's,_,/,g'); \
-	$(DOCKER) cp $(BIN_PREFIX)-testing-$(GOARCH)-$(GOOS) "$$ID:/tmp/situation"; \
-	$(DOCKER) exec -it "$$ID" sh -c '/tmp/situation -module=$(TEST_MODULE) -test.v' \
-	$(DOCKER) rm -f "$$ID"
 
 security: gosec.json govulncheck.json
 	@cat $<
@@ -155,11 +144,11 @@ analysis: goweight.json
 goweight.json:
 	@goweight --json . | jq > $@
 
+docs: modules-doc
+
 modules-doc: $(MODULE_FILES)
 	$(GO) run dev/doc/*.go -d pkg/modules -o docs/modules/
 
-test-modules:
-	$(GO) test -v -cover -run 'TestAllModules' ./modules
 
 test: .gocoverprofile.html
 

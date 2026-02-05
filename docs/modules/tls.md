@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: TLS
 summary: "Enriches TCP endpoints with TLS certificate information."
-date: 2026-02-02
+date: 2026-02-05
 filename: tls.go
 std_imports:
   - context

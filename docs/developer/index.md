@@ -1,8 +1,6 @@
----
-title: Overview
-summary: From the developer's perspective
----
+______________________________________________________________________
 
+## title: Overview summary: From the developer's perspective
 
 The Situation project aims to be enriched by the community, and [modules](../modules/index.md) are definitely a good starting point for developers to contribute.
 

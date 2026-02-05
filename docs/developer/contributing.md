@@ -5,16 +5,16 @@ The issue should be enough documented to well understand the bug or the requeste
 
 ## License
 
-All the code submitted in this project follows the [project LICENSE]({{ github_repo }}/blob/main/LICENSE.md).
+All the code submitted in this project follows the \[project LICENSE\]({{ github_repo }}/blob/main/LICENSE.md).
 
 ## MR Process
 
 1. Fork the project into your personal namespace (or group) on Github.
-2. Create a feature branch in your fork with naming `<issue-id>-<lowercase-title-of-the-issue>`.
-3. Make changes (code, docs...)
-4. Ensure the documentation is updated (`docs/` folder)
-5. Push the commits to your feature branch in your fork.
-6. Submit a pull request (PR) to the main branch in the main Github project.
+1. Create a feature branch in your fork with naming `<issue-id>-<lowercase-title-of-the-issue>`.
+1. Make changes (code, docs...)
+1. Ensure the documentation is updated (`docs/` folder)
+1. Push the commits to your feature branch in your fork.
+1. Submit a pull request (PR) to the main branch in the main Github project.
 
 ## Coding Style
 

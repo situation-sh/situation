@@ -1,9 +1,8 @@
----
-title: Ansible
-summary: Deploy situation on your infrastructure
----
+______________________________________________________________________
 
-Agents can be deployed automatically through [Ansible](https://docs.ansible.com/). 
+## title: Ansible summary: Deploy situation on your infrastructure
+
+Agents can be deployed automatically through [Ansible](https://docs.ansible.com/).
 Given an [inventory](https://docs.ansible.com/ansible/latest/inventory_guide/index.html)
 you can run the playbook given below.
 
@@ -11,11 +10,12 @@ you can run the playbook given below.
 ansible-playbook situation.yml -i inventory.yml
 ```
 
-The playbook can we tuned to customize where the agent will be installed. 
-First it downloads locally the latest linux and windows binaries. 
+The playbook can we tuned to customize where the agent will be installed.
+First it downloads locally the latest linux and windows binaries.
 Then it deploys the binaries to the hosts defined in the inventory and outputs a list of agentds deployed.
 
 {% raw %}
+
 ```yaml
 # situation.yml
 - name: Download latest binaries (once)
@@ -120,9 +120,9 @@ Then it deploys the binaries to the hosts defined in the inventory and outputs a
         path: "{{ agent_ids }}"
         create: yes
 ```
+
 {% endraw %}
 
 ## situation.sh
 
 If you use the [situation.sh](https://situation.sh) platform you must authorize the deployed agents.
-

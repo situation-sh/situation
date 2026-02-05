@@ -33,7 +33,7 @@ func defaultDockerHost() string {
 // DockerModule retrieves information about docker containers.
 //
 // It uses the official go client that performs HTTP queries
-// either on port `:2375` (on windows generally) or on UNIX sockets.
+// either on port `:2376` (on windows generally) or on UNIX sockets.
 //
 // We generally need some privileges to reads UNIX sockets, so it may
 // require root privileges (the alternative is to belong to the `docker` group)

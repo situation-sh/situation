@@ -1,8 +1,6 @@
----
-title: Quick start
-summary: What you can do with this CLI tool
-order: 20
----
+______________________________________________________________________
+
+## title: Quick start summary: What you can do with this CLI tool order: 20
 
 ## Installation
 
@@ -17,7 +15,6 @@ go install {{ variables.go_module }}/agent
 ## Quick run
 
 You can run the agent without data persistence (in-memory database)
-
 
 /// tab | Linux
 
@@ -73,4 +70,3 @@ situation.exe run --db=postgresql://[user]:[password]@[host]:[port]/[database]
 ```
 
 ///
-

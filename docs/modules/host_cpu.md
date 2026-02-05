@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: HostCPU
 summary: "Retrieves host CPU info: model, vendor and the number of cores."
-date: 2026-02-02
+date: 2026-02-05
 filename: host_cpu.go
 std_imports:
   - context

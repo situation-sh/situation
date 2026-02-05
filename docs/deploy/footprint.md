@@ -1,8 +1,8 @@
----
-title: Limiting footprint
-summary: Bound CPU and memory usage
----
-Here are two environment variables that can be used to limit the CPU and memory usage of the agent. It 
+______________________________________________________________________
+
+## title: Limiting footprint summary: Bound CPU and memory usage
+
+Here are two environment variables that can be used to limit the CPU and memory usage of the agent. It
 
 The `GOMAXPROCS` variable limits the number of operating system threads that can execute user-level Go code simultaneously[^1].
 
@@ -40,4 +40,4 @@ GOMEMLIMIT=10MiB ./situation
 
 ///
 
-[^1]: See [documentation](https://pkg.go.dev/runtime).
+\[^1\]: See [documentation](https://pkg.go.dev/runtime).

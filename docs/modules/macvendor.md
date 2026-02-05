@@ -1,17 +1,15 @@
 ---
-linux: true
-windows: true
-macos: unknown
-root: unknown
-title: ReverseLookup
-summary: "Tries to get a hostname attached to a local IP address"
+linux: 
+windows: 
+macos: 
+root: 
+title: MAC Vendor
+summary: "Resolves manufacturer from MAC addresses."
 date: 2026-02-05
-filename: reverse_lookup.go
+filename: macvendor.go
 std_imports:
   - context
   - fmt
-  - net
-  - strings
 imports: []
 ---
 
@@ -19,12 +17,14 @@ imports: []
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-ReverseLookupModule tries to get a hostname attached to a local IP address
+MACVendorModule resolves manufacturer from MAC addresses.
 
 ### Details
 
 
-It basically calls [`net.LookupAddr`]([https://pkg.go.dev/net#LookupAddr](https://pkg.go.dev/net#LookupAddr)) that uses the host resolver to perform a reverse lookup for the given addresses.
+It uses a built-in lookup table of IEEE OUI assignments (generated from the official IEEE OUI registry) to match the first 3 octets of each MAC address to a vendor name.
+
+The module queries all network interfaces that have a MAC address but no vendor yet, and updates them in bulk.
 
 ### Dependencies
 

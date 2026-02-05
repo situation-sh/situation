@@ -1,0 +1,21 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+    - id: detect-private-key
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+- repo: local
+  hooks:
+    - id: update-docs
+      name: update module documentation
+      language: system
+      entry: make docs
+      pass_filenames: false
+      files: pkg/modules/.*[.]go
+    - id: format-go
+      name: format golang files
+      language: system
+      entry: gofmt -s -w ./...
+      pass_filenames: false
+      files: .*[.]go
