@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -39,7 +38,7 @@ func (p *Platform) Ping(ctx context.Context) error {
 func createNetworkInterface(ipam network.IPAM, endpoint network.EndpointResource) *models.NetworkInterface {
 	hw, err := net.ParseMAC(endpoint.MacAddress)
 	if err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
 		hw = net.HardwareAddr([]byte{0, 0, 0, 0, 0, 0})
 	}
 	nic := models.NetworkInterface{
@@ -469,7 +468,7 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 					}
 				}
 				// }
-				fmt.Printf("Port: %+v\n", port)
+				// fmt.Printf("Port: %+v\n", port)
 			}
 			// 	for _, hostNIC := range p.machine.NICS {
 			// 		for _, addr := range hostNIC.IP {

@@ -28,8 +28,8 @@ func TestStandardProtocolQuery(t *testing.T) {
 		Model((*models.ApplicationEndpoint)(nil)).
 		Where("protocol = ?", "tcp").
 		Where("application_protocols IS NULL").
-		Where("port IN (?)", bun.In(stdPorts())).
-		SetColumn("application_protocols", sqlCase(storage)).
+		Where("port IN (?)", bun.In(stdPorts(stdTCPProtocols))).
+		SetColumn("application_protocols", sqlCase(storage, stdTCPProtocols)).
 		String()
 	fmt.Println(str)
 }

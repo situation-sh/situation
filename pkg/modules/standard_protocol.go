@@ -35,28 +35,48 @@ func (m *StandardProtocolModule) Run(ctx context.Context) error {
 	logger := getLogger(ctx, m)
 	storage := getStorage(ctx)
 
+	// update TCP endpoints
 	res, err := storage.DB().
 		NewUpdate().
 		Model((*models.ApplicationEndpoint)(nil)).
 		Where("protocol = ?", "tcp").
 		Where("application_protocols IS NULL").
-		Where("port IN (?)", bun.In(stdPorts())).
-		SetColumn("application_protocols", sqlCase(storage)).
+		Where("port IN (?)", bun.In(stdPorts(stdTCPProtocols))).
+		SetColumn("application_protocols", sqlCase(storage, stdTCPProtocols)).
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to update standard protocols: %w", err)
+		return fmt.Errorf("failed to update standard tcp protocols: %w", err)
 	}
 	n, err := res.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get number of updated rows: %w", err)
 	}
-	logger.WithField("endpoints", n).Info("endpoints updated")
+	logger.WithField("endpoints", n).Info("tcp endpoints updated")
+
+	// update UDP endpoints
+	res, err = storage.DB().
+		NewUpdate().
+		Model((*models.ApplicationEndpoint)(nil)).
+		Where("protocol = ?", "udp").
+		Where("application_protocols IS NULL").
+		Where("port IN (?)", bun.In(stdPorts(stdUDPProtocols))).
+		SetColumn("application_protocols", sqlCase(storage, stdUDPProtocols)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to update standard udp protocols: %w", err)
+	}
+	n, err = res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get number of updated rows: %w", err)
+	}
+	logger.WithField("endpoints", n).Info("udp endpoints updated")
+
 	return nil
 }
 
-func sqlCase(storage *store.BunStorage) string {
+func sqlCase(storage *store.BunStorage, protocols map[uint16]string) string {
 	chunks := []string{"( CASE port"}
-	for port, proto := range stdTCPProtocols {
+	for port, proto := range protocols {
 		chunks = append(chunks,
 			fmt.Sprintf(`WHEN %d THEN '%s'`,
 				port, storage.ARRAY([]string{proto}),
@@ -67,9 +87,9 @@ func sqlCase(storage *store.BunStorage) string {
 	return strings.Join(chunks, "\n ")
 }
 
-func stdPorts() []uint16 {
-	ports := make([]uint16, 0, len(stdTCPProtocols))
-	for port := range stdTCPProtocols {
+func stdPorts(protocols map[uint16]string) []uint16 {
+	ports := make([]uint16, 0, len(protocols))
+	for port := range protocols {
 		ports = append(ports, port)
 	}
 	return ports
@@ -140,6 +160,7 @@ var stdTCPProtocols = map[uint16]string{
 	5173:  "vite",
 	5222:  "xmpp-client",
 	5355:  "llmnr",
+	5357:  "wsdapi",
 	5601:  "kibana",
 	5670:  "zeromq",
 	5671:  "amqp-tls",
@@ -171,6 +192,7 @@ var stdTCPProtocols = map[uint16]string{
 	8883:  "mqtt-tls",
 	8983:  "solr",
 	9006:  "tomcat",
+	9100:  "raw-print",
 	9200:  "elasticsearch",
 	10050: "zabbix-agent",
 	10051: "zabbix-trapper",
@@ -180,4 +202,46 @@ var stdTCPProtocols = map[uint16]string{
 	11920: "syncthing",
 	27017: "mongodb",
 	32400: "plex",
+}
+
+var stdUDPProtocols = map[uint16]string{
+	7:     "echo",
+	9:     "discard",
+	37:    "time",
+	53:    "dns",
+	67:    "dhcp",
+	68:    "dhcp",
+	69:    "tftp",
+	88:    "kerberos",
+	111:   "onc-rpc",
+	123:   "ntp",
+	137:   "netbios-ns",
+	138:   "netbios-dgm",
+	161:   "snmp",
+	162:   "snmp-trap",
+	389:   "ldap",
+	443:   "quic",
+	500:   "isakmp",
+	514:   "syslog",
+	520:   "rip",
+	546:   "dhcpv6-client",
+	547:   "dhcpv6-server",
+	623:   "ipmi",
+	631:   "ipp",
+	749:   "kerberos",
+	853:   "dns-dtls",
+	1194:  "openvpn",
+	1812:  "radius",
+	1813:  "radius-acct",
+	1900:  "ssdp",
+	2049:  "nfs",
+	3478:  "stun",
+	3702:  "ws-discovery",
+	4500:  "ipsec-nat",
+	5060:  "sip",
+	5353:  "mdns",
+	5355:  "llmnr",
+	6343:  "sflow",
+	8125:  "statsd",
+	11211: "memcached",
 }
