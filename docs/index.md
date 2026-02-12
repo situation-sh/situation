@@ -1,15 +1,18 @@
-______________________________________________________________________
+---
+sidebar_title: Home 
+title: Situation 
+summary: IT data collection infrastructure
+---
 
-## sidebar_title: Home title: Situation summary: The autonomous data collector order: 0
+Situation is a project that aims to **discover everything** on information systems, on its own.
 
-Situation is a project that aims to **discover** everything on information systems, on its own. In a way, it lies between [nmap](https://nmap.org/), [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) and [osquery](https://osquery.io/). However it mainly differs from them on the following aspect: **user do not declare what to collect or where**.
+All IT operations require the knowledge of the underlying infrastructure (network, machines, apps... + all their relations). In practice, **this knowledge is very sparse and unreliable**, aggregated from different source:
 
-When we run tools like `nmap` or `telegraf`, we know the targets (ex: a subnetwork, a specific service...) and we must configure the tool in this way. `situation` aims to run without prior knowledge and this philosophy has two advantages:
+- people's knowledge
+- outdated diagrams/speadsheets
+- home-made scripts or manual debug
+- expensive IT tools (or manually-filled CMDB)
 
-- frictionless deployment (single binary, just download and run)
-- no blind spots (who knows exactly what runs on his/her system?)
+Situation provides the core infrastructure to automatically collect and consolidate IT data. Providing then an up-to-date and reliable view of the current state of your infra (or your home LAN).
+Now you are ready to build a context-rich IT tool above Situation.
 
-Situation is bound to collect data, nothing more. To go further, `situation` provides a \[json schema\]({{ github_repo }}/releases/download/{{ latest_tag }}/schema.json) for the output data.
-
-!!! tip ""
-Situation is an early-stage project. It currently targets Linux and Windows but keep in mind that it has not been tested on all the machines on Earth. It does not mean that is a dangerous codebase, only that it may fail.

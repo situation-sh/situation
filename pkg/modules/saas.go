@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	registerModule(&SaaSModule{MaxEndpoints: 50})
+	registerModule(&SaaSModule{MaxEndpoints: 256})
 }
 
 // Module definition ---------------------------------------------------------
@@ -57,6 +57,7 @@ func (m *SaaSModule) Run(ctx context.Context) error {
 		NewSelect().
 		Model(&endpoints).
 		Where("saas IS NULL").
+		OrderBy("id", "RANDOM()").
 		Limit(m.MaxEndpoints).
 		Scan(ctx)
 	if err != nil {

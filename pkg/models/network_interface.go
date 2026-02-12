@@ -57,6 +57,12 @@ type NetworkInterface struct {
 
 	// Many-to-many relationship via ApplicationEndpoint join table
 	Applications []*Application `bun:"m2m:application_endpoints,join:NetworkInterface=Application" json:"applications,omitempty" jsonschema:"description=list of applications associated with this network interface"`
+
+	// Has-many relationship
+	Endpoints []*ApplicationEndpoint `bun:"rel:has-many,join:id=network_interface_id"`
+
+	// Flows
+	OutgoingFlows []*Flow `bun:"rel:has-many,join:id=src_network_interface_id"`
 }
 
 // networkInterfaceUnmarshallingAlias is a mirror of NetworkInterface

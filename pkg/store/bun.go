@@ -29,6 +29,10 @@ type BunStorage struct {
 	dialect dialect.Name
 }
 
+func (s *BunStorage) Dialect() dialect.Name {
+	return s.dialect
+}
+
 func newStorage(db *bun.DB, agent string, onError func(error)) *BunStorage {
 	// register m2m models
 	db.RegisterModel((*models.ApplicationEndpoint)(nil))

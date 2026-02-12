@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"runtime"
+	"strings"
 
 	"github.com/cakturk/go-netstat/netstat"
 	"github.com/situation-sh/situation/pkg/models"
@@ -252,6 +253,11 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 					continue
 				}
 				for _, nicIP := range nic.IP {
+					// ignore if ip version and proto version do not match
+					if (utils.IPVersionString(nicIP) == 4 && strings.HasSuffix(netstatProtocols[k], "6")) ||
+						(utils.IPVersionString(nicIP) == 6 && !strings.HasSuffix(netstatProtocols[k], "6")) {
+						continue
+					}
 					// re-build the address (see netstat module)
 					key := fmt.Sprintf("%s:%d", nicIP, entry.LocalAddr.Port)
 					listeningAddrs[key] = true
@@ -293,6 +299,7 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 						uniqueApps[hApp] = app
 					}
 
+					// fmt.Println(nicIP, netstatProtocols[k])
 					endpoint := &models.ApplicationEndpoint{
 						Addr:               nicIP,
 						Port:               entry.LocalAddr.Port,

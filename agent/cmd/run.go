@@ -48,6 +48,15 @@ func moduleEnvName(name string) string {
 	return strings.ToUpper(e)
 }
 
+func defineDB() {
+	config.DefineVar(
+		"db",
+		&db,
+		puzzle.WithDescription("Database DSN (e.g. file path for SQLite or connection string for postgres)"),
+		puzzle.WithEnvName("SITUATION_DB"),
+	)
+}
+
 // populateConfig adds configuration variables from modules
 // These conf variables will be exported as CLI flags
 func populateConfig() {
@@ -56,12 +65,7 @@ func populateConfig() {
 		&ignoreMissingDeps,
 		puzzle.WithDescription("Force modules execution even if some required modules are disabled"),
 	)
-	config.DefineVar(
-		"db",
-		&db,
-		puzzle.WithDescription("Database DSN (e.g. file path for SQLite or connection string for postgres)"),
-		puzzle.WithEnvName("SITUATION_DB"),
-	)
+	defineDB()
 	config.DefineVar(
 		"sentry",
 		&sentryDSN,
@@ -101,7 +105,7 @@ func generateFlags() []cli.Flag {
 
 func runAction(ctx context.Context, cmd *cli.Command) error {
 	var loggerInterface logrus.FieldLogger = logger
-	fmt.Println("report caller:", logger.ReportCaller)
+	// fmt.Println("report caller:", logger.ReportCaller)
 	// scheduler opts
 	opts := make([]modules.SchedulerOptions, 0)
 

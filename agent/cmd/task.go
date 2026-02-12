@@ -20,6 +20,7 @@ var taskCmd = cli.Command{
 	Aliases: []string{"cron"},
 	Usage:   "Install a scheduled task",
 	Action:  runTaskCmd,
+	// SkipFlagParsing: true, // to allow extra flags to be passed to the run command
 	Flags: []cli.Flag{
 		&cli.TimestampFlag{
 			Name:        "task-start",
@@ -57,9 +58,15 @@ var taskCmd = cli.Command{
 	},
 }
 
+func init() {
+	// inject run flags
+	taskCmd.Flags = append(taskCmd.Flags, runCmd.Flags...)
+}
+
 func getRunArgs(cmd *cli.Command) []string {
 	out := make([]string, 0)
-	for _, name := range cmd.Root().LocalFlagNames() { // only root-defined (global) flags
+	for _, name := range runCmd.FlagNames() { // only root-defined (global) flags
+		// fmt.Println("name:", name)
 		if len(name) == 1 {
 			// skip short names
 			// corresponding long names are also in the list

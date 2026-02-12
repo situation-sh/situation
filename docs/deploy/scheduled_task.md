@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## title: Scheduled task summary: Run situation from time to time order: 1
+---
+title: Scheduled task 
+summary: Run situation from time to time
+---
 
 Once downloaded, the binary can install itself as a cronjob (Linux) or as a scheduled task (Windows). Why not a service? Situation should be run regularly but _occasionally_. It is not meant to run indefinitely in the background.
 
@@ -25,14 +26,14 @@ situation.exe task --task-start 00:00:00
 ///
 
 !!! warning "Important"
-You need admin privileges to install the scheduled task. On Windows, it creates a `SYSTEM` task and on Linux, it writes the job to `/etc/cron.d/situation`.
+    You need admin privileges to install the scheduled task. On Windows, it creates a `SYSTEM` task and on Linux, it writes the job to `/etc/cron.d/situation`.
 
 Any **run** parameters passed to the command line will be appended to the task. It means that if you run the command below,
 
 /// tab | Linux
 
 ```bash
-situation cron --task-start 00:00:00 --file --file-path=/tmp/situation.json
+situation cron --task-start 00:00:00 --db=db.sqlite
 ```
 
 ///
@@ -40,12 +41,12 @@ situation cron --task-start 00:00:00 --file --file-path=/tmp/situation.json
 /// tab | Windows
 
 ```ps1
-situation.exe task --task-start 00:00:00 --file --file-path=/tmp/situation.json
+situation.exe task --task-start 00:00:00 --db=db.sqlite
 ```
 
 ///
 
-the binary will be run with the flags `--file` and `--file-path=/tmp/situation.json`.
+the binary will be run with the flags `--db=db.sqlite`.
 
 ## Uninstalling
 

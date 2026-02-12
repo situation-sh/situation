@@ -68,7 +68,7 @@ func getActionProps(args []string) map[string]interface{} {
 
 	return map[string]interface{}{
 		"Path":             exePath,
-		"Arguments":        strings.Join(args, " "),
+		"Arguments":        "run " + strings.Join(args, " "),
 		"WorkingDirectory": "C:\\temp", // Just a writable directory
 	}
 }

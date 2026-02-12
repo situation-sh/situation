@@ -45,7 +45,7 @@ type ApplicationEndpoint struct {
 	Addr                 string        `bun:"addr,unique:port_protocol_addr_network_interface_id" json:"addr" jsonschema:"description=IP address the application listens on,example=127.0.0.1,example=fe80::12b8:43e7:11f0:a406"`
 	TLS                  *TLS          `bun:"tls,type:json" json:"tls,omitempty" jsonschema:"description=TLS information if the endpoint is using TLS"`
 	Fingerprints         *Fingerprints `bun:"fingerprints,type:json" json:"fingerprints,omitempty" jsonschema:"description=application fingerprints"`
-	ApplicationProtocols []string      `bun:"application_protocols" json:"application_protocols,omitempty" jsonschema:"description=list of application layer protocols detected on this endpoint,example=[\"http\",\"http/2\"]"`
+	ApplicationProtocols []string      `bun:"application_protocols,nullzero" json:"application_protocols,omitempty" jsonschema:"description=list of application layer protocols detected on this endpoint,example=[\"http\",\"http/2\"]"`
 
 	SaaS string `bun:"saas,nullzero" json:"saas,omitempty" jsonschema:"description=if the application is identified as a SaaS, the name of the SaaS,example=GitHub,example=Google Workspace"`
 
@@ -54,6 +54,9 @@ type ApplicationEndpoint struct {
 
 	NetworkInterfaceID int64             `bun:"network_interface_id,unique:port_protocol_addr_network_interface_id"` // can be null
 	NetworkInterface   *NetworkInterface `bun:"rel:belongs-to,join:network_interface_id=id"`
+
+	// Has-many relationship
+	IncomingFlows []*Flow `bun:"rel:has-many,join:id=dst_endpoint_id"`
 }
 
 func (ApplicationEndpoint) JSONSchemaExtend(schema *jsonschema.Schema) {

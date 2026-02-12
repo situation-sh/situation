@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## title: Limiting footprint summary: Bound CPU and memory usage
+---
+title: Limiting footprint 
+summary: Bound CPU and memory usage
+---
 
 Here are two environment variables that can be used to limit the CPU and memory usage of the agent. It
 
@@ -40,4 +41,4 @@ GOMEMLIMIT=10MiB ./situation
 
 ///
 
-\[^1\]: See [documentation](https://pkg.go.dev/runtime).
+[^1]: See [documentation](https://pkg.go.dev/runtime).

@@ -1,26 +1,28 @@
-______________________________________________________________________
+---
+title: CLI 
+summary: What the agent can do
+---
 
-## title: CLI summary: What the agent can do order: 30
 
 Here is what the agent can do in addition to collecting data.
 
-| Command | Description |
+| Command           | Description                                      |
 | ----------------- | ------------------------------------------------ |
-| `run` | Run the agent (default) |
-| `refresh-id` | Regenerate the internal ID of the agent |
-| `defaults`, `def` | Print the default config |
-| `id` | Print the identifier of the agent |
-| `update` | Update the agent |
-| `version` | Print the version of the agent |
-| `task`, `cron` | Install a scheduled task |
-| `help`, `h` | Shows a list of commands or help for one command |
+| `run`             | Run the agent (default)                          |
+| `refresh-id`      | Regenerate the internal ID of the agent          |
+| `defaults`, `def` | Print the default config                         |
+| `id`              | Print the identifier of the agent                |
+| `update`          | Update the agent                                 |
+| `version`         | Print the version of the agent                   |
+| `task`, `cron`    | Install a scheduled task                         |
+| `help`, `h`       | Shows a list of commands or help for one command |
 
 ## Agent identifier
 
 Every agent binary can be identified through a **16 bytes id** (`fc097e65503cb3ad9eb8e10f5a617611` by default).
 
 !!! info ""
-Currently you can't see this id in the database. In the future, it may be present in an attribute like `updated_by`.
+    Currently you can't see this id in the database. In the future, it may be present in an attribute like `updated_by`.
 
 You can display the current id through the eponym command.
 
@@ -116,8 +118,8 @@ situation.exe run -sentry="https://6eb600b24dd5c42fb149cf84d2240bef@o45880104332
 
 The internal sentry client forward logs (not debug logs) in addition to fine-grained monitoring data (module level). It attaches the following metadata (not configurable).
 
-| Metadata | Value | Example |
+| Metadata                                                                                | Value                        | Example                                    |
 | --------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------ |
-| [`ServerName`](https://docs.sentry.io/platforms/java/configuration/options/#serverName) | Agent ID (hex string format) | `fc097e65503cb3ad9eb8e10f5a617611` |
-| [`Release`](https://docs.sentry.io/platforms/java/configuration/options/#release) | Agent version | `0.20.0` |
-| [`Dist`](https://docs.sentry.io/platforms/java/configuration/options/#dist) | Agent commit | `d7fa41d254d75496200d6fe0c71b1b4bf13892b1` |
+| [`ServerName`](https://docs.sentry.io/platforms/java/configuration/options/#serverName) | Agent ID (hex string format) | `fc097e65503cb3ad9eb8e10f5a617611`         |
+| [`Release`](https://docs.sentry.io/platforms/java/configuration/options/#release)       | Agent version                | `0.20.0`                                   |
+| [`Dist`](https://docs.sentry.io/platforms/java/configuration/options/#dist)             | Agent commit                 | `d7fa41d254d75496200d6fe0c71b1b4bf13892b1` |

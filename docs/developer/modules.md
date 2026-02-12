@@ -1,69 +1,67 @@
-______________________________________________________________________
-
-## title: Module summary: Independent piece of magic
+---
+title: Module 
+summary: Independent piece of magic
+---
 
 ## Introduction
 
 A module is an _independent_ piece of code that can be run during scan. Its job is merely to enrich the store.
 It is not fully independent as it may depend on previous modules (some module are likely to need data provided by others).
 
-To develop a module, just init a new `my_new_module.go` source file in the `modules/` subdirectory. The structure of the module should look like the following snippet.
+To develop a module, create a new `my_new_module.go` source file in the `pkg/modules/` directory. The structure of the module should look like the following snippet.
 
 ```go
 package modules
 
 import (
+    "context"
     // ...
 )
 
-type MyNewModule struct {
-    Attribute string
-}
-
 func init() {
-    m := &MyNewModule{
-        Attribute: "defultValue"
-    }
-    RegisterModule(m)
-    // bind attributes with configuration variable (the attribute will be exposed to CLI flags)
-    SetDefault(m, "attribute", &m.Attribute, "Custom attribute for my new module")
+    registerModule(&MyNewModule{
+        attribute: "defaultValue",
+    })
 }
 
+// Module definition ------------------------------------------------
 
+type MyNewModule struct {
+    BaseModule
+
+    attribute string
+}
 
 // Name returns the name of the module
-func (m * MyNewModule) Name() string {
-    // return the name of the module with a dash
+func (m *MyNewModule) Name() string {
     return "my-new-module"
 }
 
 // Dependencies return the list of modules
 // required to run this one
-func (m * MyNewModule) Dependencies() []string {
-    // put the name of the modules you depend on here
+func (m *MyNewModule) Dependencies() []string {
     return []string{"host-basic"}
 }
 
-// Run do the job. It returns error only if it really
+// Run does the job. It returns error only if it really
 // fails, i.e. it cannot be run (like privileges).
 // In the other cases, just log the errors
-func (m * MyNewModule) Run() error {
-    // you can grab your logger (from https://github.com/Sirupsen/logrus)
-    logger := GetLogger(m)
+func (m *MyNewModule) Run(ctx context.Context) error {
+    // extract the logger and storage from the context
+    logger := getLogger(ctx, m)
+    storage := getStorage(ctx)
+
     // ...
     // do what you want
     // ...
     // but do not return error except if something
     // prevents the module to be run, just log them:
-    // logger.Error(err)
-    // ...
-    //
-    // don't forget to put data into the store
+    // logger.
+    //      WithError(err).
+    //      Warn("something wrong but not critical happens")
     // ...
     return nil
 }
-
-
 ```
 
 ## Naming
@@ -85,9 +83,9 @@ A module must implement the `Module` interface described below.
 // Module is the generic module interface to implement plugins to
 // the agent
 type Module interface {
-	Name() string
-	Dependencies() []string
-	Run() error
+    Name() string
+    Dependencies() []string
+    Run(ctx context.Context) error
 }
 ```
 
@@ -95,76 +93,121 @@ The `Name()` outputs the **unique** name of the module.
 
 The `Dependencies()` returns the names of the modules required to start this module (prior information).
 
-The `Run()` function does the job. This functions is called during the scan. It may have several interactions:
+The `Run(ctx)` function does the job. This function is called during the scan by the scheduler. The `context.Context` carries the logger, storage, and agent identifier. The function may have several interactions:
 
 - [config](#configuration) (get extra configuration data)
 - [logging](#logging) (output some information about the run)
 - [store](store.md) (retrieve/store collected data)
 
-## Configuration
+### BaseModule
 
-The configuration is managed by [asiffer/puzzle](https://github.com/asiffer/puzzle). As the example above, you should put the required information into the base module struct, along with a relevant default value. If you want to let the user modify attributes, you should bind your struct attribute with the configuration, through the following helper:
+All modules should embed `BaseModule`:
 
 ```go
-// SetDefault is a helper that defines default module parameter.
-// The provided values can be overwritten by CLI flags, env variables or anything
-// the asiffer/puzzle library may support.
-func SetDefault[T any](m Module, key string, value *T, usage string) {
-	// ...
+type MyNewModule struct {
+    BaseModule
+    // your fields here
 }
 ```
 
-The configuration of the modules are stored in the `modules.module-name.*` namespace in the `config` module, so it can be accessed by other modules through `config.Get[T](key string)`. In your code (like in the `Run()` function), you should directly access the attributes through the pointer receiver.
+Currently this object does not provide extra attribute/methods. But this is where we could inject ones in the future.
+
+### Registration
+
+Modules must be registered via `init()` using the unexported `registerModule` function. 
+This adds the module to the internal map. It panics if two modules share the same name.
 
 ```go
-func (m *MyNewModule) Run() error {
-    // do not get it through the config
-    attr, err := config.Get[string]("modules.my-new-module.attribute")
-    // rather access it directly
-    attr := m.Attribute
+func init() {
+    registerModule(&MyNewModule{})
+}
+```
+
+## Context
+
+The `Run` method receives a `context.Context` prepared by the scheduler.
+In this catch-all parameter, we provide all the runtile needs of the module.
+Currently, three helpers extract what you need:
+
+| Helper              | Returns              | Description                      |
+| ------------------- | -------------------- | -------------------------------- |
+| `getLogger(ctx, m)` | `logrus.FieldLogger` | Logger scoped to the module name |
+| `getStorage(ctx)`   | `*store.BunStorage`  | Database storage instance        |
+| `getAgent(ctx)`     | `string`             | Agent identifier                 |
+
+```go
+func (m *MyNewModule) Run(ctx context.Context) error {
+    logger  := getLogger(ctx, m)
+    storage := getStorage(ctx)
+    agent   := getAgent(ctx)
+    // ...
+}
+```
+
+## Configuration
+
+The configuration is managed by [asiffer/puzzle](https://github.com/asiffer/puzzle). If your module needs configurable attributes, put them in the module struct with a default value and implement the `Configurable` interface defined in `agent/config`:
+
+```go
+type Configurable interface {
+    Bind(config *puzzle.Config) error
+}
+```
+
+Inside `Bind`, use the `setDefault` helper to register parameters:
+
+```go
+func (m *MyNewModule) Bind(config *puzzle.Config) error {
+    return setDefault(config, m, "attribute", &m.Attribute,
+        "Custom attribute for my new module")
+}
+```
+
+The parameters are stored in the `modules.module-name.*` namespace and are automatically exposed as CLI flags. In your `Run()` function, access attributes directly through the pointer receiver:
+
+```go
+func (m *MyNewModule) Run(ctx context.Context) error {
+    // access it directly 
+    attr := m.attribute
+    // ...
 }
 ```
 
 ## Logging
 
-The logging is managed by [logrus](https://github.com/Sirupsen/logrus). To log some information, the `modules` package expose a `GetLogger` function that returns a contextual logger (relative to the module).
+The logging is managed by [logrus](https://github.com/Sirupsen/logrus). To log some information, extract the logger from the context with `getLogger`. This returns a logger automatically scoped to the module name.
 
 ```go
-func (m * MyModule) Run() error {
-    // ...
-    logger := GetLogger(m)
+func (m *MyNewModule) Run(ctx context.Context) error {
+    logger := getLogger(ctx, m)
     // now you can use the classical methods
     logger.Debug("Debug message")
     logger.Info("Info message")
     logger.Warn("Warning message")
     logger.Error("Error message")
-    logger.Fatal("Fatal error")
     // you should avoid logger.Panic to prevent the agent from crashing
-
     // ...
 }
 ```
 
-In addition, the module is likely to collect some information. You can log the collected data in a structured manner with the `logger.WithField` method.
+You should log collected data in a structured manner with `logger.WithField`:
 
 ```go
-func (m * MyModule) Run() error {
+func (m *MyNewModule) Run(ctx context.Context) error {
+    logger := getLogger(ctx, m)
     // ...
-    logger := GetLogger(m)
-    // ...
-    // append the fields you want to show and call Debug/Info method
     logger.WithField("hostname", hostname).Debug("Hostname found!")
 }
 ```
 
 ## Big module case
 
-if your module is heavy you can store all the work (namely the material for the `Run` function) inside a submodule and write a short interface in the `modules` directory.
+If your module is heavy you can store the implementation inside a sub-package and write a short interface in the `modules` directory.
 
 You may have the following layout:
 
 ```bash
-modules/
+pkg/modules/
     heavy.go
     heavy/
         file1.go
@@ -175,35 +218,36 @@ modules/
 The `heavy.go` file may look like the following:
 
 ```go
+package modules
 
 import (
-    // ...
+    "context"
 
-	// load the submodule
-	 "github.com/situation-sh/situation/modules/heavy"
-
+    // load the sub-package
+    heavy "github.com/situation-sh/situation/pkg/modules/heavy"
 )
 
-type HeavyModule struct {}
-
-func init() {
-    RegisterModule(&HeavyModule{})
+type HeavyModule struct {
+    BaseModule
 }
 
-func (m * HeavyModule) Name() string {
-    // return the name of the module with a dash
+func init() {
+    registerModule(&HeavyModule{})
+}
+
+func (m *HeavyModule) Name() string {
     return "heavy"
 }
 
-func (m * HeavyModule) Dependencies() []string {
-    // put the name of the modules you depend on here
+func (m *HeavyModule) Dependencies() []string {
     return []string{}
 }
 
-func (m * HeavyModule) Run() error {
-    // ...
-    // call heavy.Stuff
-    // ...
+func (m *HeavyModule) Run(ctx context.Context) error {
+    logger := getLogger(ctx, m)
+    storage := getStorage(ctx)
+    // delegate to the sub-package
+    return heavy.DoWork(ctx, logger, storage)
 }
 ```
 
@@ -215,14 +259,16 @@ Documenting a module is mandatory. There are two things to do. The first thing i
 // MyNewModule retrieves data from ...
 //
 // It mainly depends on the following external library:
-//  - ... 
+//  - ...
 //
 // On Windows, it collect data by calling...
 // On Linux, it reads ...
-type MyNewModule struct {}
+type MyNewModule struct {
+    BaseModule
+}
 ```
 
-One must have a synospis (first line) and then some details about the module.
+One must have a synopsis (first line) and then some details about the module.
 One may include how data is collected with regards to the platform and also
 other relevant things (edge cases, libraries, privileges, options etc.)
 
@@ -242,4 +288,4 @@ Currently there are 4 attributes to provide: `LINUX`, `WINDOWS`, `MACOS` and `RO
 `yes`/`ok` (meaning "supported"), `no` (meaning "not supported"), or `?` (meaning "don't know").
 
 !!! warning ""
-For `ROOT`, `yes`/`ok` means that root privileges are required
+    For `ROOT`, `yes`/`ok` means that root privileges are required

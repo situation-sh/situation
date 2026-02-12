@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## title: Quick start summary: What you can do with this CLI tool order: 20
+---
+title: Quick start 
+summary: Grab your first data
+---
 
 ## Installation
 

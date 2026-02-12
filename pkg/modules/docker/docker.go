@@ -223,6 +223,8 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 					Warn("fail to parse network")
 				continue
 			}
+			// TODO: here we may have a problem since the docker network can
+			// already be discovered by the host-network module.
 			subnet := models.Subnetwork{
 				NetworkAddr: addr.String(),
 				NetworkCIDR: cidr.String(),
@@ -349,6 +351,7 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				Gateway:   settings.Gateway,
 				Machine:   &machine,
 				MachineID: machine.ID,
+				Flags:     models.NetworkInterfaceFlags{Up: true},
 				Tag:       endpoint.EndpointID,
 			}
 
@@ -436,6 +439,8 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				}
 				endpoints = append(endpoints, &ctrEndpoint)
 
+				// TODO fix error: (we need a kind of hash i think)
+				// WRN docker fail to create application endpoints container_name="/nostalgic_galois" endpoints="9" error="ERROR: ON CONFLICT DO UPDATE command cannot affect row a second time (SQLSTATE=21000)" ip="[172.17.0.2]"
 				for _, hostNIC := range p.machine.NICS {
 					for _, addr := range hostNIC.IP {
 						if (port.IP == "0.0.0.0" && utils.IPVersionString(addr) == 4) ||

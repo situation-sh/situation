@@ -66,3 +66,7 @@ func UpdateFromJSON(raw []byte) error {
 func ReadEnv() error {
 	return puzzle.ReadEnv(k)
 }
+
+func SomeFlags(keys ...string) ([]cli.Flag, error) {
+	return urfave3.Build(k.Only(keys...))
+}

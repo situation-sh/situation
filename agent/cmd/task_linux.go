@@ -42,7 +42,7 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	} else if timePeriod.Minutes() > 0.0 {
 		minutes = fmt.Sprintf("*/%0.f", timePeriod.Minutes())
 	}
-	cronLine := fmt.Sprintf("%s %s %s * * %s %s\n", minutes, hours, day, file, strings.Join(getRunArgs(cmd), " "))
+	cronLine := fmt.Sprintf("%s %s %s * * %s run %s\n", minutes, hours, day, file, strings.Join(getRunArgs(cmd), " "))
 
 	logrus.Infof("Creating cron job file %s", cronFile)
 	f, err := os.OpenFile(cronFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
