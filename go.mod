@@ -1,6 +1,6 @@
 module github.com/situation-sh/situation
 
-go 1.25.6
+go 1.26.0
 
 tool github.com/jondot/goweight
 

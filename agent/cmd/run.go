@@ -16,6 +16,7 @@ import (
 	"github.com/situation-sh/situation/agent/config"
 	"github.com/situation-sh/situation/pkg/modules"
 	"github.com/situation-sh/situation/pkg/store"
+	"github.com/situation-sh/situation/pkg/tui"
 )
 
 var (
@@ -23,12 +24,20 @@ var (
 	db                string = ":memory:"
 	sentryDSN         string = ""
 	failfast          bool   = false
+	explore           bool   = false
 )
 
 var runCmd = cli.Command{
 	Name:   "run",
 	Usage:  "Run the agent (default)",
 	Action: runAction,
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "explore",
+			Destination: &explore,
+			Usage:       "Run the explorer after the run",
+		},
+	},
 }
 
 func init() {
@@ -194,6 +203,11 @@ func runAction(ctx context.Context, cmd *cli.Command) error {
 	scheduler := modules.NewScheduler(mods, opts...)
 	if err := scheduler.Run(newCtx); err != nil {
 		return err
+	}
+
+	if explore {
+		// run the TUI
+		return tui.NewRootModel(ctx, storage).Run()
 	}
 
 	return nil

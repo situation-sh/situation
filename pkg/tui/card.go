@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"path"
 	"slices"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -69,10 +70,10 @@ func (m *CardModel) ports() [][]string {
 	return out
 }
 
-func (m *CardModel) flows() map[string][]string {
-	out := make(map[string][]string)
+func (m *CardModel) flows() [][]string {
+	tmp := make(map[string][][]string)
 	if m.nic == nil || m.nic.OutgoingFlows == nil {
-		return out
+		return nil
 	}
 	for _, flow := range m.nic.OutgoingFlows {
 		if flow.SrcAddr == m.addr {
@@ -80,15 +81,39 @@ func (m *CardModel) flows() map[string][]string {
 			if flow.DstEndpoint.SaaS != "" {
 				saas = fmt.Sprintf("(%s)", flow.DstEndpoint.SaaS)
 			}
-			out[flow.SrcApplication.Name] = append(out[flow.SrcApplication.Name],
-				fmt.Sprintf("%s:%d %s",
-					flow.DstEndpoint.Addr,
-					flow.DstEndpoint.Port,
+			tmp[flow.SrcApplication.Name] = append(
+				tmp[flow.SrcApplication.Name],
+				[]string{
+					path.Base(flow.SrcApplication.Name),
+					"→",
+					fmt.Sprintf("%s:%d", flow.DstEndpoint.Addr, flow.DstEndpoint.Port),
 					saas,
-				),
+				},
 			)
 		}
 	}
+
+	out := make([][]string, 0)
+	for _, endpoints := range tmp {
+		if len(endpoints) > 3 {
+			e := endpoints[0]
+			e[2] = fmt.Sprintf("(%d)", len(endpoints))
+			e[3] = ""
+			out = append(out, e)
+		} else {
+			out = append(out, endpoints...)
+		}
+
+	}
+	slices.SortFunc(out, func(a, b []string) int {
+		if a[0] < b[0] {
+			return -1
+		} else if a[0] > b[0] {
+			return 1
+		}
+		return 0
+	})
+
 	return out
 }
 
@@ -149,8 +174,10 @@ func (m *CardModel) View() string {
 	}
 
 	bold := lipgloss.NewStyle().Bold(true)
+	h := m.height - 3
 
-	t := baseTable().Rows(systemRows...).Width(m.systemWidth())
+	// sys
+	t := baseTable().Rows(systemRows...).Width(m.systemWidth()).Height(h)
 	system := lipgloss.JoinVertical(lipgloss.Left, bold.Render("System"), t.String())
 
 	// endpoints
@@ -159,7 +186,7 @@ func (m *CardModel) View() string {
 			return lipgloss.NewStyle().Faint(true).Padding(0, 1)
 		}
 		return lipgloss.NewStyle()
-	}).Rows(m.ports()...)
+	}).Rows(m.ports()...).Height(h)
 	endpoints := lipgloss.JoinVertical(
 		lipgloss.Left,
 		bold.Width(28).Render("Endpoints (incoming flows)"),
@@ -167,24 +194,22 @@ func (m *CardModel) View() string {
 	)
 
 	// flows
+
 	flows := ""
 	if m.width > 100 {
-		fm := m.flows()
-		aggr := make([]string, 0)
-		for app, endpoints := range fm {
-			if len(endpoints) > 3 {
-				aggr = append(aggr, fmt.Sprintf("%s -> (%d)", app, len(endpoints)))
-			} else {
-				for _, ep := range endpoints {
-					aggr = append(aggr, fmt.Sprintf("%s -> %s", app, ep))
-				}
-			}
-		}
-		slices.Sort(aggr)
 		flows = lipgloss.JoinVertical(
 			lipgloss.Left,
 			bold.Render("Flows (outgoing)"),
-			lipgloss.JoinVertical(lipgloss.Left, aggr...))
+			baseTable().StyleFunc(func(row, col int) lipgloss.Style {
+				if col == 1 {
+					return lipgloss.NewStyle().Padding(0, 1)
+				}
+				if col == 3 {
+					return lipgloss.NewStyle().Faint(true).Padding(0, 0, 0, 1)
+				}
+				return lipgloss.NewStyle()
+			}).Rows(m.flows()...).Height(h).String(),
+		)
 	}
 
 	return cardBaseStyle.
