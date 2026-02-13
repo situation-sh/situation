@@ -23,9 +23,11 @@ require (
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jaypipes/ghw v0.23.0
 	github.com/knqyf263/go-rpmdb v0.1.1
+	github.com/leaanthony/go-ansi-parser v1.6.1
 	github.com/libp2p/go-netroute v0.4.0
 	github.com/lorenzosaino/go-sysctl v0.3.1
 	github.com/minio/selfupdate v0.6.0
+	github.com/rmhubbert/bubbletea-overlay v0.6.5
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
 	github.com/shirou/gopsutil/v4 v4.26.1
 	github.com/sirupsen/logrus v1.9.4

@@ -32,3 +32,30 @@ var AccentMutedColor = lipgloss.CompleteAdaptiveColor{
 	Light: lipgloss.CompleteColor{TrueColor: "#00530d", ANSI256: "22", ANSI: "2"},
 	Dark:  lipgloss.CompleteColor{TrueColor: "#00530d", ANSI256: "22", ANSI: "2"},
 }
+
+var ErrorBgColor = lipgloss.CompleteColor{
+	TrueColor: "#f45",
+	ANSI256:   "160",
+	ANSI:      "9",
+}
+
+var ErrorFgColor = lipgloss.CompleteColor{TrueColor: "#fff", ANSI256: "255", ANSI: "15"}
+
+var SuccessBgColor = lipgloss.CompleteColor{
+	TrueColor: "#0c0",
+	ANSI256:   "28",
+	ANSI:      "2",
+}
+
+var SuccessFgColor = lipgloss.CompleteColor{TrueColor: "#fff", ANSI256: "255", ANSI: "15"}
+
+// var ErrorFgColor = lipgloss.CompleteAdaptiveColor{
+// 	Light: lipgloss.CompleteColor{TrueColor: "#000", ANSI256: "0", ANSI: "0"},
+// 	Dark:  lipgloss.CompleteColor{TrueColor: "#000", ANSI256: "0", ANSI: "0"},
+// }
+
+// lipgloss.CompleteColor{
+// 	TrueColor: "#fff",
+// 	ANSI256:   "255",
+// 	ANSI:      "15",
+// }

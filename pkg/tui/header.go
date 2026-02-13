@@ -6,7 +6,7 @@ import (
 )
 
 var headerStyle = lipgloss.NewStyle().
-	Foreground(InvPrimaryColor)
+	Faint(true)
 	// Background(PrimaryMutedColor).PaddingLeft(1)
 
 type HeaderModel struct {

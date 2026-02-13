@@ -8,7 +8,8 @@ Here is what the agent can do in addition to collecting data.
 
 | Command           | Description                                      |
 | ----------------- | ------------------------------------------------ |
-| `run`             | Run the agent (default)                          |
+| `run`             | Run the agent                                    |
+| `explore`         | Run the experimental terminal UI                 |
 | `refresh-id`      | Regenerate the internal ID of the agent          |
 | `defaults`, `def` | Print the default config                         |
 | `id`              | Print the identifier of the agent                |
