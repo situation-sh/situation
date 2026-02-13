@@ -26,11 +26,10 @@ func init() {
 
 // Module definition ---------------------------------------------------------
 
-// HostNetworkModule retrieves basic network information about the host:
-// interfaces along with their name, MAC address, IP addresses (IPv4 and IPv6),
-// subnet masks, and default gateway.
+// HostNetworkModule retrieves basic network information about the host.
 //
-// It uses the [net] standard library and [go-netroute] for gateway detection.
+// It uses the [net] standard library to grab interfaces along with their name, MAC address, IP addresses (IPv4 and IPv6),
+// subnet masks and [go-netroute] for gateway detection.
 //
 // On Linux, it uses the Netlink API.
 // On Windows, it calls `GetAdaptersAddresses`.

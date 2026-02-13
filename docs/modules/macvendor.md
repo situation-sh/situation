@@ -5,7 +5,7 @@ macos:
 root: 
 title: MAC Vendor
 summary: "Resolves manufacturer from MAC addresses."
-date: 2026-02-05
+date: 2026-02-13
 filename: macvendor.go
 std_imports:
   - context

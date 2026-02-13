@@ -90,12 +90,11 @@ situation.exe run --ping-timeout=1s
 All the module can be disabled through the following pattern `--no-module-<module-name>` (see the list of [available modules](modules/index.md))
 
 !!! note
-As some modules may depend on others, disabling a module may lead to a cascasding effect. To force modules that depend on it to run, you must pass the `--ignore-missing-deps` flag.
+    As some modules may depend on others, disabling a module may lead to a cascasding effect. To force modules that depend on it to run, you must pass the `--ignore-missing-deps` flag.
 
-```
-    :::shell
-    situation run --no-module-ping --ignore-missing-deps
-```
+        :::shell
+        situation run --no-module-ping --ignore-missing-deps
+    
 
 ### Sentry
 

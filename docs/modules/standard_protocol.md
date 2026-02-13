@@ -3,32 +3,26 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: TCP Scan
-summary: "Tries to connect to neighbor TCP ports."
+title: StandardProtocol
+summary: "Fills standard protocol information for endpoints."
 date: 2026-02-13
-filename: tcp_scan.go
+filename: standard_protocol.go
 std_imports:
   - context
   - fmt
-  - net
   - strings
-  - time
 imports:
-  - github.com/asiffer/puzzle
+  - github.com/uptrace/bun
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-TCPScanModule tries to connect to neighbor TCP ports.
+StandardProtocolModule fills standard protocol information for endpoints.
 
 ### Details
 
-
-The module only uses the Go standard library.
-
-A TCP connect is performed on the [NMAP top 1000 ports](https://nullsec.us/top-1-000-tcp-and-udp-ports-nmap-default/). These connection attempts are made concurrently against the hosts previously found. The connections have a 500ms timeout.
 
 ### Dependencies
 

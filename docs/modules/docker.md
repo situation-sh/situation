@@ -5,11 +5,10 @@ macos: unknown
 root: true
 title: Docker
 summary: "Retrieves information about docker containers."
-date: 2026-02-05
+date: 2026-02-13
 filename: docker.go
 std_imports:
   - context
-  - fmt
   - net
   - runtime
   - strings
@@ -32,7 +31,7 @@ DockerModule retrieves information about docker containers.
 ### Details
 
 
-It uses the official go client that performs HTTP queries either on port `:2375` (on windows generally) or on UNIX sockets.
+It uses the official go client that performs HTTP queries either on port `:2376` (on windows generally) or on UNIX sockets.
 
 We generally need some privileges to reads UNIX sockets, so it may require root privileges (the alternative is to belong to the `docker` group)
 

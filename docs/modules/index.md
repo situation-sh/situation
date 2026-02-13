@@ -30,7 +30,7 @@ sidebar_title: Reference
 | [host-cpu](host_cpu.md)   | HostCPUModule retrieves host CPU info: model, vendor and the number of cores.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [host-disk](host_disk.md)   | HostDiskModule retrieves basic information about disk: name, model, size, type, controller and partitions.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [host-gpu](host_gpu.md)   | HostGPUModule retrieves basic information about GPU: index, vendor and product name.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
-| [host-network](host_network.md)   | HostNetworkModule retrieves basic network information about the host: interfaces along with their name, MAC address, IP addresses (IPv4 and IPv6), subnet masks, and default gateway.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
+| [host-network](host_network.md)   | HostNetworkModule retrieves basic network information about the host.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [ja4](ja4.md)   | JA4Module attempts JA4, JA4S and JA4X fingerprinting      | [tls](tls.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [local-users](local_users.md)   | LocalUsersModule lists all local user accounts on the system.      | [host-basic](host_basic.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [macvendor](macvendor.md)   | MACVendorModule resolves manufacturer from MAC addresses.      | [arp](arp.md)           |      |
@@ -40,6 +40,7 @@ sidebar_title: Reference
 | [reverse-lookup](reverse_lookup.md)   | ReverseLookupModule tries to get a hostname attached to a local IP address      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [rpm](rpm.md)   | RPMModule reads package information from the rpm package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |
 | [saas](saas.md)   | SaaSModule identifies SaaS applications from discovered endpoints.      | [tls](tls.md), [ja4](ja4.md)           |      |
+| [standard-protocol](standard_protocol.md)   | StandardProtocolModule fills standard protocol information for endpoints.      | [netstat](netstat.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [tcp-scan](tcp_scan.md)   | TCPScanModule tries to connect to neighbor TCP ports.      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [tls](tls.md)   | TLSModule enriches TCP endpoints with TLS certificate information.      | [tcp-scan](tcp_scan.md), [netstat](netstat.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [zypper](zypper.md)   | ZypperModule reads package information from the zypper package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |

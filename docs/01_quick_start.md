@@ -51,6 +51,46 @@ situation.exe run --db=situation.sqlite
 
 ///
 
+## Exploring (experimental)
+
+Situation embeds a minimal terminal ui (tui) that briefly shows the collected data. It can pop up after the run with the `--explore` flag,
+
+/// tab | Linux
+
+```bash
+situation run --explore
+```
+
+///
+
+/// tab | Windows
+
+```ps1
+situation.exe run --explore
+```
+
+///
+
+or the `explore` command can also be used in case of data persistence
+
+/// tab | Linux
+
+```bash
+situation explore --db=situation.sqlite
+```
+
+///
+
+/// tab | Windows
+
+```ps1
+situation.exe explore --db=situation.sqlite
+```
+
+///
+
+![tui](img/tui.svg)
+
 ## Cooperation
 
 Here is where the IT data collection platform starts!

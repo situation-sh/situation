@@ -19,6 +19,7 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.blocks.tab
   - footnotes
+  - shadcn.extensions.iconify
 
 plugins:
   - search:
