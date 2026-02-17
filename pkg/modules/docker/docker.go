@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -35,37 +36,37 @@ func (p *Platform) Ping(ctx context.Context) error {
 	return err
 }
 
-func createNetworkInterface(ipam network.IPAM, endpoint network.EndpointResource) *models.NetworkInterface {
-	hw, err := net.ParseMAC(endpoint.MacAddress)
-	if err != nil {
-		// fmt.Println(err)
-		hw = net.HardwareAddr([]byte{0, 0, 0, 0, 0, 0})
-	}
-	nic := models.NetworkInterface{
-		MAC:  hw.String(),
-		Name: endpoint.Name, // :warning: this is not the real network interface name in the container
-		IP:   make([]string, 0),
-	}
+// func createNetworkInterface(ipam network.IPAM, endpoint network.EndpointResource) *models.NetworkInterface {
+// 	hw, err := net.ParseMAC(endpoint.MacAddress)
+// 	if err != nil {
+// 		// fmt.Println(err)
+// 		hw = net.HardwareAddr([]byte{0, 0, 0, 0, 0, 0})
+// 	}
+// 	nic := models.NetworkInterface{
+// 		MAC:  hw.String(),
+// 		Name: endpoint.Name, // :warning: this is not the real network interface name in the container
+// 		IP:   make([]string, 0),
+// 	}
 
-	// ip4, subnet4, err := net.ParseCIDR(endpoint.IPv4Address)
-	// if err == nil {
-	// 	nic.IP = ip4
-	// 	nic.MaskSize, _ = subnet4.Mask.Size()
-	// }
-	if endpoint.IPv4Address != "" {
-		nic.IP = append(nic.IP, endpoint.IPv4Address)
-	}
-	if endpoint.IPv6Address != "" {
-		nic.IP = append(nic.IP, endpoint.IPv6Address)
-	}
+// 	// ip4, subnet4, err := net.ParseCIDR(endpoint.IPv4Address)
+// 	// if err == nil {
+// 	// 	nic.IP = ip4
+// 	// 	nic.MaskSize, _ = subnet4.Mask.Size()
+// 	// }
+// 	if endpoint.IPv4Address != "" {
+// 		nic.IP = append(nic.IP, endpoint.IPv4Address)
+// 	}
+// 	if endpoint.IPv6Address != "" {
+// 		nic.IP = append(nic.IP, endpoint.IPv6Address)
+// 	}
 
-	// ip6, subnet6, err := net.ParseCIDR(endpoint.IPv6Address)
-	// if err == nil {
-	// 	nic.IP6 = ip6
-	// 	nic.Mask6Size, _ = subnet6.Mask.Size()
-	// }
-	return &nic
-}
+// 	// ip6, subnet6, err := net.ParseCIDR(endpoint.IPv6Address)
+// 	// if err == nil {
+// 	// 	nic.IP6 = ip6
+// 	// 	nic.Mask6Size, _ = subnet6.Mask.Size()
+// 	// }
+// 	return &nic
+// }
 
 func splitImageName(image string) (string, string) {
 	// parse image and version
@@ -191,7 +192,86 @@ func getContainerByID(ctx context.Context, cli *client.Client, id string) (conta
 	return container.Summary{}, err
 }
 
+func tagSubnets(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *store.BunStorage) error {
+	hostID := s.GetHostID(ctx)
+	if hostID <= 0 {
+		return fmt.Errorf("host not found in storage")
+	}
+	options := network.ListOptions{Filters: filters.NewArgs(filters.Arg("driver", "bridge"))}
+	networks, err := p.client.NetworkList(ctx, options)
+	if err != nil {
+		return err
+	}
+
+	subnets := make([]*models.Subnetwork, 0)
+
+	// loop over the networks
+	for _, n := range networks {
+		network, err := p.client.NetworkInspect(ctx, n.ID, network.InspectOptions{})
+		if err != nil {
+			logger.WithError(err).WithField("network_id", n.ID).Warn("fail to inspect network")
+			continue
+		}
+		iface, ok := network.Options["com.docker.network.bridge.name"]
+		if ok {
+			var link models.NetworkInterfaceSubnet
+			err = s.DB().
+				NewSelect().
+				Model(&link).
+				Relation("Subnetwork").
+				Relation("NetworkInterface").
+				Where("network_interface_id IN (?)",
+					s.DB().NewSelect().
+						Model((*models.NetworkInterface)(nil)).
+						Column("id").
+						Where("name = ?", iface).
+						Where("machine_id = ?", hostID),
+				).
+				Limit(1).
+				Scan(ctx)
+			if err != nil {
+				logger.
+					WithError(err).
+					WithField("iface", iface).
+					WithField("host_id", hostID).
+					Warn("no host iface found")
+				continue
+			}
+			if link.Subnetwork != nil {
+				link.Subnetwork.Tag = network.ID
+				// set the gateway if there is only one config
+				// (most of the time it is the case for bridge networks)
+				if len(network.IPAM.Config) == 1 {
+					link.Subnetwork.Gateway = network.IPAM.Config[0].Gateway
+				}
+				subnets = append(subnets, link.Subnetwork)
+			}
+		}
+	}
+
+	if len(subnets) > 0 {
+		_, err = s.DB().
+			NewUpdate().
+			Model(&subnets).
+			Bulk().
+			Exec(ctx)
+		if err != nil {
+			logger.
+				WithError(err).
+				WithField("subnets", len(subnets)).
+				Warn("failed to update subnet tags")
+		}
+		logger.WithField("subnets", len(subnets)).Info("Subnet tags updated")
+	}
+
+	return nil
+}
+
 func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *store.BunStorage) error {
+	// tag subnets with docker network id
+	if err := tagSubnets(ctx, p, logger, s); err != nil {
+		return fmt.Errorf("failed to tag subnets: %v", err)
+	}
 	// find all the networks
 	networks, err := p.client.NetworkList(ctx, network.ListOptions{})
 	if err != nil {
@@ -213,6 +293,7 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 		subnetMap := make(map[string]*models.Subnetwork)
 		subnets := make([]*models.Subnetwork, 0)
 		for _, cfg := range network.IPAM.Config {
+
 			addr, cidr, err := net.ParseCIDR(cfg.Subnet)
 			if err != nil {
 				logger.
@@ -222,6 +303,14 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 					Warn("fail to parse network")
 				continue
 			}
+
+			// if network.Driver == "bridge" {
+			// 	iface, ok := network.Options["com.docker.network.bridge.name"]
+			// 	if ok {
+			// 		storage.D
+			// 	}
+
+			// }
 			// TODO: here we may have a problem since the docker network can
 			// already be discovered by the host-network module.
 			subnet := models.Subnetwork{

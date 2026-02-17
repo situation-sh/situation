@@ -17,7 +17,7 @@ import (
 )
 
 func init() {
-	m := &TCPScanModule{Timeout: 300 * time.Millisecond}
+	m := &TCPScanModule{Timeout: 200 * time.Millisecond}
 	registerModule(m)
 }
 

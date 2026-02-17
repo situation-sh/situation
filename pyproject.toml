@@ -15,3 +15,9 @@ dependencies = [
 
 [tool.uv.workspace]
 members = [".dev/guide/situation-fastapi", ".dev/ja4s/python"]
+
+[dependency-groups]
+dev = [
+    "psycopg2>=2.9.11",
+    "sqlacodegen>=3.2.0",
+]

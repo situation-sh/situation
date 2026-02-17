@@ -39,6 +39,7 @@ var app = &cli.Command{
 		&versionCmd,
 		&taskCmd,
 		&exploreCmd,
+		&migrateCmd,
 	},
 	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 		level := logrus.Level(logLevel)

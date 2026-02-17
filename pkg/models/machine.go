@@ -38,7 +38,7 @@ type Machine struct {
 	Chassis string `json:"chassis,omitempty" jsonschema:"description=machine kind,example=vm,example=laptop"`
 
 	// Has-one relationship
-	ParentMachineID int64    `bun:"parent_machine_id" json:"parent_machine,omitempty" jsonschema:"description=internal reference of the parent machine (docker or VM cases especially),example=53127"`
+	ParentMachineID int64    `bun:"parent_machine_id,nullzero" json:"parent_machine,omitempty" jsonschema:"description=internal reference of the parent machine (docker or VM cases especially),example=53127"`
 	ParentMachine   *Machine `bun:"rel:has-one,join:parent_machine_id=id" json:"parent,omitempty" jsonschema:"description=parent machine (docker or VM host)"`
 
 	// Has-one relationship

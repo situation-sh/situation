@@ -27,7 +27,7 @@ type Application struct {
 	CPE      string                 `bun:"cpe" json:"cpe,omitempty" jsonschema:"description=application CPE uri,example=cpe:2.3:a:f5:nginx:*:*:*:*:*:*:*:*"`
 
 	MachineID int64    `bun:"machine_id,notnull,unique:machine_app_name_pid"`
-	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id" json:"machine,omitempty" jsonschema:"description=machine hosting this application"`
+	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id,on_delete:cascade" json:"machine,omitempty" jsonschema:"description=machine hosting this application"`
 	// Belongs-to relationship
 	PackageID int64    `bun:"package_id,nullzero"`
 	Package   *Package `bun:"rel:belongs-to,join:package_id=id" json:"package,omitempty" jsonschema:"description=package providing this application"`

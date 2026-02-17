@@ -17,8 +17,9 @@ type NetworkInterfaceSubnet struct {
 	SubnetworkID int64       `bun:"subnetwork_id,pk"`
 	Subnetwork   *Subnetwork `bun:"rel:belongs-to,join:subnetwork_id=id"`
 
+	IP string `bun:"ip,pk"`
 	// dummy columns for constraints only
-	MACSubnet string `bun:"mac_subnet,unique,notnull,nullzero"`
+	MACSubnet string `bun:"mac_subnet,unique,nullzero"`
 }
 
 func (nis *NetworkInterfaceSubnet) SetMACSubnet() error {

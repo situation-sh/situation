@@ -171,6 +171,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 			link := &models.NetworkInterfaceSubnet{
 				NetworkInterface: nic,
 				Subnetwork:       s,
+				IP:               ip.String(),
 			}
 			key := hashNICSubnet(link)
 			// fmt.Println(key)

@@ -53,6 +53,9 @@ func (m *PingModule) Dependencies() []string {
 }
 
 func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, source net.IP, logger logrus.FieldLogger, s *store.BunStorage) error {
+	// better context
+	logger = logger.WithField("subnet", network)
+
 	ips := utils.ListIPs(network)
 
 	ipChan := make(chan net.IP, len(ips))
@@ -64,7 +67,6 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 
 	if err := ping.PingSubnet4(ips, source, 1000*time.Millisecond, onRecv); err != nil {
 		logger.
-			WithField("network", network).
 			WithError(err).
 			Warnf("error while pinging subnetwork")
 	}
@@ -114,6 +116,9 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 		if err != nil {
 			return fmt.Errorf("unable to insert new NICs for subnetwork %s: %v", network.String(), err)
 		}
+		logger.WithField("nics", len(newNICs)).Info("New NICs discovered")
+	} else {
+		logger.Warn("No new NICs discovered")
 	}
 
 	// Create links for new NICs only
@@ -123,22 +128,31 @@ func pingSubnetwork(ctx context.Context, network *net.IPNet, subnetID int64, sou
 			NetworkInterface:   nic,
 			NetworkInterfaceID: nic.ID,
 			SubnetworkID:       subnetID,
+			IP:                 nic.IP[0],
 		}
-		if err := link.SetMACSubnet(); err != nil {
-			return fmt.Errorf("unable to set MACSubnet for NIC-subnet link: %v", err)
-		}
+		// if err := link.SetMACSubnet(); err != nil {
+		// 	return fmt.Errorf("unable to set MACSubnet for NIC-subnet link: %v", err)
+		// }
 		links = append(links, &link)
 	}
 
 	if len(links) > 0 {
+		// for _, link := range links {
+		// 	fmt.Printf("Link: NIC IP %v <-> Subnet ID %d (MACSubnet: %s)\n", link.NetworkInterface.IP, link.SubnetworkID, link.MACSubnet)
+		// }
 		_, err = s.DB().
 			NewInsert().
 			Model(&links).
-			On("CONFLICT DO NOTHING").
+			On("CONFLICT (mac_subnet) DO UPDATE").
+			Set("network_interface_id = EXCLUDED.network_interface_id").
+			Set("subnetwork_id = EXCLUDED.subnetwork_id").
 			Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("unable to insert NIC-subnet links for subnetwork %s: %v", network.String(), err)
 		}
+		logger.WithField("links", len(links)).Info("NICs linked to subnets")
+	} else {
+		logger.Warn("No new NIC-subnet links to create")
 	}
 
 	return nil

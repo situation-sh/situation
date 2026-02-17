@@ -56,7 +56,7 @@ func (s *BunStorage) GenerateSchema() string {
 func (s *BunStorage) snapshotMigrations() (string, string) {
 	upStatements := make([]string, 0)
 	for _, model := range trackedModels {
-		query := s.db.NewCreateTable().Model(model).IfNotExists()
+		query := s.db.NewCreateTable().Model(model).WithForeignKeys().IfNotExists()
 		upStatements = append(upStatements, query.String()+";")
 	}
 	downStatements := make([]string, 0)

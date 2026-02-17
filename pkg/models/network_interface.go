@@ -50,7 +50,7 @@ type NetworkInterface struct {
 
 	// Belongs-to relationship
 	MachineID int64    `bun:"machine_id,unique:machine_nic_name,nullzero,unique:machine_mac_tag" json:"machine_id,omitempty" jsonschema:"description=ID of the machine this network interface belongs to"`
-	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
+	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id,on_delete:cascade"`
 
 	// Has-many relationship
 	Subnetworks []*Subnetwork `bun:"m2m:network_interface_subnets,join:NetworkInterface=Subnetwork"`

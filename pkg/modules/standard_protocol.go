@@ -12,6 +12,7 @@ import (
 	"github.com/situation-sh/situation/pkg/models"
 	"github.com/situation-sh/situation/pkg/store"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect"
 )
 
 func init() {
@@ -75,15 +76,26 @@ func (m *StandardProtocolModule) Run(ctx context.Context) error {
 }
 
 func sqlCase(storage *store.BunStorage, protocols map[uint16]string) string {
+	isPG := storage.Dialect() == dialect.PG
 	chunks := []string{"( CASE port"}
 	for port, proto := range protocols {
+		// For PG, use JSON array literal since column is jsonb
+		// For SQLite, use the standard ARRAY format
+		var value string
+		if isPG {
+			value = fmt.Sprintf(`["%s"]`, proto)
+		} else {
+			value = storage.ARRAY([]string{proto})
+		}
 		chunks = append(chunks,
-			fmt.Sprintf(`WHEN %d THEN '%s'`,
-				port, storage.ARRAY([]string{proto}),
-			),
+			fmt.Sprintf(`WHEN %d THEN '%s'`, port, value),
 		)
 	}
-	chunks = append(chunks, "END )")
+	suffix := "END )"
+	if isPG {
+		suffix = "END )::jsonb"
+	}
+	chunks = append(chunks, suffix)
 	return strings.Join(chunks, "\n ")
 }
 

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/situation-sh/situation/pkg/models"
 )
@@ -82,10 +83,21 @@ func (s *BunStorage) GetNICByIPOnSubnet(ctx context.Context, ip string, subnetID
 // GetNICByMACOrIPOnSubnet returns a network interface by its MAC or IP address on a specific subnet.
 func (s *BunStorage) GetNICByMACOrIPOnSubnet(ctx context.Context, mac string, ip string, subnetID int64) (*models.NetworkInterface, error) {
 	var nic models.NetworkInterface
+	// q := s.db.
+	// 	NewSelect().
+	// 	Model(&nic).
+	// 	Where(fmt.Sprintf("((mac = ?) OR (%s))", s.ANY("ip")), mac, ip).
+	// 	// Where("mac = ? OR "+s.ANY("ip"), mac, ip).
+	// 	Where("EXISTS (SELECT 1 FROM network_interface_subnets WHERE network_interface_id = network_interface.id AND subnetwork_id = ?)", subnetID).
+	// 	Relation("Machine").
+	// 	Relation("Subnetworks").
+	// 	Limit(1).String()
+	// fmt.Println("Generated SQL:", q)
 	err := s.db.
 		NewSelect().
 		Model(&nic).
-		Where("mac = ? OR "+s.ANY("ip"), mac, ip).
+		Where(fmt.Sprintf("((mac = ?) OR (%s))", s.ANY("ip")), mac, ip).
+		// Where("mac = ? OR "+s.ANY("ip"), mac, ip).
 		Where("EXISTS (SELECT 1 FROM network_interface_subnets WHERE network_interface_id = network_interface.id AND subnetwork_id = ?)", subnetID).
 		Relation("Machine").
 		Relation("Subnetworks").

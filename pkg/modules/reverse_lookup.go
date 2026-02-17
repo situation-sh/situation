@@ -64,7 +64,7 @@ func (m *ReverseLookupModule) Run(ctx context.Context) error {
 			}
 			// if ip != nil && ip.IsPrivate() {
 			// run first lookup
-			net.LookupAddr(ip.String()) // #nosec G104 -- we don't care about the errors here
+			// net.LookupAddr(ip.String()) // #nosec G104 -- we don't care about the errors here
 			names, err := net.LookupAddr(ip.String())
 			if err != nil {
 				logger.

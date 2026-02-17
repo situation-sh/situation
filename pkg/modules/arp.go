@@ -121,6 +121,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 						Debug("no candidate found")
 				}
 
+				// already exists
 				if obj != nil {
 					if obj.MAC != mac {
 						obj.MAC = mac
@@ -145,7 +146,7 @@ func (m *ARPModule) Run(ctx context.Context) error {
 
 					logger.WithField("mac", entry.MAC).
 						WithField("ip", entry.IP).
-						Info("New machine added from ARP entry")
+						Info("NIC created from ARP entry")
 				}
 
 			}

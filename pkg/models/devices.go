@@ -20,7 +20,7 @@ type CPU struct {
 
 	// Belongs-to relationship
 	MachineID int64    `bun:"machine_id,notnull,unique"`
-	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
+	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id,on_delete:cascade"`
 }
 
 type Disk struct {
@@ -39,7 +39,7 @@ type Disk struct {
 
 	// Belongs-to relationship
 	MachineID int64    `bun:"machine_id,unique:machine_disk_name,notnull"`
-	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
+	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id,on_delete:cascade"`
 }
 
 type Partition struct {
@@ -63,5 +63,5 @@ type GPU struct {
 
 	// Belongs-to relationship
 	MachineID int64    `bun:"machine_id,unique:machine_gpu_index,notnull"`
-	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
+	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id,on_delete:cascade"`
 }

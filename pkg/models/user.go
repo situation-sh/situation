@@ -33,7 +33,7 @@ type User struct {
 	Domain   string `bun:"domain" json:"domain,omitempty" jsonschema:"description=domain of the user (windows),example=WORKGROUP,example=CORP"`
 
 	MachineID int64    `bun:"machine_id,notnull,unique:machine_user"`
-	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
+	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id,on_delete:cascade"`
 }
 
 type UserApplication struct {
@@ -44,9 +44,9 @@ type UserApplication struct {
 	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
 
 	UserID        int64        `bun:"user_id,notnull,unique:user_application"`
-	User          *User        `bun:"rel:belongs-to,join:user_id=id"`
+	User          *User        `bun:"rel:belongs-to,join:user_id=id,on_delete:cascade"`
 	ApplicationID int64        `bun:"application_id,notnull,unique:user_application"`
-	Application   *Application `bun:"rel:belongs-to,join:application_id=id"`
+	Application   *Application `bun:"rel:belongs-to,join:application_id=id,on_delete:cascade"`
 
 	Linux string `bun:"linux" json:"linux,omitempty" jsonschema:"description=Linux-specific data for this user-application relation,example=suid:0"`
 }

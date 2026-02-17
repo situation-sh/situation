@@ -91,20 +91,16 @@ goarm = $(strip \
 	@echo 'Usage: make [command] [variable=]...'
 	@echo ''
 	@echo 'Commands:'
-	@echo '             all    build for linux and windows (amd64)'
+	@echo '             all    build for linux and windows'
 	@echo '            test    run tests locally (+coverage)'
-	@echo '      build-test    build test binaries (linux and windows, amd64)'
-	@echo '     modules-doc    update modules documentation'
+	@echo '            docs    update modules documentation'
 	@echo '           clear    remove the build artifacts'
 	@echo '        security    run gosec and govulncheck'
 	@echo '        analysis    run goweight'
 	@echo '         version    print the current version'
 	@echo ''
-	@echo 'Variables:'
-	@echo '            GOOS    target OS'
-	@echo '          GOARCH    target architecture'
 
-.PHONY: version all security analysis test build-test clean clear container
+.PHONY: version all security analysis test clean clear container
 
 version:
 	@echo "$(VERSION)"
@@ -122,13 +118,10 @@ all: $(BIN_PREFIX)-amd64-linux \
 	 $(BIN_PREFIX)-armv7l-linux \
 	 $(BIN_PREFIX)-amd64-windows.exe
 
-build-test: $(BIN_PREFIX)-module-testing-amd64-linux $(BIN_PREFIX)-module-testing-amd64-windows.exe
-
 # final binary files
 $(BIN_PREFIX)-%: $(SRC_FILES) $(MIGRATION_FILES)
 	@mkdir -p $(@D)
 	GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) GOARM=$(call goarm,$*) $(BUILD) -o $@ agent/main.go
-
 
 security: gosec.json govulncheck.json
 	@cat $<
@@ -168,3 +161,23 @@ clean: clear
 
 container:
 	ko build --local --tarball $@ --tags $(VERSION) --tag-only --base-import-paths
+
+sdk: sdk/drizzle/schema.ts
+
+sdk/drizzle/schema.ts:
+	@mkdir -p $(@D)
+	docker run \
+        --rm \
+        --detach \
+        --name situation-pg \
+        -e "POSTGRES_PASSWORD=situation" \
+        -p "127.0.0.1:15432:5432" \
+        --health-cmd="pg_isready -U postgres" \
+        --health-interval=1s \
+        --health-timeout=1s \
+        --health-retries=4 \
+        postgres:17.6 >/dev/null
+	until [ "$$(docker inspect -f '{{.State.Health.Status}}' situation-pg)" == "healthy" ]; do sleep 1; done
+	$(GO) run agent/main.go migrate --db="postgres://postgres:situation@127.0.0.1:15432/postgres?sslmode=disable"
+	bun generate
+	docker rm -f situation-pg

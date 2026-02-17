@@ -25,7 +25,7 @@ type Package struct {
 
 	// Belongs-to relationship
 	MachineID int64    `bun:"machine_id,notnull,nullzero,unique:name_version_machine_id"`
-	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id"`
+	Machine   *Machine `bun:"rel:belongs-to,join:machine_id=id,on_delete:cascade"`
 
 	// Has-many relationship
 	Applications []*Application `bun:"rel:has-many,join:id=package_id" json:"applications" jsonschema:"description=list of applications"`

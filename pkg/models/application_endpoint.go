@@ -50,10 +50,10 @@ type ApplicationEndpoint struct {
 	SaaS string `bun:"saas,nullzero" json:"saas,omitempty" jsonschema:"description=if the application is identified as a SaaS, the name of the SaaS,example=GitHub,example=Google Workspace"`
 
 	ApplicationID int64        `bun:"application_id,nullzero"`
-	Application   *Application `bun:"rel:belongs-to,join:application_id=id"`
+	Application   *Application `bun:"rel:belongs-to,join:application_id=id,on_delete:cascade"`
 
-	NetworkInterfaceID int64             `bun:"network_interface_id,unique:port_protocol_addr_network_interface_id"` // can be null
-	NetworkInterface   *NetworkInterface `bun:"rel:belongs-to,join:network_interface_id=id"`
+	NetworkInterfaceID int64             `bun:"network_interface_id,nullzero,unique:port_protocol_addr_network_interface_id"` // can be null
+	NetworkInterface   *NetworkInterface `bun:"rel:belongs-to,join:network_interface_id=id,on_delete:cascade"`
 
 	// Has-many relationship
 	IncomingFlows []*Flow `bun:"rel:has-many,join:id=dst_endpoint_id"`
@@ -79,7 +79,7 @@ type EndpointPolicy struct {
 
 	// The endpoint this policy applies to
 	EndpointID int64                `bun:"endpoint_id,notnull,unique:endpoint_action_src"`
-	Endpoint   *ApplicationEndpoint `bun:"rel:belongs-to,join:endpoint_id=id"`
+	Endpoint   *ApplicationEndpoint `bun:"rel:belongs-to,join:endpoint_id=id,on_delete:cascade"`
 
 	// What happens to the traffic
 	// "accept", "drop", "reject", "forward"
