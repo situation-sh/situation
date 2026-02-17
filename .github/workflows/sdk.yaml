@@ -61,4 +61,17 @@ jobs:
 
       - name: Build SDKs
         run: make sdk
+      
+      - name: Upload Drizzle SDK
+        uses: actions/upload-artifact@v6
+        with:
+          name: drizzle
+          path: sdk/drizzle/situation*.tgz
+  
+      - name: Upload SQLModel SDK
+        uses: actions/upload-artifact@v6
+        with:
+          name: sqlmodel
+          path: sdk/sqlmodel/dist/situation*.whl
+
 
