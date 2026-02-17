@@ -48,7 +48,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Migrate database
-        run: go run agent/migrate.go --db="${PG_DSN}"
+        run: go run agent/cmd/migrate.go --db="${PG_DSN}"
 
       - name: Install python deps
         run: uv sync --all-extras
