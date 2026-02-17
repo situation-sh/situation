@@ -22,8 +22,10 @@ jobs:
           --health-interval 2s
           --health-timeout 2s
           --health-retries 5
+        ports:
+          - 5432:5432
     env:
-      PG_DSN: postgresql://postgres:situation@postgres:5432/postgres
+      PG_DSN: postgresql://postgres:situation@localhost:5432/postgres
     
     steps:
       - name: Checkout Source
