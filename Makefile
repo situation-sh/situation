@@ -67,10 +67,8 @@ BIN        := situation
 BIN_DIR    := bin
 BIN_PREFIX := $(BIN_DIR)/$(BIN)-$(VERSION)
 
-# container engine
-DOCKER := podman
-# default module to test
-TEST_MODULE ?= host-basic
+# postgres test database 
+PG_DSN     ?= postgresql://postgres:situation@127.0.0.1:5432/postgres?sslmode=disable
 
 # utils
 split = $(word $2,$(subst -, ,$(basename $1)))
@@ -156,28 +154,30 @@ clear:
 	rm -f .go*.json
 	rm -f .go*.txt
 	rm -f .go*.html
+	rm -rf sdk/*/*.ts sdk/**/*.py sdk/**/dist sdk/**/*.tgz sdk/**/*.gz sdk/**/*.whl 
 
 clean: clear
 
 container:
 	ko build --local --tarball $@ --tags $(VERSION) --tag-only --base-import-paths
 
-sdk: sdk/drizzle/schema.ts
 
-sdk/drizzle/schema.ts:
-	@mkdir -p $(@D)
-	docker run \
-        --rm \
-        --detach \
-        --name situation-pg \
-        -e "POSTGRES_PASSWORD=situation" \
-        -p "127.0.0.1:15432:5432" \
-        --health-cmd="pg_isready -U postgres" \
-        --health-interval=1s \
-        --health-timeout=1s \
-        --health-retries=4 \
-        postgres:17.6 >/dev/null
-	until [ "$$(docker inspect -f '{{.State.Health.Status}}' situation-pg)" == "healthy" ]; do sleep 1; done
-	$(GO) run agent/main.go migrate --db="postgres://postgres:situation@127.0.0.1:15432/postgres?sslmode=disable"
-	bun generate
-	docker rm -f situation-pg
+# SDK generators (experimental)
+# NOTE: a migrated pg instance is required (PG_DSN should be set accordingly)
+
+sdk: sdk/drizzle/situation-sh-drizzle-$(VERSION).tgz \
+	 sdk/sqlmodel/dist/situation_sdk-$(VERSION)-py3-none-any.whl
+
+sdk/drizzle/situation-sh-drizzle-$(VERSION).tgz: $(MIGRATION_FILES)
+	@mkdir -p sdk/drizzle
+	@sed -i 's/"version":[ ]*".*"/"version": "$(VERSION)"/' sdk/drizzle/package.json
+	bun run drizzle-kit pull --out sdk/drizzle --url "$(PG_DSN)" --dialect postgresql
+	@echo -e "export * from './schema';\nexport * from './relations';" > sdk/drizzle/index.ts
+	cd sdk/drizzle && bun run build && bun pm pack
+
+sdk/sqlmodel/dist/situation_sdk-$(VERSION)-py3-none-any.whl: $(MIGRATION_FILES)
+	@mkdir -p sdk/sqlmodel
+	@sed -i 's/"version"[ ]*[=][ ]*".*"/"version" = "$(VERSION)"/' sdk/sqlmodel/pyproject.toml
+	uv run sqlacodegen --generator sqlmodels --outfile sdk/sqlmodel/situation.py "$(PG_DSN)" 
+	cd sdk/sqlmodel && uv build -o dist
+

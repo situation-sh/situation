@@ -1,9 +1,9 @@
 [project]
-name = "situation-docs"
-version = "0.19.2"
-description = "The autonomous IT data collector"
+name = "situation"
+version = "0.20.0"
+description = "IT data collection infrastructure"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.6.4",
@@ -11,13 +11,9 @@ dependencies = [
     "mkdocs-macros-plugin>=1.3.7",
     "mkdocs-shadcn>=0.9.7",
     "pre-commit>=4.5.1",
+    "sqlacodegen>=4.0.0",
+    "psycopg2>=2.9.11",
 ]
 
 [tool.uv.workspace]
-members = [".dev/guide/situation-fastapi", ".dev/ja4s/python"]
-
-[dependency-groups]
-dev = [
-    "psycopg2>=2.9.11",
-    "sqlacodegen>=3.2.0",
-]
+members = ["dev/ja4", "sdk/sqlmodel"]
