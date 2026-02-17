@@ -25,7 +25,7 @@ jobs:
         ports:
           - 5432:5432
     env:
-      PG_DSN: postgresql://postgres:situation@localhost:5432/postgres
+      PG_DSN: postgresql://postgres:situation@localhost:5432/postgres?sslmode=disable
     
     steps:
       - name: Checkout Source
