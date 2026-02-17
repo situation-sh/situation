@@ -1,0 +1,7 @@
+[project]
+name = "ja4"
+version = "0.1.0"
+description = "Script that generates JA4 tests from wireshark captures"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pyshark>=0.6", "tqdm>=4.67.3"]
