@@ -5,7 +5,7 @@ macos: unknown
 root: unknown
 title: ReverseLookup
 summary: "Tries to get a hostname attached to a local IP address"
-date: 2026-02-13
+date: 2026-02-18
 filename: reverse_lookup.go
 std_imports:
   - context

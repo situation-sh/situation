@@ -1,4 +1,4 @@
-package main
+package docs
 
 import (
 	"bytes"
@@ -75,6 +75,7 @@ type ModuleStatus struct {
 }
 
 type ModuleDoc struct {
+	modulesDir   string
 	Name         string
 	Dependencies []string
 	Status       ModuleStatus
@@ -85,8 +86,9 @@ type ModuleDoc struct {
 	Object       *doc.Type
 }
 
-func NewModuleDoc() *ModuleDoc {
+func NewModuleDoc(modulesDir string) *ModuleDoc {
 	return &ModuleDoc{
+		modulesDir:   modulesDir,
 		Dependencies: make([]string, 0),
 		RawMarkdown:  make([]byte, 0),
 		Imports:      make([]string, 0),
@@ -152,14 +154,14 @@ func (m *ModuleDoc) insertSubmoduleImports() {
 			// get last element (name of the submodule)
 			name := w[len(w)-1] + "/"
 			// append that name to the current directory
-			subpkg, _, _ := parseSourceDirectory(path.Join(dir, name))
+			subpkg, _, _, _ := parseSourceDirectory(path.Join(m.modulesDir, name))
 			// insert its imports
 			newImports = append(newImports, subpkg.Imports...)
 		} else {
 			newImports = append(newImports, imp)
 		}
 	}
-	m.Imports = unique[string](newImports)
+	m.Imports = unique(newImports)
 }
 
 func (m *ModuleDoc) ImportHeader() string {
@@ -228,10 +230,10 @@ func (m *ModuleDoc) Markdown() []byte {
 }
 
 func (m *ModuleDoc) MkDocs() []byte {
-	h := []byte(fmt.Sprintf(metadataTemplate,
+	h := fmt.Appendf(nil, metadataTemplate,
 		m.Status.LINUX, m.Status.WINDOWS, m.Status.MACOS, m.Status.ROOT,
 		m.Title(), m.Summary(), time.Now().Format("2006-01-02"), m.SrcFile,
-		m.ImportHeader()))
+		m.ImportHeader())
 
 	h = append(h, m.Markdown()...)
 	h = append(h, m.Libraries()...)

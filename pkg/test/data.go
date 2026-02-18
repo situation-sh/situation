@@ -102,7 +102,7 @@ func RandomPartition() models.Partition {
 func RandomDisk() *models.Disk {
 	n := gofakeit.IntRange(1, 5)
 	partitions := make([]models.Partition, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		partitions[i] = RandomPartition()
 	}
 

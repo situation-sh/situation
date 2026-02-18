@@ -9,12 +9,12 @@ func fallBackRandomByte() byte {
 	ch := make(chan byte)
 	var b byte = 0
 	go func() {
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			ch <- 0xFF
 		}
 	}()
 
-	for i := 0; i < 8; i++ {
+	for i := range 8 {
 		select {
 		case <-ch:
 			// add 2^i
@@ -27,7 +27,7 @@ func fallBackRandomByte() byte {
 }
 
 func fallbackFillRandom(buffer []byte) {
-	for i := 0; i < len(buffer); i++ {
+	for i := range buffer {
 		buffer[i] = fallBackRandomByte()
 	}
 }

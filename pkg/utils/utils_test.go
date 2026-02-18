@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 )
@@ -68,7 +69,7 @@ func TestRandomTCPPort(t *testing.T) {
 	var b uint16 = 50000
 	var p uint16
 
-	for i := 0; i < 100000; i++ {
+	for i := range 100000 {
 		if i%2 == 0 {
 			p = RandomTCPPort(a, b)
 		} else {
@@ -293,7 +294,7 @@ func TestIncludes(t *testing.T) {
 
 func TestGetKeys(t *testing.T) {
 	trueKeys := []string{"a", "b", "c", "d"}
-	m := map[string]interface{}{
+	m := map[string]any{
 		"a": 0,
 		"b": time.Now(),
 		"c": "xxx",
@@ -341,14 +342,14 @@ func TestGetLines(t *testing.T) {
 	}
 
 	trimNumber := func(s string) string {
-		out := ""
+		var out strings.Builder
 		for _, r := range s {
 			if r >= 48 && r < 58 {
 				continue
 			}
-			out += string(r)
+			out.WriteString(string(r))
 		}
-		return out
+		return out.String()
 	}
 
 	lines, err = GetLines(fp, trimNumber)

@@ -10,8 +10,8 @@ import (
 type TLS struct {
 	Subject            string    `json:"subject,omitempty" jsonschema:"description=subject of the certificate,example=www.example.com,example=CN=www.example.com,O=Example Inc.,C=US"`
 	Issuer             string    `json:"issuer,omitempty" jsonschema:"description=issuer of the certificate,example=Let's Encrypt Authority X3,O=Let's Encrypt,C=US"`
-	NotBefore          time.Time `json:"not_before,omitempty" jsonschema:"description=UNIX timestamp of the certificate not before date,example=1670520587"`
-	NotAfter           time.Time `json:"not_after,omitempty" jsonschema:"description=UNIX timestamp of the certificate not after date,example=1670520587"`
+	NotBefore          time.Time `json:"not_before" jsonschema:"description=UNIX timestamp of the certificate not before date,example=1670520587"`
+	NotAfter           time.Time `json:"not_after" jsonschema:"description=UNIX timestamp of the certificate not after date,example=1670520587"`
 	SerialNumber       string    `json:"serial_number,omitempty" jsonschema:"description=serial number of the certificate,example=1234567890"`
 	SignatureAlgorithm string    `json:"signature_algorithm,omitempty" jsonschema:"description=signature algorithm used to sign the certificate,example=SHA256withRSA"`
 	PublicKeyAlgorithm string    `json:"public_key_algorithm,omitempty" jsonschema:"description=public key algorithm used in the certificate,example=RSA,example=ECDSA"`

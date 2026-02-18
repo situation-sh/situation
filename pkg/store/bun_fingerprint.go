@@ -224,7 +224,7 @@ func (s *BunStorage) computeFuzzyMatchInDB(ctx context.Context, query *Fingerpri
 func (s *BunStorage) fuzzyMatchSQLite(ctx context.Context, query *FingerprintQuery) (*FuzzyMatchResult, error) {
 	// Build MAC values list for IN clause
 	macPlaceholders := make([]string, len(query.MACs))
-	macArgs := make([]interface{}, len(query.MACs))
+	macArgs := make([]any, len(query.MACs))
 	for i, mac := range query.MACs {
 		macPlaceholders[i] = "?"
 		macArgs[i] = strings.ToLower(mac)
@@ -232,7 +232,7 @@ func (s *BunStorage) fuzzyMatchSQLite(ctx context.Context, query *FingerprintQue
 
 	// Build port values list for IN clause
 	portPlaceholders := make([]string, len(query.Ports))
-	portArgs := make([]interface{}, len(query.Ports))
+	portArgs := make([]any, len(query.Ports))
 	for i, port := range query.Ports {
 		portPlaceholders[i] = "?"
 		portArgs[i] = port
@@ -240,7 +240,7 @@ func (s *BunStorage) fuzzyMatchSQLite(ctx context.Context, query *FingerprintQue
 
 	// Build IP matching conditions using json_each
 	ipConditions := make([]string, len(query.IPs))
-	ipArgs := make([]interface{}, len(query.IPs))
+	ipArgs := make([]any, len(query.IPs))
 	for i, ip := range query.IPs {
 		ipConditions[i] = "EXISTS (SELECT 1 FROM json_each(ni.ip) WHERE value = ?)"
 		ipArgs[i] = ip
@@ -301,7 +301,7 @@ func (s *BunStorage) fuzzyMatchSQLite(ctx context.Context, query *FingerprintQue
 	`, macInClause, ipMatchExpr, portInClause)
 
 	// Add hostname args in the right places
-	finalArgs := make([]interface{}, 0)
+	finalArgs := make([]any, 0)
 	finalArgs = append(finalArgs, macArgs...)                      // for mac IN clause
 	finalArgs = append(finalArgs, ipArgs...)                       // for ip conditions
 	finalArgs = append(finalArgs, portArgs...)                     // for port IN clause
@@ -333,7 +333,7 @@ func (s *BunStorage) fuzzyMatchSQLite(ctx context.Context, query *FingerprintQue
 // fuzzyMatchPostgres computes fuzzy match scores in PostgreSQL
 func (s *BunStorage) fuzzyMatchPostgres(ctx context.Context, query *FingerprintQuery) (*FuzzyMatchResult, error) {
 	// Build the query using PostgreSQL array operations
-	args := make([]interface{}, 0)
+	args := make([]any, 0)
 
 	macArray := "{}"
 	if len(query.MACs) > 0 {

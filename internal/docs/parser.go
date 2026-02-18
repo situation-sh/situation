@@ -1,4 +1,4 @@
-package main
+package docs
 
 import (
 	"fmt"
@@ -11,11 +11,36 @@ import (
 	"sort"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
+type Parser struct {
+	ModulesDir string
+	Modules    []*ModuleDoc
+	logger     logrus.FieldLogger
+}
+
+func NewParser(modulesDir string, logger logrus.FieldLogger) *Parser {
+	return &Parser{
+		ModulesDir: modulesDir,
+		logger:     logger,
+		Modules:    make([]*ModuleDoc, 0),
+	}
+}
+
+func (p *Parser) Parse() error {
+	pkg, fset, files, err := parseSourceDirectory(p.ModulesDir)
+	if err != nil {
+		return err
+	}
+	if err := p.parseModules(pkg, fset); err != nil {
+		return err
+	}
+	p.getModuleImports(fset, files)
+	return nil
+}
+
 func collectFiles(directory string) (*token.FileSet, []*ast.File, error) {
-	log.Debugf("Collecting files from %s", directory)
 	entries, err := os.ReadDir(directory)
 	if err != nil {
 		return nil, nil, err
@@ -30,7 +55,6 @@ func collectFiles(directory string) (*token.FileSet, []*ast.File, error) {
 		}
 		info, err := entry.Info()
 		if err != nil {
-			log.Warnf("ignoring %s (cannot read entry info: %v)", entry.Name(), err)
 			continue
 		}
 		f := path.Join(directory, info.Name())
@@ -38,13 +62,11 @@ func collectFiles(directory string) (*token.FileSet, []*ast.File, error) {
 		if strings.HasSuffix(f, ".go") {
 			src, err := os.ReadFile(f) //#nosec G304 -- If the file is not valid, that will be triggered by parser.ParseFile
 			if err != nil {
-				log.Warnf("ignoring %s (cannot read file: %v)", entry.Name(), err)
 				continue
 			}
 			// parse
 			af, err := parser.ParseFile(fset, info.Name(), string(src), parser.ParseComments)
 			if err != nil {
-				log.Warnf("ignoring %s (cannot parse file: %v)", entry.Name(), err)
 				continue
 			}
 			files = append(files, af)
@@ -54,7 +76,6 @@ func collectFiles(directory string) (*token.FileSet, []*ast.File, error) {
 }
 
 func getModuleTypes(p *doc.Package) []*doc.Type {
-	log.Infof("Get modules from package '%s'", p.Name)
 	out := make([]*doc.Type, 0)
 	for _, t := range p.Types {
 		if strings.HasSuffix(t.Name, "Module") && len(t.Name) > 6 {
@@ -65,7 +86,6 @@ func getModuleTypes(p *doc.Package) []*doc.Type {
 }
 
 func getModuleTypeName(t *doc.Type) (string, error) {
-	log.Infof("Get module name of %s object", t.Name)
 	for _, method := range t.Methods {
 		// find the Name() method
 		if method.Name != "Name" {
@@ -88,7 +108,6 @@ func getModuleTypeName(t *doc.Type) (string, error) {
 }
 
 func getModuleTypeDependencies(t *doc.Type) ([]string, error) {
-	log.Infof("Get module dependencies of %s object", t.Name)
 	out := make([]string, 0)
 
 	for _, method := range t.Methods {
@@ -125,33 +144,45 @@ func getModuleTypeDependencies(t *doc.Type) ([]string, error) {
 	return nil, fmt.Errorf("cannot get module dependencies of %s object", t.Name)
 }
 
-func parseModules(p *doc.Package, fset *token.FileSet) []*ModuleDoc {
+func (parser *Parser) parseModules(p *doc.Package, fset *token.FileSet) error {
 	internal := make(map[string]*ModuleDoc)
 	// loop over the modules
 	for _, t := range getModuleTypes(p) {
+		parser.logger.WithField("object", t.Name).Info("Get module name")
+		// Get module name of %s object
 		name, err := getModuleTypeName(t)
 		if err != nil {
-			log.Warnf("error while parsing module %s: %v", t.Name, err)
+			parser.logger.
+				WithError(err).
+				WithField("module-name", t.Name).
+				Warn("Fail to parse module. Skipping.")
 			continue
 		}
 
-		m := NewModuleDoc()
+		m := NewModuleDoc(parser.ModulesDir)
 		m.Name = name
 		m.Object = t
 		m.Synopsis = p.Synopsis(t.Doc)
 		m.RawMarkdown = p.Markdown(t.Doc)
 		m.SrcFile = fset.Position(t.Decl.TokPos).Filename
 
+		parser.logger.WithField("module-name", t.Name).Infof("Get module dependencies")
 		deps, err := getModuleTypeDependencies(t)
 		if err != nil {
-			log.Fatalf("error while parsing module %s: %v", t.Name, err)
+			return err
+			// parser.logger.
+			// 	WithError(err).
+			// 	WithField("module", t.Name).
+			// 	Fatal("Fail to parse module dependencies. Skipping.")
+
+			// continue
 		}
 		m.Dependencies = deps
 
 		internal[t.Name] = m
 	}
 
-	log.Info("Populating modules status")
+	parser.logger.Info("Populating modules status")
 	for _, key := range []string{"LINUX", "WINDOWS", "MACOS", "ROOT"} {
 		for _, note := range p.Notes[key] {
 			m := internal[note.UID]
@@ -159,15 +190,15 @@ func parseModules(p *doc.Package, fset *token.FileSet) []*ModuleDoc {
 		}
 	}
 
-	out := make([]*ModuleDoc, 0)
 	for _, m := range internal {
-		out = append(out, m)
+		parser.Modules = append(parser.Modules, m)
 	}
-	return out
+
+	return nil
 }
 
-func getModuleImports(mods []*ModuleDoc, fset *token.FileSet, files []*ast.File) []*ModuleDoc {
-	log.Info("Populating modules imports")
+func (parser *Parser) getModuleImports(fset *token.FileSet, files []*ast.File) {
+	parser.logger.Info("Populating modules imports")
 	map1 := make(map[string][]string)
 
 	for _, f := range files {
@@ -178,33 +209,31 @@ func getModuleImports(mods []*ModuleDoc, fset *token.FileSet, files []*ast.File)
 		}
 	}
 
-	for _, m := range mods {
+	for _, m := range parser.Modules {
 		m.Imports = map1[m.SrcFile]
-		log.Debugf("Get module imports for %s", m.Name)
+		parser.logger.
+			WithField("module-name", m.Name).
+			Info("Get module imports")
 	}
-
-	return mods
 }
 
 // parseSourceDirectory return the package doc along with the source files through a
 // fileset and the file AST
-func parseSourceDirectory(directory string) (*doc.Package, *token.FileSet, []*ast.File) {
-	log.Infof("Parsing sources within %s", directory)
-	ip, err := detectImportPath(dir, "", 3)
+func parseSourceDirectory(directory string) (*doc.Package, *token.FileSet, []*ast.File, error) {
+	ip, err := detectImportPath(directory, "", 3)
 	if err != nil {
-		log.Fatalf("error while detecting import path: %v", err)
+		return nil, nil, nil, fmt.Errorf("error while detecting import path: %v", err)
 	}
 	fset, files, err := collectFiles(directory)
 	if err != nil {
-		log.Fatalf("error while collecting files: %v", err)
+		return nil, nil, nil, fmt.Errorf("error while collecting files: %v", err)
 	}
 	// PreserveAST to access function body notably
 	p, err := doc.NewFromFiles(fset, files, ip, doc.PreserveAST)
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, nil, fmt.Errorf("error while creating package doc: %v", err)
 	}
-	log.Debugf("Package name: %s, Files: %d", p.Name, len(p.Filenames))
-	return p, fset, files
+	return p, fset, files, nil
 }
 
 func buildBadge(m *ModuleDoc) string {
@@ -241,7 +270,7 @@ const LEGEND = `
 </div>
 `
 
-func buildIndex(modules []*ModuleDoc) []byte {
+func (parser *Parser) BuildIndex() []byte {
 	head := "---\ntitle: Modules reference\nsummary: List of all collectors\nsidebar_title: Reference\n---\n\n"
 	head += LEGEND
 	head += "| Name | Summary | Dependencies | Status |\n"
@@ -250,14 +279,14 @@ func buildIndex(modules []*ModuleDoc) []byte {
 
 	out := []byte(head)
 	links := make(map[string]string)
-	for _, m := range modules {
+	for _, m := range parser.Modules {
 		links[m.Name] = fmt.Sprintf(`[%s](%s)`, m.Name, strings.Replace(m.SrcFile, ".go", ".md", 1))
 	}
 	// sort modules by name
-	sort.Slice(modules, func(i, j int) bool {
-		return modules[i].Name < modules[j].Name
+	sort.Slice(parser.Modules, func(i, j int) bool {
+		return parser.Modules[i].Name < parser.Modules[j].Name
 	})
-	for _, m := range modules {
+	for _, m := range parser.Modules {
 		// deps with links
 		deps := make([]string, len(m.Dependencies))
 		for i, d := range m.Dependencies {

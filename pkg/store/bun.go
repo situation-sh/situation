@@ -98,7 +98,7 @@ func NewPostgresBunStorage(dataSourceName string, agent string, onError func(err
 	return newStorage(db, agent, onError), nil
 }
 
-func newPostgresBunStorageNoPing(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
+func NewPostgresBunStorageNoPing(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dataSourceName)))
 	db := bun.NewDB(sqldb, pgdialect.New())
 	return newStorage(db, agent, onError), nil

@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package rpm
 
@@ -28,7 +27,7 @@ func (a *Install) Parse() int64 {
 	return int64(binary.LittleEndian.Uint32(a.Key[:4]))
 }
 
-func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) interface{} {
+func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) any {
 	var step uint32
 	store := p.Blob[storeOffset:]
 	switch typ {
@@ -40,7 +39,7 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 	case RPM_INT8_TYPE:
 		step = 1
 		out := make([]uint8, cnt)
-		for i := uint32(0); i < cnt; i++ {
+		for i := range cnt {
 			out[i] = uint8(store[off+i])
 		}
 		if cnt == 1 {
@@ -50,7 +49,7 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 	case RPM_INT16_TYPE:
 		step = 2
 		out := make([]uint16, cnt)
-		for i := uint32(0); i < cnt; i++ {
+		for i := range cnt {
 			out[i] = binary.BigEndian.Uint16(store[off+i*step : off+(i+1)*step])
 		}
 		if cnt == 1 {
@@ -60,7 +59,7 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 	case RPM_INT32_TYPE:
 		step = 4
 		out := make([]uint32, cnt)
-		for i := uint32(0); i < cnt; i++ {
+		for i := range cnt {
 			out[i] = binary.BigEndian.Uint32(store[off+i*step : off+(i+1)*step])
 		}
 		if cnt == 1 {
@@ -70,7 +69,7 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 	case RPM_INT64_TYPE:
 		step = 8
 		out := make([]uint32, cnt)
-		for i := uint32(0); i < cnt; i++ {
+		for i := range cnt {
 			out[i] = binary.BigEndian.Uint32(store[off+i*step : off+(i+1)*step])
 		}
 		if cnt == 1 {
@@ -94,7 +93,7 @@ func (p *Pkg) Value(storeOffset uint32, typ uint32, off uint32, cnt uint32) inte
 		end := int(off)
 		start := 0
 
-		for k := uint32(0); k < cnt; k++ {
+		for k := range cnt {
 			start = end
 			end += bytes.IndexByte(store[end:], 0x0)
 			out[k] = string(store[start:end])
@@ -129,7 +128,7 @@ func (p *Pkg) Parse() *models.Package {
 	var dirnames []string
 	var dirindexes []uint32
 
-	for i := uint32(0); i < nIndex; i++ {
+	for i := range nIndex {
 		header := p.Blob[8+headerSize*i : 8+headerSize*(i+1)]
 
 		tag := binary.BigEndian.Uint32(header[:4])

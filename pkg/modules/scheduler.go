@@ -3,6 +3,7 @@ package modules
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/sirupsen/logrus"
 )
@@ -127,12 +128,7 @@ func (s *Scheduler) buildTasksList() ([]Module, error) {
 
 	isPermanent := func(m string) bool {
 		// check if the module is permanent
-		for _, np := range notPermanents {
-			if np == m {
-				return false
-			}
-		}
-		return true
+		return !slices.Contains(notPermanents, m)
 	}
 
 	markAsPermanent := func(m string) {

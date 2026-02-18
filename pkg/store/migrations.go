@@ -18,7 +18,7 @@ var sqliteMigrations embed.FS
 //go:embed migrations/postgres/*.sql
 var postgresMigrations embed.FS
 
-var trackedModels = []interface{}{
+var TrackedModels = []any{
 	(*models.Subnetwork)(nil),
 	(*models.Machine)(nil),
 	(*models.CPU)(nil),
@@ -39,13 +39,13 @@ var trackedModels = []interface{}{
 func (s *BunStorage) GenerateSchema() string {
 	var statements []string
 	statements = append(statements, "--- up")
-	for _, model := range trackedModels {
+	for _, model := range TrackedModels {
 		query := s.db.NewCreateTable().Model(model).IfNotExists()
 		statements = append(statements, query.String()+";")
 	}
 	statements = append(statements, "--- down")
-	for i := len(trackedModels) - 1; i >= 0; i-- {
-		model := trackedModels[i]
+	for i := len(TrackedModels) - 1; i >= 0; i-- {
+		model := TrackedModels[i]
 		// query := s.db.NewCreateTable().Model(model).IfNotExists()
 		query := s.db.NewDropTable().Model(model).IfExists()
 		statements = append(statements, query.String()+";")
@@ -53,15 +53,15 @@ func (s *BunStorage) GenerateSchema() string {
 	return strings.Join(statements, "\n\n")
 }
 
-func (s *BunStorage) snapshotMigrations() (string, string) {
+func (s *BunStorage) SnapshotMigrations() (string, string) {
 	upStatements := make([]string, 0)
-	for _, model := range trackedModels {
+	for _, model := range TrackedModels {
 		query := s.db.NewCreateTable().Model(model).WithForeignKeys().IfNotExists()
 		upStatements = append(upStatements, query.String()+";")
 	}
 	downStatements := make([]string, 0)
-	for i := len(trackedModels) - 1; i >= 0; i-- {
-		model := trackedModels[i]
+	for i := len(TrackedModels) - 1; i >= 0; i-- {
+		model := TrackedModels[i]
 		query := s.db.NewDropTable().Model(model).IfExists()
 		downStatements = append(downStatements, query.String()+";")
 	}
@@ -104,7 +104,7 @@ func (s *BunStorage) Migrate(ctx context.Context) error {
 
 // CreateTables directly creates all tables without migrations
 func (s *BunStorage) CreateTables(ctx context.Context) error {
-	for _, model := range trackedModels {
+	for _, model := range TrackedModels {
 		_, err := s.db.NewCreateTable().Model(model).IfNotExists().Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to create table for model %T: %w", model, err)

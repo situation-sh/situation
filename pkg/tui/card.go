@@ -122,10 +122,7 @@ func (m *CardModel) systemWidth() int {
 	if m.width > 100 {
 		ratio = 1. / 3.
 	}
-	w := int(ratio * float64(m.width-2))
-	if w > 34 {
-		w = 34
-	}
+	w := min(int(ratio*float64(m.width-2)), 34)
 	return w
 }
 

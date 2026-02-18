@@ -70,3 +70,27 @@ func GetLines(file string, callbacks ...func(string) string) ([]string, error) {
 	}
 	return result, nil
 }
+
+// FindFileUpward walks up the directory tree from startDir
+// looking for a file with the given name.
+// Returns the full path to the file, or empty string if not found.
+func FindFileUpward(startDir, filename string) (string, error) {
+	dir, err := filepath.Abs(startDir)
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		candidate := filepath.Join(dir, filename)
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached the root
+			return "", nil
+		}
+		dir = parent
+	}
+}

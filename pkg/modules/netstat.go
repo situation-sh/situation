@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/cakturk/go-netstat/netstat"
@@ -57,19 +58,14 @@ func (m *NetstatModule) Dependencies() []string {
 }
 
 func flowFilter(state netstat.SkState) bool {
-	for _, s := range []netstat.SkState{
+	return slices.Contains([]netstat.SkState{
 		netstat.Established,
 		netstat.FinWait1,
 		netstat.FinWait2,
 		netstat.TimeWait,
 		netstat.CloseWait,
 		netstat.LastAck,
-		netstat.Closing} {
-		if s == state {
-			return true
-		}
-	}
-	return false
+		netstat.Closing}, state)
 }
 
 // portFilter returns true when the connection is listening, established or close-wait

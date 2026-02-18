@@ -157,7 +157,7 @@ func parseSignatureAlgorithms(raw []byte) ([]uint16, error) {
 
 	sigAlgCount := sigAlgLen / 2
 	sigAlgs = make([]uint16, sigAlgCount)
-	for j := uint16(0); j < sigAlgCount; j++ {
+	for j := range sigAlgCount {
 		sigAlgs[j] = binary.BigEndian.Uint16(raw[2*(j+1) : 2*(j+2)])
 	}
 	return sigAlgs, nil
