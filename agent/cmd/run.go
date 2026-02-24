@@ -25,6 +25,7 @@ var (
 	sentryDSN         string = ""
 	failfast          bool   = false
 	explore           bool   = false
+	noMigrate         bool   = false
 )
 
 var runCmd = cli.Command{
@@ -36,6 +37,11 @@ var runCmd = cli.Command{
 			Name:        "explore",
 			Destination: &explore,
 			Usage:       "Run the explorer after the run",
+		},
+		&cli.BoolFlag{
+			Name:        "no-migrate",
+			Destination: &noMigrate,
+			Usage:       "Skip database migrations",
 		},
 	},
 }
@@ -168,10 +174,12 @@ func runAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to create storage: %v", err)
 	}
 
-	logger.WithField("on", "storage").Info("Migrating")
-	if err := storage.Migrate(ctx); err != nil {
-		logger.Errorf("Failed to migrate: %v", err)
-		return fmt.Errorf("failed to migrate: %v", err)
+	if !noMigrate {
+		logger.WithField("on", "storage").Info("Migrating")
+		if err := storage.Migrate(ctx); err != nil {
+			logger.Errorf("Failed to migrate: %v", err)
+			return fmt.Errorf("failed to migrate: %v", err)
+		}
 	}
 
 	newCtx := modules.SituationContext(ctx, config.AgentString(), storage, loggerInterface)
