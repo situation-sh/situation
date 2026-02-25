@@ -1,6 +1,6 @@
 # Situation
 
-[![pages-build-deployment](https://github.com/situation-sh/situation/actions/workflows/pages/pages-build-deployment/badge.svg)](https://situation-sh.github.io/situation/)
+[![docs](https://github.com/situation-sh/situation/actions/workflows/docs.yaml/badge.svg)](https://situation-sh.github.io/situation/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/situation-sh/situation)](https://goreportcard.com/report/github.com/situation-sh/situation)
 [![gosec](https://github.com/situation-sh/situation/actions/workflows/gosec.yaml/badge.svg)](https://github.com/situation-sh/situation/security/code-scanning)
 [![CodeQL](https://github.com/situation-sh/situation/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/situation-sh/situation/security/quality)
