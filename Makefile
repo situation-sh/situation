@@ -138,8 +138,8 @@ goweight.json:
 docs: modules-doc
 
 modules-doc: $(MODULE_FILES)
-	$(GO) run dev/doc/*.go -d pkg/modules -o docs/modules/
-
+	$(GO) run internal/main.go modules-doc
+	$(GO) run internal/main.go db-doc
 
 test: .gocoverprofile.html
 
