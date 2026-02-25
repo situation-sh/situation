@@ -19,12 +19,12 @@ Pre-built binaries are available through [github releases](https://github.com/si
 ### From sources
 
 ```shell
-go install github.com/situation-sh/situation@latest
+go install github.com/situation-sh/situation/agent@latest
 ```
 
 ## Quick start
 
-You can run the agent directly (without data persistence) and explore chat has been discovered (experimental terminal ui)
+You can run the agent directly (without data persistence) and explore what has been discovered (experimental terminal ui)
 
 ```bash
 situation run --explore
@@ -33,7 +33,7 @@ situation run --explore
 ![tui](docs/img/tui.svg)
 
 
-## Data persistence
+## Data persistence
 
 Once you gives a db (sqlite or postgres) to `situation` you enable data persistence. 
 
@@ -45,7 +45,7 @@ To go further, several agents can collaborate by sharing the same postgres db (y
 The **IT data collection starts here**!
 
 ```bash
-situation run --db="postgres://user:password@example.org:5432/situation?sslmode=disable"
+situation run --db="postgres://user:password@example.org:5432/situation"
 ```
 
 See the [docs](https://situation-sh.github.io/situation/) for more details.
