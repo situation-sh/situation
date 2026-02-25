@@ -1,8 +1,10 @@
 package store
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -84,12 +86,57 @@ func NewSQLiteBunStorage(dataSourceName string, agent string, onError func(error
 	return newStorage(db, agent, onError), nil
 }
 
+func extractClientSSL(dsn string) (string, pgdriver.Option, error) {
+	u, err := url.Parse(dsn)
+	if err != nil {
+		return dsn, nil, err
+	}
+	q := u.Query()
+	sslCert := q.Get("sslcert")
+	q.Del("sslcert")
+	sslKey := q.Get("sslkey")
+	q.Del("sslkey")
+
+	u.RawQuery = q.Encode()
+	out := u.String()
+
+	if sslCert != "" && sslKey != "" {
+		cert, err := tls.LoadX509KeyPair(sslCert, sslKey)
+		if err != nil {
+			return out, nil, fmt.Errorf("failed to load client certificate: %w", err)
+		}
+		opt := pgdriver.Option(func(conf *pgdriver.Config) {
+			if conf.TLSConfig == nil {
+				conf.TLSConfig = &tls.Config{}
+			}
+			conf.TLSConfig.Certificates = append(conf.TLSConfig.Certificates, cert)
+		})
+		return out, opt, nil
+	}
+
+	return u.String(), nil, nil
+}
+
 // NewPostgresBunStorage creates a new BunStorage instance using PostgreSQL.
 func NewPostgresBunStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
-	connector := pgdriver.NewConnector(
-		pgdriver.WithDSN(dataSourceName),
-		pgdriver.WithDialTimeout(6*time.Second),
-	)
+	// remove key-value options that pgdriver doesn't support and handle them manually
+	dsn, opt, err := extractClientSSL(dataSourceName)
+	if err != nil {
+		return nil, fmt.Errorf("invalid DSN: %w", err)
+	}
+
+	opts := []pgdriver.Option{
+		pgdriver.WithDSN(dsn),
+		pgdriver.WithDialTimeout(6 * time.Second),
+	}
+
+	// pgdriver does not parse sslcert/sslkey from the DSN; handle them manually.
+	// This option runs after WithDSN so it can extend the TLS config it already built.
+	if opt != nil {
+		opts = append(opts, opt)
+	}
+
+	connector := pgdriver.NewConnector(opts...)
 	sqldb := sql.OpenDB(connector)
 	db := bun.NewDB(sqldb, pgdialect.New())
 	if err := db.Ping(); err != nil {
