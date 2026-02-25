@@ -1,5 +1,5 @@
 site_name: Situation
-site_url: https://situation-sh.github.io/situation/
+site_url: https://docs.situation.sh
 repo_url: https://github.com/situation-sh/situation
 docs_dir: docs
 dev_addr: "127.0.0.1:12000"
