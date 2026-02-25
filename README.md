@@ -1,7 +1,9 @@
 # Situation
 
-[![test](https://github.com/situation-sh/situation/actions/workflows/test.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/test.yaml)
+[![pages-build-deployment](https://github.com/situation-sh/situation/actions/workflows/pages/pages-build-deployment/badge.svg)](https://situation-sh.github.io/situation/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/situation-sh/situation)](https://goreportcard.com/report/github.com/situation-sh/situation)
+[![gosec](https://github.com/situation-sh/situation/actions/workflows/gosec.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/gosec.yaml)
+[![CodeQL](https://github.com/situation-sh/situation/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/github-code-scanning/codeql)
 
 Situation provides the core infrastructure to automatically collect and consolidate IT data (machines, device, apps, network, flows...), on its own. 
 Providing then an up-to-date and reliable view of the current state of your infra (or your home LAN), namely the *graph*.
