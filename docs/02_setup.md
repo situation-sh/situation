@@ -38,7 +38,7 @@ Once your db is ready, you can deploy agents anywhere on your infra. We advise t
     - deploy one agent per subnet since every agent is able to grab data from neighboring hosts
     - deploy agent on hosts where exhaustive data collection is mandatory
 
-On each host where agent are deployed, follow the next steps.
+On each host where agent is deployed, follow the next steps.
 
 ### Identifier
 
