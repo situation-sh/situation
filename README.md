@@ -10,7 +10,7 @@ Providing then an up-to-date and reliable view of the current state of your infr
 
 Now you are ready to build a context-rich IT tool above Situation.
 
-![infra][./excalidraw/architecture.svg]
+![infra](./excalidraw/architecture.svg)
 
 ## Installation
 
