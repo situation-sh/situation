@@ -1,0 +1,31 @@
+html,
+body {
+  scroll-behavior: smooth;
+}
+
+article > p {
+  text-align: justify;
+}
+
+#modules table {
+  font-size: x-small;
+}
+
+#modules table th {
+  min-width: unset;
+}
+
+/* article table tbody tr td:has(img.tag) {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+} */
+
+img.tag {
+  display: inline-flex;
+  margin: 0.15rem;
+}
