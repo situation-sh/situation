@@ -16,7 +16,7 @@ situation run --sentry="https://6eb600b24dd5c42fb149cf84d2240bef@o458801043321e5
 /// tab | Windows
 
 ```ps1
-situation.exe run -sentry="https://6eb600b24dd5c42fb149cf84d2240bef@o458801043321e512.ingest.us.sentry.io/4509589955543040"
+situation.exe run --sentry="https://6eb600b24dd5c42fb149cf84d2240bef@o458801043321e512.ingest.us.sentry.io/4509589955543040"
 ```
 
 ///

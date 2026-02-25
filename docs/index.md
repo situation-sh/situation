@@ -9,6 +9,8 @@ Providing then an up-to-date and reliable view of the current state of your infr
 
 Now you are ready to build a context-rich IT tool above Situation.
 
+~{architecture}(architecture.json)
+
 **Yet another scanning tool?**
 
 Situation is different from common tools like [nmap](https://nmap.org/), [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) or [osquery](https://osquery.io/):

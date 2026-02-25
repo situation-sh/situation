@@ -9,7 +9,7 @@
 # For more examples and options, including how to ignore specific vulnerabilities,
 # see https://google.github.io/osv-scanner/github-action/
 
-name: OSV-Scanner
+name: osv-scanner
 
 on:
   schedule:

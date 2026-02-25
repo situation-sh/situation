@@ -34,6 +34,26 @@ def latest_release() -> Dict[str, Any]:
 
 
 @cache
+def latest_successful_workflow(name: str) -> Dict[str, Any]|None:
+    try:
+        response = requests.get(
+            f"https://api.github.com/repos/situation-sh/situation/actions/workflows/{name}/runs?status=success&per_page=1",
+            headers={
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            timeout=1000,
+        )
+    except BaseException as err:
+        print("error:", err)
+        return None
+    if response.status_code == 200:
+        return response.json()
+    print("error:", response.content)
+    return None
+
+
+@cache
 def latest_binary(
     platform: Literal["linux", "windows"],
     version: str,
@@ -78,3 +98,7 @@ def define_env(env: MacrosPlugin):
     env.variables["windows_icon_src"] = f"{img_dir}/windows.svg"
     env.variables["linux_icon_src"] = f"{img_dir}/linux.svg"
     env.variables["root_required_icon_src"] = f"{img_dir}/root.svg"
+
+    w = latest_successful_workflow("sdk.yaml")
+    if (w is not None) and w.get("workflow_runs"):
+        env.variables["latest_sdk_workflow_url"] = w["workflow_runs"][0]["html_url"]

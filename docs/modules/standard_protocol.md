@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: StandardProtocol
 summary: "Fills standard protocol information for endpoints."
-date: 2026-02-18
+date: 2026-02-25
 filename: standard_protocol.go
 std_imports:
   - context

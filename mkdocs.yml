@@ -25,7 +25,7 @@ markdown_extensions:
 plugins:
   - search:
   - excalidraw:
-      directory: ./docs/excalidraw/
+      directory: ./excalidraw/
   - macros:
       verbose: true
       module_name: docs/macros/main
@@ -38,3 +38,4 @@ extra:
   variables:
     go_module: github.com/situation-sh/situation
     godoc_base_url: https://pkg.go.dev
+

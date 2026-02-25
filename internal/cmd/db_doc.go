@@ -54,18 +54,22 @@ var dbDocCmd = cli.Command{
 		&cli.StringFlag{
 			Name:        "output",
 			Aliases:     []string{"o"},
-			Value:       path.Join(rootDir(), "docs", "database"),
+			Value:       path.Join(rootDir(), "docs", "API"),
 			Destination: &dbDocsOutputDir,
 		},
 	},
 }
 
+func header(title string) []byte {
+	return []byte(fmt.Sprintf(`---
+title: %s
+summary: Database schema for %s storage
+---`, title, title))
+}
+
 func dbWrite(storage *store.BunStorage, filename string, title string) error {
 	content := [][]byte{
-		[]byte("---"),
-		fmt.Appendf(nil, "title: %s", title),
-		fmt.Appendf(nil, "summary: Database schema for %s storage", title),
-		[]byte("---"),
+		header(title),
 		[]byte(legend),
 	}
 

@@ -1,9 +1,6 @@
 ---
-
 title: SQLite
-
 summary: Database schema for SQLite storage
-
 ---
 
 +mynaui:link-one+ Primary Key&emsp;+mynaui:key+ Foreign Key&emsp;+mynaui:one-diamond-solid+ +mynaui:two-diamond-solid+ Unique
@@ -101,13 +98,13 @@ summary: Database schema for SQLite storage
 | `id` | `INTEGER` | +mynaui:link-one+ |
 | `created_at` | `TIMESTAMP` |  |
 | `updated_at` | `TIMESTAMP` |  |
-| `name` | `VARCHAR` | +mynaui:one-diamond-solid+ |
-| `mac` | `VARCHAR` | +mynaui:two-diamond-solid+ |
+| `name` | `VARCHAR` | +mynaui:two-diamond-solid+ |
+| `mac` | `VARCHAR` | +mynaui:one-diamond-solid+ |
 | `mac_vendor` | `VARCHAR` |  |
 | `ip` | `VARCHAR` |  |
 | `gateway` | `VARCHAR` |  |
 | `flags` | `VARCHAR` |  |
-| `tag` | `VARCHAR` | +mynaui:two-diamond-solid+ |
+| `tag` | `VARCHAR` | +mynaui:one-diamond-solid+ |
 | `machine_id` | `INTEGER` | +mynaui:two-diamond-solid+ [+mynaui:key+](#machines) |
 
 

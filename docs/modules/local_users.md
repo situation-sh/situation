@@ -5,7 +5,7 @@ macos: false
 root: false
 title: LocalUsers
 summary: "Lists all local user accounts on the system."
-date: 2026-02-18
+date: 2026-02-25
 filename: local_users.go
 std_imports:
   - bufio

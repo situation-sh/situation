@@ -5,7 +5,7 @@ macos:
 root: 
 title: SaaS
 summary: "Identifies SaaS applications from discovered endpoints."
-date: 2026-02-18
+date: 2026-02-25
 filename: saas.go
 std_imports:
   - context

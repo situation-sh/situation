@@ -1,9 +1,6 @@
 ---
-
 title: PostgreSQL
-
 summary: Database schema for PostgreSQL storage
-
 ---
 
 +mynaui:link-one+ Primary Key&emsp;+mynaui:key+ Foreign Key&emsp;+mynaui:one-diamond-solid+ +mynaui:two-diamond-solid+ Unique

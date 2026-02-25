@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: JA4
 summary: "Attempts JA4, JA4S and JA4X fingerprinting"
-date: 2026-02-18
+date: 2026-02-25
 filename: ja4.go
 std_imports:
   - context
