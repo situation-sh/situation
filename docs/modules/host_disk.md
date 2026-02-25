@@ -3,11 +3,12 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: Host Disk
+title: HostDisk
 summary: "Retrieves basic information about disk: name, model, size, type, controller and partitions."
-date: 2025-09-24
+date: 2026-02-18
 filename: host_disk.go
 std_imports:
+  - context
   - fmt
 imports:
   - github.com/jaypipes/ghw

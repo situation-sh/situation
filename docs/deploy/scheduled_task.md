@@ -1,10 +1,11 @@
 ---
-title: Scheduled task
+title: Scheduled task 
 summary: Run situation from time to time
-order: 1
 ---
 
-Once downloaded, the binary can install itself as a cronjob (Linux) or as a scheduled task (Windows). Why not a service? Situation should be run regularly but _occasionally_. It is not meant to run indefinitely in the background.
+Once downloaded, the binary can install itself as a cronjob (Linux) or as a scheduled task (Windows). 
+
+**Why not a service?** Situation should be run regularly but _occasionally_. It is not meant to run indefinitely in the background.
 
 ## Installing
 
@@ -13,7 +14,7 @@ Here is an example that installs the scheduled task that triggers every day at m
 /// tab | Linux
 
 ```bash
-situation cron --task-start 00:00:00
+situation cron --task-start 00:00:00 --db=db.sqlite
 ```
 
 ///
@@ -21,7 +22,7 @@ situation cron --task-start 00:00:00
 /// tab | Windows
 
 ```ps1
-situation.exe task --task-start 00:00:00
+situation.exe task --task-start 00:00:00 --db=db.sqlite
 ```
 
 ///
@@ -34,7 +35,7 @@ Any **run** parameters passed to the command line will be appended to the task. 
 /// tab | Linux
 
 ```bash
-situation cron --task-start 00:00:00 --file --file-path=/tmp/situation.json
+situation cron --task-start 00:00:00 --db=db.sqlite --tcp-scan-timeout=5s
 ```
 
 ///
@@ -42,13 +43,12 @@ situation cron --task-start 00:00:00 --file --file-path=/tmp/situation.json
 /// tab | Windows
 
 ```ps1
-situation.exe task --task-start 00:00:00 --file --file-path=/tmp/situation.json
+situation.exe task --task-start 00:00:00 --db=db.sqlite --tcp-scan-timeout=5s
 ```
 
 ///
 
-the binary will be run with the flags `--file` and `--file-path=/tmp/situation.json`.
-
+the binary will be run with the flags `--db=db.sqlite` and `--tcp-scan-timeout=5s`.
 
 ## Uninstalling
 

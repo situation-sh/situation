@@ -1,0 +1,27 @@
+DROP TABLE IF EXISTS "endpoint_policies";
+
+DROP TABLE IF EXISTS "flows";
+
+DROP TABLE IF EXISTS "user_applications";
+
+DROP TABLE IF EXISTS "users";
+
+DROP TABLE IF EXISTS "application_endpoints";
+
+DROP TABLE IF EXISTS "applications";
+
+DROP TABLE IF EXISTS "packages";
+
+DROP TABLE IF EXISTS "network_interface_subnets";
+
+DROP TABLE IF EXISTS "network_interfaces";
+
+DROP TABLE IF EXISTS "disks";
+
+DROP TABLE IF EXISTS "gpus";
+
+DROP TABLE IF EXISTS "cpus";
+
+DROP TABLE IF EXISTS "machines";
+
+DROP TABLE IF EXISTS "subnetworks";

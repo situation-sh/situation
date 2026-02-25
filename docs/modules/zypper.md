@@ -5,11 +5,10 @@ macos: false
 root: false
 title: Zypper
 summary: "Reads package information from the zypper package manager."
-date: 2025-09-24
+date: 2026-02-18
 filename: zypper.go
 std_imports:
-  - fmt
-  - time
+  - context
 imports:
   - github.com/knqyf263/go-rpmdb/pkg
 ---

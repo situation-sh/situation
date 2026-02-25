@@ -1,0 +1,30 @@
+{
+  "name": "@situation-sh/drizzle",
+  "version": "0.20.0",
+  "description": "Drizzle schema for Situation",
+  "author": {
+    "name": "Alban Siffer",
+    "email": "alban@situation.sh"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "bun build index.ts --outdir ./dist",
+    "postbuild": "tsc --declaration --emitDeclarationOnly --outDir ./dist"
+  },
+  "dependencies": {
+    "drizzle-orm": ">=0.45.0"
+  }
+}

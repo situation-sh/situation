@@ -5,15 +5,15 @@ macos: unknown
 root: true
 title: MSI
 summary: "Creates models.Packages instance from the windows registry"
-date: 2025-09-24
+date: 2026-02-18
 filename: msi.go
 std_imports:
+  - context
   - fmt
   - io/fs
   - os
   - path/filepath
   - strings
-  - sync
   - time
 imports:
   - github.com/sirupsen/logrus

@@ -5,14 +5,16 @@ macos: unknown
 root: false
 title: TCP Scan
 summary: "Tries to connect to neighbor TCP ports."
-date: 2025-09-24
+date: 2026-02-18
 filename: tcp_scan.go
 std_imports:
+  - context
   - fmt
   - net
-  - sync
+  - strings
   - time
-imports: []
+imports:
+  - github.com/asiffer/puzzle
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -24,7 +26,7 @@ TCPScanModule tries to connect to neighbor TCP ports.
 ### Details
 
 
-The module only uses the Go standard library.
+The module only uses the Go standard library.
 
 A TCP connect is performed on the [NMAP top 1000 ports](https://nullsec.us/top-1-000-tcp-and-udp-ports-nmap-default/). These connection attempts are made concurrently against the hosts previously found. The connections have a 500ms timeout.
 

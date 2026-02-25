@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -22,13 +22,13 @@ jobs:
       - name: Build all binaries
         run: make all
       - name: Upload linux binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: situation-linux
           path: bin/situation-*-linux
           retention-days: 1
       - name: Upload windows binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: situation-windows
           path: bin/situation-*-windows.exe
@@ -37,25 +37,47 @@ jobs:
   linux:
     needs: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          [
+            "debian:10",
+            "debian:12",
+            "ubuntu:22.04",
+            "ubuntu:24.04",
+            "fedora:40",
+            "fedora:42",
+            "rockylinux:8.9",
+            "rockylinux:9.3",
+            "alpine:3.18",
+            "alpine:3.21",
+            "opensuse/leap:15.6",
+            "opensuse/leap:16.0",
+          ]
+    container:
+      image: ${{ matrix.image }}
     steps:
       - name: Download linux binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: situation-linux
           path: bin
-      - name: Export binary name
+      - name: Prepare binary
         run: |
-          echo "SITUATION=$(ls bin/situation-*linux | tail -n 1)" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - name: Run the binary
-        run: |
-          chmod +x ${{ env.SITUATION }}
-          ${{ env.SITUATION }} --file --file-path=linux.json
+          cp bin/situation-*-amd64-linux ./situation
+          chmod +x ./situation
+      - name: Run
+        run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
+      - name: Run again
+        run: ./situation run --log-level=5 --db=db.sqlite --fail-fast
+      - name: Artifact naming
+        id: artifact-naming
+        run: echo "name=$(echo '${{ matrix.image }}' | sed 's,[:/],-,g')" >> "$GITHUB_OUTPUT"
       - name: Upload linux results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: linux-results
-          path: linux.json
+          name: ${{ steps.artifact-naming.outputs.name }}-results
+          path: db.sqlite
           retention-days: 1
 
   windows:
@@ -63,20 +85,22 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Download windows binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: situation-windows
           path: bin
-      - name: Export binary name
+      - name: Prepare binary
         run: |
-          echo "SITUATION=$(ls bin/situation-*.exe | Select-Object -First 1)" >> $env:GITHUB_ENV
-          Get-Content $env:GITHUB_ENV
+          cp bin/situation-*-amd64-windows.exe ./situation.exe
       - name: Run the binary
         run: |
-          & $env:SITUATION --file --file-path=windows.json
+          .\situation.exe run --log-level=5 --db=db.sqlite --fail-fast
+      - name: Run the binary again
+        run: |
+          .\situation.exe run --log-level=5 --db=db.sqlite --fail-fast
       - name: Upload windows results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-results
-          path: windows.json
+          path: db.sqlite
           retention-days: 1

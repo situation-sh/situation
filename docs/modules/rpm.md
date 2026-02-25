@@ -5,19 +5,21 @@ macos: false
 root: false
 title: RPM
 summary: "Reads package information from the rpm package manager."
-date: 2025-09-24
+date: 2026-02-18
 filename: rpm.go
 std_imports:
   - bytes
+  - context
   - database/sql
   - encoding/binary
   - fmt
   - io/fs
   - path
   - path/filepath
-  - time
   - unicode/utf8
 imports:
+  - github.com/hashicorp/go-version
+  - github.com/sirupsen/logrus
   - modernc.org/sqlite
 ---
 

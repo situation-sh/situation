@@ -1,18 +1,24 @@
 # Architecture
 
-The agent is divided into several modules.
+The project is organized around a core library (`pkg/`) and an agent application (`agent/`).
 
-| Module     | Job                                                              |
-| ---------- | ---------------------------------------------------------------- |
-| `backends` | all the possible outputs (like stdout, file, databases...)       |
-| `config`   | central app configuration                                        |
-| `cmd`      | agent entrypoint (it basically manages the run of the agent)     |
-| `models`   | definition of the models that represent what could be discovered |
-| `modules`  | all the collectors                                               |
-| `store`    | internal payload where all the retrieved information are stored  |
-| `utils`    | extra helpers                                                    |
+## Package Overview
 
-The overall architecture is quite classical for plugin-based tools. An orchestrator schedules and runs the available modules and all the collected data can be sent in the backend you want.
+| Package       | Job                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| `agent`       | Agent entrypoint and CLI subcommands (run, id, task, update, version)                             |
+| `pkg/models`  | Data structures representing discoverable entities (Machine, Application, NetworkInterface, etc.) |
+| `pkg/modules` | All collection modules (plugins)                                                                  |
+| `pkg/store`   | Database layer using [Bun ORM](https://bun.uptrace.dev/) (SQLite and PostgreSQL)                  |
+| `pkg/utils`   | Extra helpers                                                                                     |
 
+## Core Concepts
 
-~{architecture}(architecture.json)
+The overall architecture is plugin-based. A **scheduler** resolves module dependencies and runs the available modules in order. Each module receives a `context.Context` that carries:
+
+- **logger**: a [logrus](https://github.com/Sirupsen/logrus) field logger scoped to the module
+- **storage**: a `BunStorage` instance connected to a database (SQLite or PostgreSQL)
+- **agent**: the agent identifier string
+
+All collected data is persisted via the store into a relational database. 
+

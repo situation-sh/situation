@@ -3,18 +3,49 @@
 [![test](https://github.com/situation-sh/situation/actions/workflows/test.yaml/badge.svg)](https://github.com/situation-sh/situation/actions/workflows/test.yaml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/situation-sh/situation)](https://goreportcard.com/report/github.com/situation-sh/situation)
 
-The autonomous IT data collector.
+Situation provides the core infrastructure to automatically collect and consolidate IT data (machines, device, apps, network, flows...), on its own. 
+Providing then an up-to-date and reliable view of the current state of your infra (or your home LAN), namely the *graph*.
 
-Situation is a project that aims to **discover** everything on information systems, on its own. In a way, it lies between [nmap](https://nmap.org/), [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) and [osquery](https://osquery.io/). However it mainly differs from them on the following aspect: **user do not declare what to collect or where**.
+Now you are ready to build a context-rich IT tool above Situation.
 
-When we run tools like `nmap` or `telegraf`, we know the targets (ex: a subnetwork, a specific service...) and we must configure the tool in this way. `situation` aims to run without prior knowledge and this philosophy has two advantages:
+## Installation
 
-- frictionless deployment (single binary, just download and run)
-- no blind spots (who knows exactly what runs on his/her system?)
+The agent currently supports Linux and Windows. 
 
-Situation is bound to collect data, nothing more. To go further, `situation` provides a [json schema](https://github.com/situation-sh/situation/releases/download/v0.14.0/schema.json) for the output data.
+### Github releases
 
-> [!WARNING]  
-> Situation tries to abstract all the IT mess. It currently targets Linux and Windows but keep in mind that it has not been tested on all the machines on Earth. It does not mean that is a dangerous codebase, only that it may fail.
+Pre-built binaries are available through [github releases](https://github.com/situation-sh/situation/releases/latest/).
 
-View the Situation [documentation](https://situation-sh.github.io/situation/).
+### From sources
+
+```shell
+go install github.com/situation-sh/situation/agent@latest
+```
+
+## Quick start
+
+You can run the agent directly (without data persistence) and explore what has been discovered (experimental terminal ui)
+
+```bash
+situation run --explore
+```
+
+![tui](docs/img/tui.svg)
+
+
+## Data persistence
+
+Once you gives a db (sqlite or postgres) to `situation` you enable data persistence. 
+
+```bash
+situation run --db=situation.sqlite
+```
+
+To go further, several agents can collaborate by sharing the same postgres db (you own). 
+The **IT data collection starts here**!
+
+```bash
+situation run --db="postgres://user:password@example.org:5432/situation"
+```
+
+See the [docs](https://situation-sh.github.io/situation/) for more details.

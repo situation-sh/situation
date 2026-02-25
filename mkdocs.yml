@@ -12,6 +12,7 @@ markdown_extensions:
   - admonition
   - codehilite
   - fenced_code
+  - footnotes
   - attr_list
   - pymdownx.keys
   - md_in_html
@@ -19,11 +20,12 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.blocks.tab
   - footnotes
+  - shadcn.extensions.iconify
 
 plugins:
   - search:
   - excalidraw:
-      directory: docs/excalidraw
+      directory: ./docs/excalidraw/
   - macros:
       verbose: true
       module_name: docs/macros/main

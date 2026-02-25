@@ -1,19 +1,22 @@
 ---
-sidebar_title: Home
-title: Situation
-summary: The autonomous data collector
-order: 0
+sidebar_title: Home 
+title: Situation 
+summary: IT data collection infrastructure
 ---
 
+Situation provides the core infrastructure to automatically collect and consolidate IT data (machines, device, apps, network, flows...), on its own. 
+Providing then an up-to-date and reliable view of the current state of your infra (or your home LAN), namely the *graph*.
 
-Situation is a project that aims to **discover** everything on information systems, on its own. In a way, it lies between [nmap](https://nmap.org/), [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) and [osquery](https://osquery.io/). However it mainly differs from them on the following aspect: **user do not declare what to collect or where**.
+Now you are ready to build a context-rich IT tool above Situation.
 
-When we run tools like `nmap` or `telegraf`, we know the targets (ex: a subnetwork, a specific service...) and we must configure the tool in this way. `situation` aims to run without prior knowledge and this philosophy has two advantages:
+**Yet another scanning tool?**
 
-- frictionless deployment (single binary, just download and run)
-- no blind spots (who knows exactly what runs on his/her system?)
+Situation is different from common tools like [nmap](https://nmap.org/), [telegraf](https://www.influxdata.com/time-series-platform/telegraf/) or [osquery](https://osquery.io/):
 
-Situation is bound to collect data, nothing more. To go further, `situation` provides a [json schema]({{ github_repo }}/releases/download/{{ latest_tag }}/schema.json) for the output data.
+1. It aims to run without prior knowledge
+2. Agents collaborate natively
+3. It builds the whole infra, namely the graph (not only the nodes)
 
-!!! tip ""
-    Situation is an early-stage project. It currently targets Linux and Windows but keep in mind that it has not been tested on all the machines on Earth. It does not mean that is a dangerous codebase, only that it may fail.
+
+
+

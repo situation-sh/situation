@@ -1,0 +1,15 @@
+[project]
+name = "situation-sdk"
+version = "0.20.0"
+description = "SQLModel schema for Situation"
+authors = [{ name = "Alban Siffer", email = "alban@situation.sh" }]
+requires-python = ">=3.10"
+dependencies = ["sqlmodel>=0.0.34"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["situation.py"]
+directory = "dist"

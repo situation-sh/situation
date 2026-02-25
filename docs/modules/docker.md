@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: Docker
 summary: "Retrieves information about docker containers."
-date: 2025-09-24
+date: 2026-02-18
 filename: docker.go
 std_imports:
   - context
@@ -15,7 +15,7 @@ std_imports:
   - strings
   - time
 imports:
-  - github.com/docker/docker/api/types
+  - github.com/asiffer/puzzle
   - github.com/docker/docker/api/types/container
   - github.com/docker/docker/api/types/filters
   - github.com/docker/docker/api/types/network
@@ -32,7 +32,7 @@ DockerModule retrieves information about docker containers.
 ### Details
 
 
-It uses the official go client that performs HTTP queries either on port `:2375` (on windows generally) or on UNIX sockets.
+It uses the official go client that performs HTTP queries either on port `:2376` (on windows generally) or on UNIX sockets.
 
 We generally need some privileges to reads UNIX sockets, so it may require root privileges (the alternative is to belong to the `docker` group)
 

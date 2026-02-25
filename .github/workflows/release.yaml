@@ -18,23 +18,18 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       # Setup Go
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
       # Run build of the application
       - name: Run build
         run: make all COMMIT=$GITHUB_SHA BIN_DIR=dist
-      # generate schema
-      - name: Generate schema
-        run: |
-          cp dist/situation-*-linux /tmp/situation;
-          /tmp/situation schema > dist/schema.json
       # upload binaries and schema
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: situation
           path: dist/**
@@ -49,7 +44,7 @@ jobs:
       id-token: write # IMPORTANT: mandatory for sigstore
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: situation
           path: dist/

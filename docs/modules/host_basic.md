@@ -3,15 +3,15 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: Host Basic
+title: HostBasic
 summary: "Retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime"
-date: 2025-09-24
+date: 2026-02-18
 filename: host_basic.go
 std_imports:
+  - context
+  - fmt
   - os
-  - time
 imports:
-  - github.com/google/uuid
   - github.com/shirou/gopsutil/v4/host
 ---
 

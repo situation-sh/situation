@@ -1,0 +1,77 @@
+name: sdk
+
+on:
+  workflow_dispatch:
+  push:
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:17.6
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: situation
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      PG_DSN: postgresql://postgres:situation@localhost:5432/postgres?sslmode=disable
+    
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v6
+  
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+    
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Migrate database
+        run: |
+          env
+          go run agent/main.go migrate --db=$PG_DSN
+
+      - name: Install python deps
+        run: uv sync --all-extras
+
+      - name: Install js deps
+        run: bun install
+
+      - name: Build SDKs
+        run: make sdk
+      
+      - name: Upload Drizzle SDK
+        uses: actions/upload-artifact@v6
+        with:
+          name: drizzle
+          path: sdk/drizzle/situation*.tgz
+  
+      - name: Upload SQLModel SDK
+        uses: actions/upload-artifact@v6
+        with:
+          name: sqlmodel
+          path: sdk/sqlmodel/dist/situation*.whl
+
+

@@ -1,8 +1,7 @@
 ---
-title: Overview
+title: Overview 
 summary: From the developer's perspective
 ---
-
 
 The Situation project aims to be enriched by the community, and [modules](../modules/index.md) are definitely a good starting point for developers to contribute.
 
@@ -12,4 +11,10 @@ Before detailing the internals of Situation, it is paramount to understand the o
 
 Fortunately, modules also provide data that could be useful for subsequent modules through the [store](store.md). So developers should well define their dependencies to ease the workflow of their module. Basically, we should avoid to do twice the same thing.
 
-**Security**: yes it is hard to ensure at 100%. However, for this kind of project, we quickly feel like using `exec.Command` and other shortcuts that ease developers' job (but decrease security level). So, do not use `exec.Command` and do not use library that uses it. In nutshell, we should keep in mind that this agent is likely to run with root privileges on critical systems.
+**Security**: yes it is hard to ensure at 100%. However, for this kind of project, we quickly feel like using `exec.Command` and other shortcuts that ease developers' job (but decrease security level). So, do not use `exec.Command` and do not use library that uses it. In a nutshell, we should keep in mind that this agent is likely to run with root privileges on critical systems.
+
+## Key concepts
+
+- **Context-driven**: modules receive a `context.Context` carrying the logger, storage, and agent ID. See [modules](modules.md) for details.
+- **Relational storage**: collected data is stored in a relational database (SQLite or PostgreSQL) via the [Bun ORM](https://bun.uptrace.dev/). See [store](store.md) for details.
+- **Dependency resolution**: the scheduler automatically orders module execution based on declared dependencies. See [architecture](architecture.md) for the big picture.
