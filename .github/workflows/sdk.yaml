@@ -3,7 +3,11 @@ name: sdk
 on:
   workflow_dispatch:
   push:
-
+    paths:
+      - "pkg/store/**/*.sql"
+      - ".github/workflows/sdk.yaml"
+      - "pyproject.toml"
+      - "package.json"
 
 jobs:
   build:
