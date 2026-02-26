@@ -6,9 +6,11 @@ package modules
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jaypipes/ghw"
+	"github.com/jaypipes/pcidb/types"
 	"github.com/situation-sh/situation/pkg/models"
 )
 
@@ -57,6 +59,13 @@ func (m *HostGPUModule) Run(ctx context.Context) error {
 	gpus := make([]models.GPU, 0)
 	gpu, err := ghw.GPU(ghw.WithDisableWarnings())
 	if err != nil {
+		// pcidb.ErrNoDB is returned by ghw v0.23.0+ when pci.ids is not installed
+		// (e.g. Alpine without pciutils). Systems with real GPUs always have pci.ids;
+		// minimal containers without it also lack GPUs, so treat this as non-fatal.
+		if errors.Is(err, types.ErrNoDB) {
+			logger.WithError(err).Warn("GPU detection skipped")
+			return nil
+		}
 		return fmt.Errorf("error while retrieving GPU information: %v", err)
 	}
 
