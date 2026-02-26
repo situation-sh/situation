@@ -132,8 +132,8 @@ govulncheck.json:
 
 analysis: goweight.json
 
-goweight.json:
-	@goweight --json . | jq > $@
+goweight.json: $(BIN_PREFIX)-$(GOARCH)-$(GOOS)
+	@gsa --format=json $< | jq > $@
 
 docs: modules-doc
 
