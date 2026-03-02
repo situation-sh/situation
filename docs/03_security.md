@@ -1,6 +1,6 @@
 ---
 title: Security
-summary: Recommendations for PostgreSQL
+summary: Recommendations for PostgreSQL setup
 external_links:
   "PostgreSQL reference": https://www.postgresql.org/docs/18/admin.html
 ---
@@ -132,6 +132,58 @@ situation.exe migrate --db="postgres://user:@db.example.org:5432/situation?sslmo
 
 !!! warning "Warning"
     Some options like `sslcert` or `sslkey` are not supported by postgres clients.
+
+### Proxy
+
+The previous TLS features require that certs are deployed on every machine. 
+It implies then an heavier configuration that could limit the deployment of Situation.
+
+To solve his problem, you can setup a **simple TLS proxy** that will implement all these security features.
+Agent will just have to talk to it. 
+
+!!! warning "Warning"
+    While it seems the panacea, security is only hardened between the proxy and the database. 
+    It maybe relevant when the database is outside your LAN (ex: saas) and the proxy is itself
+    trusted in some way (with already installed certificates for example).
+
+
+Using a proxy simplifies also your organizational flows because only one node will call the external service.
+Security can then be further hardened through simple firewall rules (on both proxy and db sides).
+
+Here is an example with [`pgbouncer`](https://www.pgbouncer.org/).
+
+```ini
+; pgbouncer.ini
+[databases]
+# Map a local database name to the remote server
+db = host=postgres port=5432 dbname=situation user=postgres
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 5432
+# you can define your own users
+auth_type = scram-sha-256
+auth_file = /etc/pgbouncer/userlist.txt
+
+# Connection pooling mode
+pool_mode = transaction
+
+# --- Frontend TLS (agents -> pgbouncer) ---
+# we suppose machines already trust that cert
+# otherwise disable ssl
+client_tls_sslmode = require
+client_tls_cert_file = /etc/pgbouncer/certs/proxy.crt
+client_tls_key_file = /etc/pgbouncer/certs/proxy.key
+
+# --- Backend TLS (pgbouncer -> remote postgres) ---
+server_tls_sslmode = verify-full
+server_tls_ca_file = /etc/pgbouncer/certs/ca.crt
+
+# client cert for mTLS to the backend
+server_tls_cert_file = /etc/pgbouncer/certs/client.crt
+server_tls_key_file = /etc/pgbouncer/certs/client.key
+```
+
 
 ## Roles
 
