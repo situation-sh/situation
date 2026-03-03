@@ -49,11 +49,10 @@ func runTaskCmd(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return fmt.Errorf("cannot open or create %s: %w", cronFile, err)
 	}
-	defer f.Close()
 
 	logrus.Debugf("Writing cron line: %s", cronLine)
 	if _, err := f.WriteString(cronLine); err != nil {
 		return fmt.Errorf("cannot write to %s: %w", cronFile, err)
 	}
-	return nil
+	return f.Close()
 }
