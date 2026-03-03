@@ -197,3 +197,6 @@ sdk/sqlmodel/dist/situation_sdk-$(VERSION)-py3-none-any.whl: $(MIGRATION_FILES)
 	uv run sqlacodegen --generator sqlmodels --outfile sdk/sqlmodel/situation.py "$(PG_DSN)" 
 	cd sdk/sqlmodel && uv build -o dist
 
+# mcp inspection (PG_DSN required)
+mcp: $(.DEFAULT_GOAL)
+	bun run mcp-inspector $^ mcp --db=\""$(PG_DSN)"\"
