@@ -25,17 +25,18 @@ func init() {
 }
 
 func migrateAction(ctx context.Context, cmd *cli.Command) error {
-	storage, err := store.NewStorage(db, config.AgentString(), func(err error) {
-		logger.WithField("on", "storage").Warn(err)
-	})
+	storage, err := store.NewStorage(db,
+		store.WithAgent(config.AgentString()),
+		store.WithErrorHandler(func(err error) {
+			logger.WithField("on", "storage").Warn(err)
+		}),
+	)
 	if err != nil {
-		logger.Errorf("Failed to create storage: %v", err)
 		return fmt.Errorf("failed to create storage: %v", err)
 	}
 
 	logger.WithField("on", "storage").Info("Migrating")
 	if err := storage.Migrate(ctx); err != nil {
-		logger.Errorf("Failed to migrate: %v", err)
 		return fmt.Errorf("failed to migrate: %v", err)
 	}
 	return nil

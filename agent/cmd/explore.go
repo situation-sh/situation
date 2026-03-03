@@ -26,9 +26,12 @@ func init() {
 }
 
 func exploreAction(ctx context.Context, cmd *cli.Command) error {
-	storage, err := store.NewStorage(db, config.AgentString(), func(err error) {
-		// TODO
-	})
+	storage, err := store.NewStorage(db,
+		store.WithAgent(config.AgentString()),
+		store.WithErrorHandler(func(err error) {
+			// TODO (modal?)
+		}),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create storage: %v", err)
 	}

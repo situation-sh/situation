@@ -12,8 +12,8 @@ import (
 func NewTestingBunStorage(t *testing.T) *store.BunStorage {
 	storage, err := store.NewSQLiteBunStorage(
 		":memory:",
-		"test-agent",
-		func(err error) { t.Error(err) },
+		store.WithAgent("test-agent"),
+		store.WithErrorHandler(func(err error) { t.Error(err) }),
 	)
 	if err != nil {
 		t.Fatalf("failed to create storage: %v", err)
