@@ -68,22 +68,60 @@ func (s *BunStorage) SnapshotMigrations() (string, string) {
 	return strings.Join(upStatements, "\n\n"), strings.Join(downStatements, "\n\n")
 }
 
+func (s *BunStorage) migrationsFS() (fs.FS, error) {
+	switch s.db.Dialect().Name() {
+	case dialect.SQLite:
+		return fs.Sub(sqliteMigrations, "migrations/sqlite")
+	case dialect.PG:
+		return fs.Sub(postgresMigrations, "migrations/postgres")
+	default:
+		return nil, fmt.Errorf("unsupported database dialect: %s", s.db.Dialect().Name())
+	}
+}
+
+// RawSchema returns the raw SQL schema from the migration files as a single string
+func (s *BunStorage) RawSchema() (string, error) {
+	fsys, err := s.migrationsFS()
+	if err != nil {
+		return "", fmt.Errorf("failed to get migrations subdirectory: %w", err)
+	}
+
+	out := &strings.Builder{}
+	walk := func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			// The err argument reports an error related to path,
+			// signaling that WalkDir will not walk into that directory
+			// returning the error will cause WalkDir to stop walking
+			// the entire tree.
+			return nil
+		}
+		if strings.HasSuffix(path, ".up.sql") {
+			content, err := fs.ReadFile(fsys, path)
+			if err != nil {
+				return fmt.Errorf("failed to read migration file %s: %w", path, err)
+			}
+			if _, err := out.Write(content); err != nil {
+				return fmt.Errorf("failed to write migration content for %s: %w", path, err)
+			}
+			if _, err := out.WriteString("\n\n"); err != nil {
+				return fmt.Errorf("failed to write newline after migration content for %s: %w", path, err)
+			}
+		}
+		return nil
+	}
+	// Implement logic to read and return the raw schema from the migrations filesystem
+	if err := fs.WalkDir(fsys, ".", walk); err != nil {
+		return "", fmt.Errorf("failed to walk migrations fs: %w", err)
+	}
+	return out.String(), nil
+}
+
 // Migrate applies migrations using bun's migration system
 func (s *BunStorage) Migrate(ctx context.Context) error {
 	migrations := migrate.NewMigrations()
 
 	// select the right migrations subdirectory
-	var fsys fs.FS
-	var err error = nil
-	switch s.db.Dialect().Name() {
-	case dialect.SQLite:
-		fsys, err = fs.Sub(sqliteMigrations, "migrations/sqlite")
-	case dialect.PG:
-		fsys, err = fs.Sub(postgresMigrations, "migrations/postgres")
-	default:
-		return fmt.Errorf("unsupported database dialect: %s", s.db.Dialect().Name())
-	}
-
+	fsys, err := s.migrationsFS()
 	if err != nil {
 		return fmt.Errorf("failed to get migrations subdirectory: %w", err)
 	}
