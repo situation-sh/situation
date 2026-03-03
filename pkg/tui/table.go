@@ -130,7 +130,7 @@ func (m *TableModel) Init() tea.Cmd {
 func (m *TableModel) Update(msg tea.Msg) (*TableModel, tea.Cmd) {
 	var cmd tea.Cmd
 	// cmd is always nil here
-	m.table, cmd = m.table.Update(msg)
+	m.table, _ = m.table.Update(msg)
 	row := m.table.SelectedRow()
 	index := m.table.Cursor()
 	// WARNING: hardcoded column index

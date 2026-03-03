@@ -107,5 +107,5 @@ func (m *HostGPUModule) Run(ctx context.Context) error {
 		Set("driver = EXCLUDED.driver").
 		Set("updated_at = CURRENT_TIMESTAMP").
 		Exec(ctx)
-	return nil
+	return err
 }
