@@ -43,14 +43,47 @@ var runCmd = cli.Command{
 			Destination: &noMigrate,
 			Usage:       "Skip database migrations",
 		},
+		&cli.BoolFlag{
+			Name:        "ignore-missing-deps",
+			Destination: &ignoreMissingDeps,
+			Usage:       "Force modules execution even if some required modules are disabled",
+		},
+		&cli.BoolFlag{
+			Name:        "fail-fast",
+			Destination: &failfast,
+			Usage:       "Return directly when a module fails",
+		},
+		&cli.StringFlag{
+			Name:        "sentry",
+			Usage:       "Sentry DSN for tracing",
+			Destination: &sentryDSN,
+		},
 	},
 }
 
 func init() {
 	populateConfig()
+	runCmd.Flags = append(runCmd.Flags, dbFlag())
 	runCmd.Flags = append(runCmd.Flags, generateFlags()...)
-	// we first read env before parsing cli parameters
-	config.ReadEnv()
+}
+
+func dbFlag() cli.Flag {
+	// ensure flag exists
+	// normally we must catch the error here
+	config.DefineVar(
+		"db",
+		&db,
+		puzzle.WithDescription("Database DSN (e.g. file path for SQLite or connection string for postgres)"),
+		puzzle.WithEnvName("SITUATION_DB"),
+	)
+	flags, err := config.SomeFlags("db")
+	if err != nil {
+		panic(err)
+	}
+	if len(flags) == 0 {
+		panic("db flag not found")
+	}
+	return flags[0]
 }
 
 func disableFlagName(name string) string {
@@ -63,36 +96,9 @@ func moduleEnvName(name string) string {
 	return strings.ToUpper(e)
 }
 
-func defineDB() {
-	config.DefineVar(
-		"db",
-		&db,
-		puzzle.WithDescription("Database DSN (e.g. file path for SQLite or connection string for postgres)"),
-		puzzle.WithEnvName("SITUATION_DB"),
-	)
-}
-
 // populateConfig adds configuration variables from modules
 // These conf variables will be exported as CLI flags
 func populateConfig() {
-	config.DefineVar(
-		"ignore-missing-deps",
-		&ignoreMissingDeps,
-		puzzle.WithDescription("Force modules execution even if some required modules are disabled"),
-	)
-	defineDB()
-	config.DefineVar(
-		"sentry",
-		&sentryDSN,
-		puzzle.WithDescription("Sentry DSN for tracing"),
-		puzzle.WithEnvName("SENTRY_DSN"),
-	)
-	config.DefineVar(
-		"fail-fast",
-		&failfast,
-		puzzle.WithDescription("Return directly when a module fails"),
-	)
-
 	// config from modules
 	modules.Walk(func(name string, mod modules.Module) {
 		// add specific config to flags
@@ -110,6 +116,7 @@ func populateConfig() {
 }
 
 func generateFlags() []cli.Flag {
+	// maybe here we generate too many flags
 	flags, err := config.Urfave3()
 	if err != nil {
 		panic(err)
@@ -120,7 +127,7 @@ func generateFlags() []cli.Flag {
 
 func runAction(ctx context.Context, cmd *cli.Command) error {
 	var loggerInterface logrus.FieldLogger = logger
-	// fmt.Println("report caller:", logger.ReportCaller)
+
 	// scheduler opts
 	opts := make([]modules.SchedulerOptions, 0)
 

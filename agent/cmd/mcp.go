@@ -65,12 +65,7 @@ var mcpCmd = cli.Command{
 }
 
 func init() {
-	defineDB()
-	flags, err := config.SomeFlags("db")
-	if err != nil {
-		panic(err)
-	}
-	mcpCmd.Flags = append(mcpCmd.Flags, flags...)
+	mcpCmd.Flags = append(mcpCmd.Flags, dbFlag())
 }
 
 var server = mcp.NewServer(
@@ -103,6 +98,19 @@ type QueryArgs struct {
 	SQL string `json:"sql" jsonschema:"description:SQL query to execute"`
 }
 
+var queryTool = mcp.Tool{
+	Title:       "Run SQL query on your infrastructure data",
+	Name:        "query",
+	Description: "Execute a read-only SQL query, returns JSON rows",
+	Meta:        mcp.Meta{"dialect": "unknown"},
+	Annotations: &mcp.ToolAnnotations{
+		DestructiveHint: new(false),
+		IdempotentHint:  true,
+		OpenWorldHint:   new(false),
+		ReadOnlyHint:    true,
+	},
+}
+
 func mcpAction(ctx context.Context, cmd *cli.Command) error {
 	storage, err := store.NewStorage(db,
 		store.WithAgent(config.AgentString()),
@@ -127,7 +135,7 @@ func mcpAction(ctx context.Context, cmd *cli.Command) error {
 			Name:        "schema",
 			Title:       "Situation schema",
 			MIMEType:    "text/plain",
-			URI:         fmt.Sprintf("file:///situation/%s/schema.sql", config.Version),
+			URI:         fmt.Sprintf("file:///situation/%s/%v/schema.sql", config.Version, storage.Dialect()),
 			Size:        int64(len([]byte(schema))),
 			Icons: []mcp.Icon{
 				{
@@ -149,36 +157,27 @@ func mcpAction(ctx context.Context, cmd *cli.Command) error {
 		},
 	)
 
-	destructive := false
-	openWorld := false
-	queryTool := mcp.Tool{
-		Title:       "Run SQL query on your infrastructure data",
-		Name:        "query",
-		Description: "Execute a read-only SQL query, returns JSON rows",
-		Meta:        mcp.Meta{"dialect": storage.Dialect().String()},
-		Annotations: &mcp.ToolAnnotations{
-			DestructiveHint: &destructive,
-			IdempotentHint:  true,
-			OpenWorldHint:   &openWorld,
-			ReadOnlyHint:    true,
-		},
-	}
-	if storage.Dialect() == dialect.SQLite {
-		queryTool.Icons = append(queryTool.Icons,
-			mcp.Icon{
+	switch storage.Dialect() {
+	case dialect.SQLite:
+		queryTool.Meta["dialect"] = "sqlite"
+		queryTool.Icons = []mcp.Icon{
+			{
 				Source:   SQLITE_SVG,
 				Sizes:    []string{"any"},
 				MIMEType: "image/svg+xml",
 			},
-		)
-	} else if storage.Dialect() == dialect.PG {
-		queryTool.Icons = append(queryTool.Icons,
-			mcp.Icon{
+		}
+	case dialect.PG:
+		queryTool.Meta["dialect"] = "postgres"
+		queryTool.Icons = []mcp.Icon{
+			{
 				Source:   POSTGRES_SVG,
 				Sizes:    []string{"any"},
 				MIMEType: "image/svg+xml",
 			},
-		)
+		}
+	default:
+		queryTool.Meta["dialect"] = "unknown"
 	}
 
 	mcp.AddTool(server, &queryTool, func(ctx context.Context, req *mcp.CallToolRequest, args QueryArgs) (*mcp.CallToolResult, any, error) {
@@ -211,18 +210,18 @@ func mcpAction(ctx context.Context, cmd *cli.Command) error {
 	})
 
 	switch mcpTransport {
-	case "http":
-		return nil
-		// handler := mcp.NewStreamableHTTPHandler(
-		// 	func(*http.Request) *mcp.Server { return server },
-		// 	&mcp.StreamableHTTPOptions{},
-		// )
-		// return http.ListenAndServe(
-		// 	net.JoinHostPort(mcpHost, fmt.Sprintf("%d", mcpPort)),
-		// 	handler,
-		// )
+	// case "http":
+	// 	return nil
+	// handler := mcp.NewStreamableHTTPHandler(
+	// 	func(*http.Request) *mcp.Server { return server },
+	// 	&mcp.StreamableHTTPOptions{},
+	// )
+	// return http.ListenAndServe(
+	// 	net.JoinHostPort(mcpHost, fmt.Sprintf("%d", mcpPort)),
+	// 	handler,
+	// )
 	case "stdio":
-		return server.Run(context.Background(), &mcp.StdioTransport{})
+		return server.Run(ctx, &mcp.StdioTransport{})
 	default:
 		return fmt.Errorf("unsupported transport: %s", mcpTransport)
 	}

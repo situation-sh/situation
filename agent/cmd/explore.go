@@ -17,12 +17,7 @@ var exploreCmd = cli.Command{
 }
 
 func init() {
-	defineDB()
-	flags, err := config.SomeFlags("db")
-	if err != nil {
-		panic(err)
-	}
-	exploreCmd.Flags = append(exploreCmd.Flags, flags...)
+	exploreCmd.Flags = append(exploreCmd.Flags, dbFlag())
 }
 
 func exploreAction(ctx context.Context, cmd *cli.Command) error {

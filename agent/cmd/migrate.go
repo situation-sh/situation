@@ -16,12 +16,7 @@ var migrateCmd = cli.Command{
 }
 
 func init() {
-	defineDB()
-	flags, err := config.SomeFlags("db")
-	if err != nil {
-		panic(err)
-	}
-	migrateCmd.Flags = append(migrateCmd.Flags, flags...)
+	migrateCmd.Flags = append(migrateCmd.Flags, dbFlag())
 }
 
 func migrateAction(ctx context.Context, cmd *cli.Command) error {
@@ -35,7 +30,7 @@ func migrateAction(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("failed to create storage: %v", err)
 	}
 
-	logger.WithField("on", "storage").Info("Migrating")
+	logger.WithField("on", "storage").WithField("dsn", db).Info("Migrating")
 	if err := storage.Migrate(ctx); err != nil {
 		return fmt.Errorf("failed to migrate: %v", err)
 	}
