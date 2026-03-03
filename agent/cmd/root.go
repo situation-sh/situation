@@ -40,6 +40,7 @@ var app = &cli.Command{
 		&taskCmd,
 		&exploreCmd,
 		&migrateCmd,
+		&mcpCmd,
 	},
 	Before: func(ctx context.Context, c *cli.Command) (context.Context, error) {
 		level := logrus.Level(logLevel)
