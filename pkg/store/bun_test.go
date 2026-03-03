@@ -37,3 +37,23 @@ func TestMigrateSQLite(t *testing.T) {
 		t.Fatalf("failed to migrate tables: %v", err)
 	}
 }
+
+func TestQLiteCheckReadOnly(t *testing.T) {
+	dsn := "/tmp/test.db"
+	rodsn := sqliteCheckReadOnly(dsn, ReadOnly())
+	if rodsn != "file://"+dsn+"?mode=ro" {
+		t.Errorf("Expected read-only DSN to be '%s?mode=ro', got '%s'", dsn, rodsn)
+	}
+
+	dsn = "/tmp/test.db?cache=shared"
+	rodsn = sqliteCheckReadOnly(dsn, ReadOnly())
+	if rodsn != "file://"+dsn+"&mode=ro" {
+		t.Errorf("Expected read-only DSN to be '%s&mode=ro', got '%s'", dsn, rodsn)
+	}
+
+	dsn = "test.db?mode=ro"
+	rodsn = sqliteCheckReadOnly(dsn, ReadOnly())
+	if rodsn != "file://"+dsn {
+		t.Errorf("Expected read-only DSN to be '%s&mode=ro', got '%s'", dsn, rodsn)
+	}
+}

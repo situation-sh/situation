@@ -62,7 +62,7 @@ func newStorage(db *bun.DB, opts ...BunStorageOption) *BunStorage {
 	db.RegisterModel((*models.UserApplication)(nil))
 	db.RegisterModel((*models.NetworkInterfaceSubnet)(nil))
 
-	storage := &BunStorage{
+	storage := BunStorage{
 		db:       db,
 		agent:    "",
 		onError:  func(err error) {},
@@ -72,10 +72,10 @@ func newStorage(db *bun.DB, opts ...BunStorageOption) *BunStorage {
 	}
 
 	for _, opt := range opts {
-		opt(storage)
+		opt(&storage)
 	}
 
-	return storage
+	return &storage
 }
 
 // NewStorage creates a new BunStorage instance, auto-detecting the database type.
@@ -107,6 +107,11 @@ func sqliteCheckReadOnly(dataSourceName string, opts ...BunStorageOption) string
 	if strings.Contains(dataSourceName, ":memory:") {
 		return dataSourceName
 	}
+	// the file:// prefix (uri format) is important in modernc/sqlite to pass
+	// uri parameters like "mode=ro"
+	if !strings.HasPrefix(dataSourceName, "file://") {
+		dataSourceName = "file://" + dataSourceName
+	}
 	if !strings.Contains(dataSourceName, "mode=ro") {
 		if strings.Contains(dataSourceName, "?") {
 			dataSourceName += "&mode=ro"
@@ -119,12 +124,12 @@ func sqliteCheckReadOnly(dataSourceName string, opts ...BunStorageOption) string
 
 // NewSQLiteBunStorage creates a new BunStorage instance using SQLite.
 func NewSQLiteBunStorage(dataSourceName string, opts ...BunStorageOption) (*BunStorage, error) {
-	dataSourceName = sqliteCheckReadOnly(dataSourceName, opts...)
-	sqldb, err := sql.Open(sqliteshim.ShimName, dataSourceName)
+	dsn := sqliteCheckReadOnly(dataSourceName, opts...)
+	sqldb, err := sql.Open(sqliteshim.ShimName, dsn)
 	if err != nil {
 		return nil, err
 	}
-	if strings.Contains(dataSourceName, ":memory:") {
+	if strings.Contains(dsn, ":memory:") || strings.Contains(dsn, "mode=memory") {
 		// Prevent connection closure from destroying in-memory database
 		// see https://bun.uptrace.dev/guide/drivers.html#important-in-memory-database-configuration
 		sqldb.SetMaxIdleConns(1000) // Keep connections alive
