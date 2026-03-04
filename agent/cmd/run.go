@@ -111,15 +111,19 @@ func populateConfig() {
 	modules.Walk(func(name string, mod modules.Module) {
 		// add specific config to flags
 		if configurableMod, ok := mod.(config.Configurable); ok {
-			config.Bind(configurableMod)
+			if err := config.Bind(configurableMod); err != nil {
+				panic(err)
+			}
 		}
 		// enable/disable module
-		config.Define(
+		if err := config.Define(
 			disableFlagName(name),
 			false,
 			puzzle.WithDescription(fmt.Sprintf("Disable module %s", name)),
 			puzzle.WithEnvName(fmt.Sprintf("NO_MODULE_%s", moduleEnvName(name))),
-		)
+		); err != nil {
+			panic(err)
+		}
 	})
 }
 

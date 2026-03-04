@@ -77,7 +77,7 @@ func generateMigrations(storage *store.BunStorage, migrationsDir string, migrati
 	if err := os.WriteFile(
 		path.Join(migrationsDir, fmt.Sprintf("%s.up.sql", migrationName)),
 		[]byte(up),
-		0644,
+		0600,
 	); err != nil {
 		return fmt.Errorf("failed to write up migration: %v", err)
 	}
@@ -85,7 +85,7 @@ func generateMigrations(storage *store.BunStorage, migrationsDir string, migrati
 	if err := os.WriteFile(
 		path.Join(migrationsDir, fmt.Sprintf("%s.down.sql", migrationName)),
 		[]byte(down),
-		0644,
+		0600,
 	); err != nil {
 		return fmt.Errorf("failed to write down migration: %v", err)
 	}

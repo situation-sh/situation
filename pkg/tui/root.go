@@ -106,6 +106,7 @@ func (m RootModel) Fetch() tea.Cmd {
 
 func (m RootModel) Screenshot() tea.Msg {
 	name := path.Join(os.TempDir(), fmt.Sprintf("situation-%d.svg", time.Now().Unix()))
+	// #nosec G304
 	f, err := os.Create(name)
 	if err != nil {
 		return err
@@ -114,10 +115,13 @@ func (m RootModel) Screenshot() tea.Msg {
 	if err != nil {
 		return err
 	}
-	io.WriteString(f, svg)
+	if _, err := io.WriteString(f, svg); err != nil {
+		return err
+	}
 	if err := f.Close(); err != nil {
 		return err
 	}
+	// #nosec G302
 	if err := os.Chmod(name, 0o644); err != nil {
 		return err
 	}

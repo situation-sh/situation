@@ -147,7 +147,9 @@ func (s *BunStorage) CreateTables(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to create table for model %T: %w", model, err)
 		}
-		s.db.NewCreateIndex().Model(model).IfNotExists().Exec(ctx)
+		if _, err := s.db.NewCreateIndex().Model(model).IfNotExists().Exec(ctx); err != nil {
+			return fmt.Errorf("failed to create index for model %T: %w", model, err)
+		}
 	}
 	return nil
 }

@@ -73,7 +73,7 @@ func dbWrite(storage *store.BunStorage, filename string, title string) error {
 		[]byte(legend),
 	}
 
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,8 @@ func dbDocAction(ctx context.Context, cmd *cli.Command) error {
 		if err != nil {
 			return err
 		}
-		if err := dbWrite(storage, path.Join(dbDocsOutputDir, "sqlite.md"), "SQLite"); err != nil {
+		// #nosec G304
+		if err := dbWrite(storage, path.Join(dbDocsOutputDir, "sqlite.md"), "SQLite"); err != nil { // #nosec G304
 			return err
 		}
 	}

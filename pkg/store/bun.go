@@ -164,7 +164,9 @@ func extractClientSSL(dsn string) (string, pgdriver.Option, error) {
 		}
 		opt := pgdriver.Option(func(conf *pgdriver.Config) {
 			if conf.TLSConfig == nil {
-				conf.TLSConfig = &tls.Config{}
+				conf.TLSConfig = &tls.Config{
+					MinVersion: tls.VersionTLS12,
+				}
 			}
 			conf.TLSConfig.Certificates = append(conf.TLSConfig.Certificates, cert)
 		})
