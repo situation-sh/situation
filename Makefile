@@ -140,16 +140,16 @@ security: gosec.json govulncheck.json
 	@cat $<
 
 gosec.json:
-	@gosec -fmt json -exclude-dir dev -quiet ./... | jq > $@
+	@$(GO) tool gosec -fmt json -exclude-dir dev -quiet ./... | jq > $@
 
 govulncheck.json:
-	@govulncheck --json ./... | jq > $@
+	@$(GO) tool govulncheck --json ./... | jq > $@
 
 weight: $(BIN_PREFIX)-$(GOARCH)-$(GOOS)-debug
-	@gsa --no-dwarf --web --open $<
+	@$(GO) tool gsa --no-dwarf --web --open $<
 
 goweight.json: $(BIN_PREFIX)-$(GOARCH)-$(GOOS)-debug
-	@gsa --format=json $< | jq > $@
+	@$(GO) tool gsa --format=json $< | jq > $@
 
 docs: modules-doc
 
