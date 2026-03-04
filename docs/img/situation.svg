@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+    <style>
+        @media (prefers-color-scheme: dark) {
+        :root {
+        filter: invert(100%);
+        }
+        }
+        :root.dark {
+        filter: invert(100%);
+        }
+    </style>
+    <rect width="256" height="256" fill="#171717" rx="40" ry="40" />
+    <g transform="translate(14.2, 14.2) scale(0.9)">
+        <path d="M100,60c-48,0,0,66-48,66,48,0,0,66,48,66" fill="none" stroke="#ffffff"
+            stroke-linecap="round"
+            stroke-linejoin="round" stroke-width="20" />
+        <path d="M156,60c48,0,0,66,48,66-48,0,0,66-48,66" fill="none" stroke="#ffffff"
+            stroke-linecap="round"
+            stroke-linejoin="round" stroke-width="20" />
+    </g>
+</svg>

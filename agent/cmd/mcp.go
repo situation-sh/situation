@@ -146,10 +146,6 @@ func mcpAction(ctx context.Context, cmd *cli.Command) error {
 			},
 		},
 		func(ctx context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
-
-			if err != nil {
-				return nil, fmt.Errorf("failed to get raw schema: %w", err)
-			}
 			return &mcp.ReadResourceResult{
 				Contents: []*mcp.ResourceContents{
 					{URI: req.Params.URI, Text: schema, MIMEType: "text/plain"}},
