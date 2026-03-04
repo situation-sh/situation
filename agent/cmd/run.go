@@ -70,12 +70,20 @@ func init() {
 func dbFlag() cli.Flag {
 	// ensure flag exists
 	// normally we must catch the error here
-	config.DefineVar(
+	if err := config.DefineVar(
 		"db",
 		&db,
 		puzzle.WithDescription("Database DSN (e.g. file path for SQLite or connection string for postgres)"),
 		puzzle.WithEnvName("SITUATION_DB"),
-	)
+	); err != nil {
+		switch err.(type) {
+		case *puzzle.KeyAlreadyExistsError:
+			// ignore
+			break
+		default:
+			panic(err)
+		}
+	}
 	flags, err := config.SomeFlags("db")
 	if err != nil {
 		panic(err)

@@ -101,7 +101,7 @@ func (m *HostGPUModule) Run(ctx context.Context) error {
 	// it seems reliable enough for now.
 	_, err = storage.DB().NewInsert().
 		Model(&gpus).
-		On("CONFLICT (machine_id, index) DO UPDATE").
+		On(`CONFLICT (machine_id, "index") DO UPDATE`). // add quotes because index is a SQL protected name
 		Set("product = EXCLUDED.product").
 		Set("vendor = EXCLUDED.vendor").
 		Set("driver = EXCLUDED.driver").

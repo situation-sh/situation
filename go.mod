@@ -5,7 +5,7 @@ go 1.26.0
 tool github.com/Zxilly/go-size-analyzer/cmd/gsa
 
 require (
-	github.com/asiffer/puzzle v0.0.0-20251128150614-4c9bcf5648e6
+	github.com/asiffer/puzzle v0.1.0
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/cakturk/go-netstat v0.0.0-20200220111822-e5b49efee7a5
 	github.com/charmbracelet/bubbles v1.0.0
@@ -31,14 +31,14 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.4.0
 	github.com/rmhubbert/bubbletea-overlay v0.6.5
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
-	github.com/shirou/gopsutil/v4 v4.26.1
+	github.com/shirou/gopsutil/v4 v4.26.2
 	github.com/sirupsen/logrus v1.9.4
-	github.com/uptrace/bun v1.2.17
-	github.com/uptrace/bun/dialect/pgdialect v1.2.17
-	github.com/uptrace/bun/dialect/sqlitedialect v1.2.17
-	github.com/uptrace/bun/driver/pgdriver v1.2.17
-	github.com/uptrace/bun/driver/sqliteshim v1.2.17
-	github.com/urfave/cli/v3 v3.6.2
+	github.com/uptrace/bun v1.2.18
+	github.com/uptrace/bun/dialect/pgdialect v1.2.18
+	github.com/uptrace/bun/dialect/sqlitedialect v1.2.18
+	github.com/uptrace/bun/driver/pgdriver v1.2.18
+	github.com/uptrace/bun/driver/sqliteshim v1.2.18
+	github.com/urfave/cli/v3 v3.7.0
 	github.com/vishvananda/netlink v1.3.1
 	github.com/winlabs/gowin32 v0.0.0-20240930213947-f504d7e14639
 	golang.org/x/mod v0.33.0
@@ -116,7 +116,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/lo v1.52.0 // indirect
-	github.com/segmentio/asm v1.1.3 // indirect
+	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/segmentio/encoding v0.5.3 // indirect
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
@@ -129,17 +129,17 @@ require (
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0 // indirect
-	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.66.0 // indirect
+	go.opentelemetry.io/otel v1.41.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.37.0 // indirect
-	go.opentelemetry.io/otel/metric v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.41.0 // indirect
+	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	golang.org/x/arch v0.24.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/lint v0.0.0-20241112194109-818c5a804067 // indirect
-	golang.org/x/oauth2 v0.34.0 // indirect
+	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.13.0 // indirect
@@ -153,7 +153,7 @@ require (
 	honnef.co/go/tools v0.7.0 // indirect
 	howett.net/plist v1.0.2-0.20250314012144-ee69052608d9 // indirect
 	mellium.im/sasl v0.3.2 // indirect
-	modernc.org/libc v1.68.0 // indirect
+	modernc.org/libc v1.69.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )

@@ -191,7 +191,10 @@ func mcpAction(ctx context.Context, cmd *cli.Command) error {
 			for i := range vals {
 				ptrs[i] = &vals[i]
 			}
-			rows.Scan(ptrs...)
+			if err := rows.Scan(ptrs...); err != nil {
+				// ignore currently
+				continue
+			}
 			row := make(map[string]any, len(cols))
 			for i, c := range cols {
 				row[c] = vals[i]
