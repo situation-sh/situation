@@ -98,9 +98,11 @@ func makeMigrationsAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	if !noSqlite {
 		logger.Info("Creating SQLite storage")
-		storage, err := store.NewSQLiteBunStorage(":memory:", "test-agent", func(err error) {
-			logger.WithError(err).Error("Storage error")
-		})
+		storage, err := store.NewSQLiteBunStorage(":memory:",
+			store.WithAgent("test-agent"),
+			store.WithErrorHandler(func(err error) {
+				logger.WithError(err).Error("Storage error")
+			}))
 		if err != nil {
 			return fmt.Errorf("failed to create storage: %v", err)
 		}
@@ -114,9 +116,11 @@ func makeMigrationsAction(ctx context.Context, cmd *cli.Command) error {
 	}
 	if !noPostgres {
 		logger.Info("Creating Postgres storage")
-		storage, err := store.NewPostgresBunStorageNoPing("postgresql://postgres:situation@localhost:5432/situation", "test-agent", func(err error) {
-			logger.WithError(err).Error("Storage error")
-		})
+		storage, err := store.NewPostgresBunStorageNoPing("postgresql://postgres:situation@localhost:5432/situation",
+			store.WithAgent("test-agent"),
+			store.WithErrorHandler(func(err error) {
+				logger.WithError(err).Error("Storage error")
+			}))
 		if err != nil {
 			return fmt.Errorf("failed to create storage: %v", err)
 		}
