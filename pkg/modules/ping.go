@@ -173,8 +173,6 @@ func (m *PingModule) Run(ctx context.Context) error {
 		// 	continue
 		// }
 		ipnet, err := network.IPNet()
-		_, zeros := ipnet.Mask.Size()
-
 		if err != nil {
 			logger.
 				WithField("network", network.NetworkCIDR).
@@ -182,6 +180,7 @@ func (m *PingModule) Run(ctx context.Context) error {
 				Warn("unable to parse network CIDR")
 			continue
 		}
+		_, zeros := ipnet.Mask.Size()
 
 		switch ones := network.MaskSize; {
 		case ones < 20:

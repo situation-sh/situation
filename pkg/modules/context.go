@@ -22,7 +22,7 @@ func dummyLogger() logrus.FieldLogger {
 }
 
 func fallbackStorage(agent string) *store.BunStorage {
-	s, err := store.NewSQLiteBunStorage(":memory:", agent, func(err error) {})
+	s, err := store.NewSQLiteBunStorage(":memory:", store.WithAgent(agent))
 	if err != nil {
 		// here we prefer panic since we must have a storage
 		panic(err)

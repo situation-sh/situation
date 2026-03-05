@@ -48,8 +48,8 @@ func Get[T any](key string) (T, error) {
 	return puzzle.Get[T](k, key)
 }
 
-func Bind(cf Configurable) {
-	cf.Bind(k)
+func Bind(cf Configurable) error {
+	return cf.Bind(k)
 }
 
 func Urfave3() ([]cli.Flag, error) {

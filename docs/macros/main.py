@@ -20,7 +20,7 @@ def latest_release() -> Dict[str, Any]:
             },
             timeout=1000,
         )
-    except BaseException as err:
+    except Exception as err:
         print("error:", err)
         return {
             "tag_name": "v0.19.1",
@@ -44,7 +44,7 @@ def latest_successful_workflow(name: str) -> Dict[str, Any]|None:
             },
             timeout=1000,
         )
-    except BaseException as err:
+    except Exception as err:
         print("error:", err)
         return None
     if response.status_code == 200:

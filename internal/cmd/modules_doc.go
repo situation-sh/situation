@@ -53,6 +53,7 @@ func modulesDocAction(ctx context.Context, cmd *cli.Command) error {
 		f := path.Join(moduleDocsOutputDir, strings.ReplaceAll(m.SrcFile, ".go", ".md"))
 		mkdocs := m.MkDocs()
 		logger.WithField("name", m.Name).WithField("file", f).Info("Writing module docs")
+		// #nosec G306
 		if err := os.WriteFile(f, mkdocs, 0644); err != nil {
 			return err
 		}
@@ -63,6 +64,7 @@ func modulesDocAction(ctx context.Context, cmd *cli.Command) error {
 		WithField("name", "index").
 		WithField("file", indexFile).
 		Info("Writing module index")
+	// #nosec G306
 	err := os.WriteFile(
 		indexFile,
 		parser.BuildIndex(),

@@ -13,6 +13,7 @@ Here is what the agent can do in addition to collecting data.
 | `refresh-id`      | Regenerate the internal ID of the agent          |
 | `defaults`, `def` | Print the default config                         |
 | `id`              | Print the identifier of the agent                |
+| `migrate`         | Only run database migrations                     |
 | `update`          | Update the agent                                 |
 | `version`         | Print the version of the agent                   |
 | `task`, `cron`    | Install a scheduled task                         |

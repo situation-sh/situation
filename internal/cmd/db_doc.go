@@ -73,7 +73,7 @@ func dbWrite(storage *store.BunStorage, filename string, title string) error {
 		[]byte(legend),
 	}
 
-	file, err := os.Create(filename)
+	file, err := os.Create(filename) // #nosec G304
 	if err != nil {
 		return err
 	}
@@ -96,21 +96,26 @@ func dbWrite(storage *store.BunStorage, filename string, title string) error {
 
 func dbDocAction(ctx context.Context, cmd *cli.Command) error {
 	if !noSqlite {
-		storage, err := store.NewSQLiteBunStorage(":memory:", "test-agent", func(err error) {
-			logger.WithField("module", "storage").WithError(err).Error("Storage error")
-		})
+		storage, err := store.NewSQLiteBunStorage(":memory:",
+			store.WithAgent("test-agent"),
+			store.WithErrorHandler(func(err error) {
+				logger.WithField("module", "storage").WithError(err).Error("Storage error")
+			}))
 		if err != nil {
 			return err
 		}
-		if err := dbWrite(storage, path.Join(dbDocsOutputDir, "sqlite.md"), "SQLite"); err != nil {
+		// #nosec G304
+		if err := dbWrite(storage, path.Join(dbDocsOutputDir, "sqlite.md"), "SQLite"); err != nil { // #nosec G304
 			return err
 		}
 	}
 
 	if !noPostgres {
-		storage, err := store.NewPostgresBunStorageNoPing("postgres://user:pass@localhost:5432/dbname?sslmode=disable", "test-agent", func(err error) {
-			logger.WithField("module", "storage").WithError(err).Error("Storage error")
-		})
+		storage, err := store.NewPostgresBunStorageNoPing("postgres://user:pass@localhost:5432/dbname?sslmode=disable",
+			store.WithAgent("test-agent"),
+			store.WithErrorHandler(func(err error) {
+				logger.WithField("module", "storage").WithError(err).Error("Storage error")
+			}))
 		if err != nil {
 			return err
 		}

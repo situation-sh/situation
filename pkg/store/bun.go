@@ -24,68 +24,125 @@ type Cache struct {
 
 // BunStorage is the main storage implementation using Bun ORM.
 type BunStorage struct {
-	db      *bun.DB
-	agent   string
-	onError func(error)
-	cache   Cache
-	dialect dialect.Name
+	db       *bun.DB
+	agent    string
+	onError  func(error)
+	readOnly bool
+	cache    Cache
+	dialect  dialect.Name
 }
 
 func (s *BunStorage) Dialect() dialect.Name {
 	return s.dialect
 }
 
-func newStorage(db *bun.DB, agent string, onError func(error)) *BunStorage {
+type BunStorageOption func(*BunStorage)
+
+func WithAgent(agent string) BunStorageOption {
+	return func(s *BunStorage) {
+		s.agent = agent
+	}
+}
+
+func WithErrorHandler(onError func(error)) BunStorageOption {
+	return func(s *BunStorage) {
+		s.onError = onError
+	}
+}
+
+func ReadOnly() BunStorageOption {
+	return func(s *BunStorage) {
+		s.readOnly = true
+	}
+}
+
+func newStorage(db *bun.DB, opts ...BunStorageOption) *BunStorage {
 	// register m2m models
 	db.RegisterModel((*models.ApplicationEndpoint)(nil))
 	db.RegisterModel((*models.UserApplication)(nil))
 	db.RegisterModel((*models.NetworkInterfaceSubnet)(nil))
 
-	// fallback onError handler
-	if onError == nil {
-		onError = func(err error) {}
+	storage := BunStorage{
+		db:       db,
+		agent:    "",
+		onError:  func(err error) {},
+		cache:    Cache{HostID: -1},
+		dialect:  db.Dialect().Name(),
+		readOnly: false,
 	}
 
-	return &BunStorage{
-		db:      db,
-		agent:   agent,
-		onError: onError,
-		cache:   Cache{HostID: -1},
-		dialect: db.Dialect().Name(),
+	for _, opt := range opts {
+		opt(&storage)
 	}
+
+	return &storage
 }
 
 // NewStorage creates a new BunStorage instance, auto-detecting the database type.
-func NewStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
+func NewStorage(dataSourceName string, opts ...BunStorageOption) (*BunStorage, error) {
 	// Simple heuristic to choose between SQLite and Postgres
 	switch detectDBType(dataSourceName) {
 	case "sqlite":
-		return NewSQLiteBunStorage(dataSourceName, agent, onError)
+		return NewSQLiteBunStorage(dataSourceName, opts...)
 	case "postgres":
-		return NewPostgresBunStorage(dataSourceName, agent, onError)
+		return NewPostgresBunStorage(dataSourceName, opts...)
 	default:
 		return nil, fmt.Errorf("cannot detect database type with dsn=%s", dataSourceName)
 	}
 }
 
+func isReadOnly(opts ...BunStorageOption) bool {
+	s := &BunStorage{}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s.readOnly
+}
+
+func sqliteCheckReadOnly(dataSourceName string, opts ...BunStorageOption) string {
+	// dumyy struct
+	if !isReadOnly(opts...) {
+		return dataSourceName
+	}
+	if strings.Contains(dataSourceName, ":memory:") {
+		return dataSourceName
+	}
+	// the file:// prefix (uri format) is important in modernc/sqlite to pass
+	// uri parameters like "mode=ro"
+	if !strings.HasPrefix(dataSourceName, "file://") {
+		dataSourceName = "file://" + dataSourceName
+	}
+	if !strings.Contains(dataSourceName, "mode=ro") {
+		if strings.Contains(dataSourceName, "?") {
+			dataSourceName += "&mode=ro"
+		} else {
+			dataSourceName += "?mode=ro"
+		}
+	}
+	return dataSourceName
+}
+
 // NewSQLiteBunStorage creates a new BunStorage instance using SQLite.
-func NewSQLiteBunStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
-	sqldb, err := sql.Open(sqliteshim.ShimName, dataSourceName)
+func NewSQLiteBunStorage(dataSourceName string, opts ...BunStorageOption) (*BunStorage, error) {
+	dsn := sqliteCheckReadOnly(dataSourceName, opts...)
+	sqldb, err := sql.Open(sqliteshim.ShimName, dsn)
 	if err != nil {
 		return nil, err
 	}
-	if strings.Contains(dataSourceName, ":memory:") {
+	if strings.Contains(dsn, ":memory:") || strings.Contains(dsn, "mode=memory") {
 		// Prevent connection closure from destroying in-memory database
 		// see https://bun.uptrace.dev/guide/drivers.html#important-in-memory-database-configuration
 		sqldb.SetMaxIdleConns(1000) // Keep connections alive
 		sqldb.SetConnMaxLifetime(0) // No connection expiry
 		sqldb.SetMaxOpenConns(1)    // Single connection for consistency
-
 	}
 	db := bun.NewDB(sqldb, sqlitedialect.New())
-	return newStorage(db, agent, onError), nil
+	return newStorage(db, opts...), nil
 }
 
+// extractClientSSL parses sslcert and sslkey from the DSN and returns
+// a modified DSN without them, along with a pgdriver.Option to set up
+// TLS connection if both are present.
 func extractClientSSL(dsn string) (string, pgdriver.Option, error) {
 	u, err := url.Parse(dsn)
 	if err != nil {
@@ -107,7 +164,9 @@ func extractClientSSL(dsn string) (string, pgdriver.Option, error) {
 		}
 		opt := pgdriver.Option(func(conf *pgdriver.Config) {
 			if conf.TLSConfig == nil {
-				conf.TLSConfig = &tls.Config{}
+				conf.TLSConfig = &tls.Config{
+					MinVersion: tls.VersionTLS12,
+				}
 			}
 			conf.TLSConfig.Certificates = append(conf.TLSConfig.Certificates, cert)
 		})
@@ -118,14 +177,14 @@ func extractClientSSL(dsn string) (string, pgdriver.Option, error) {
 }
 
 // NewPostgresBunStorage creates a new BunStorage instance using PostgreSQL.
-func NewPostgresBunStorage(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
+func NewPostgresBunStorage(dataSourceName string, opts ...BunStorageOption) (*BunStorage, error) {
 	// remove key-value options that pgdriver doesn't support and handle them manually
 	dsn, opt, err := extractClientSSL(dataSourceName)
 	if err != nil {
 		return nil, fmt.Errorf("invalid DSN: %w", err)
 	}
 
-	opts := []pgdriver.Option{
+	pgOpts := []pgdriver.Option{
 		pgdriver.WithDSN(dsn),
 		pgdriver.WithDialTimeout(6 * time.Second),
 	}
@@ -133,22 +192,31 @@ func NewPostgresBunStorage(dataSourceName string, agent string, onError func(err
 	// pgdriver does not parse sslcert/sslkey from the DSN; handle them manually.
 	// This option runs after WithDSN so it can extend the TLS config it already built.
 	if opt != nil {
-		opts = append(opts, opt)
+		pgOpts = append(pgOpts, opt)
 	}
 
-	connector := pgdriver.NewConnector(opts...)
+	// If read-only mode is requested, set the appropriate connection parameter.
+	if isReadOnly(opts...) {
+		pgOpts = append(pgOpts,
+			pgdriver.WithConnParams(map[string]any{
+				"default_transaction_read_only": "on",
+			}),
+		)
+	}
+
+	connector := pgdriver.NewConnector(pgOpts...)
 	sqldb := sql.OpenDB(connector)
 	db := bun.NewDB(sqldb, pgdialect.New())
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
-	return newStorage(db, agent, onError), nil
+	return newStorage(db, opts...), nil
 }
 
-func NewPostgresBunStorageNoPing(dataSourceName string, agent string, onError func(error)) (*BunStorage, error) {
+func NewPostgresBunStorageNoPing(dataSourceName string, opts ...BunStorageOption) (*BunStorage, error) {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dataSourceName)))
 	db := bun.NewDB(sqldb, pgdialect.New())
-	return newStorage(db, agent, onError), nil
+	return newStorage(db, opts...), nil
 }
 
 func detectDBType(dsn string) string {

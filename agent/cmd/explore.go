@@ -17,18 +17,16 @@ var exploreCmd = cli.Command{
 }
 
 func init() {
-	defineDB()
-	flags, err := config.SomeFlags("db")
-	if err != nil {
-		panic(err)
-	}
-	exploreCmd.Flags = append(exploreCmd.Flags, flags...)
+	exploreCmd.Flags = append(exploreCmd.Flags, dbFlag())
 }
 
 func exploreAction(ctx context.Context, cmd *cli.Command) error {
-	storage, err := store.NewStorage(db, config.AgentString(), func(err error) {
-		// TODO
-	})
+	storage, err := store.NewStorage(db,
+		store.WithAgent(config.AgentString()),
+		store.WithErrorHandler(func(err error) {
+			// TODO (modal?)
+		}),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create storage: %v", err)
 	}

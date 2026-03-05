@@ -146,7 +146,6 @@ func parseSignatureAlgorithms(raw []byte) ([]uint16, error) {
 	//  │ ...                                        │ ← more pairs
 	//  └────────────────────────────────────────────┘
 	size := len(raw)
-	sigAlgs := make([]uint16, 0)
 	if size < 2 {
 		return nil, fmt.Errorf("signature algorithms data too short: %d bytes", size)
 	}
@@ -156,7 +155,7 @@ func parseSignatureAlgorithms(raw []byte) ([]uint16, error) {
 	}
 
 	sigAlgCount := sigAlgLen / 2
-	sigAlgs = make([]uint16, sigAlgCount)
+	sigAlgs := make([]uint16, sigAlgCount)
 	for j := range sigAlgCount {
 		sigAlgs[j] = binary.BigEndian.Uint16(raw[2*(j+1) : 2*(j+2)])
 	}

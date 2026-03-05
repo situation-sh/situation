@@ -71,11 +71,13 @@ func (m *TLSModule) Run(ctx context.Context) error {
 	storage := getStorage(ctx)
 
 	tlsEndpoints := make([]*models.ApplicationEndpoint, 0)
-	storage.DB().NewSelect().
+	if err := storage.DB().NewSelect().
 		Model(&tlsEndpoints).
 		Where("protocol = ?", "tcp").
-		Where("port IN (?)", bun.In(m.Ports)). // see https://bun.uptrace.dev/guide/placeholders.html#in
-		Scan(ctx)
+		Where("port IN (?)", bun.List(m.Ports)). // see https://bun.uptrace.dev/guide/placeholders.html#in
+		Scan(ctx); err != nil {
+		return fmt.Errorf("failed to query TLS endpoints: %w", err)
+	}
 
 	toUpdate := make([]*models.ApplicationEndpoint, 0)
 	for _, endpoint := range tlsEndpoints {

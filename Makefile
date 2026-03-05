@@ -24,7 +24,7 @@
 # 
 
 MODULE     := $(shell go list -m)
-VERSION    := 0.20.0
+VERSION    := 0.20.1
 COMMIT     := $(shell git rev-parse HEAD)
 
 # system stuff
@@ -37,8 +37,13 @@ CGO_ENABLED ?= 0
 SRC_FILES       := $(shell find . -path "*.go" -not -path "./.*")
 MODULE_FILES    := $(shell find ./pkg/modules -path "*.go")
 MIGRATION_FILES	:= $(shell find ./pkg/store/migrations -path "*.sql")
+SVG_FILES	    := $(shell find ./dev/mcp -path "*.svg")
 
+# generate variable name from pathname
+varname = $(shell echo "$(subst .,_,$(notdir $1))" | tr '[:lower:]' '[:upper:]')
 
+# generate SVG constants
+GO_LDFLAGS_SVG := $(foreach item,$(SVG_FILES),-X "$(MODULE)/agent/cmd.$(call varname,$(item))=$(shell echo "data:image/svg+xml;base64,$$(base64 -w 0 $(item))")")
 # Put the version in the config file
 GO_LDFLAGS_SET_VERSION := -X "$(MODULE)/agent/config.Version=$(VERSION)"
 # Put the conmmit in the config file
@@ -56,11 +61,12 @@ GO_LDFLAGS_STRIP_DWARF := -w
 # prod flags
 GO_LDFLAGS_PROD        := $(GO_LDFLAGS_STRIP) $(GO_LDFLAGS_STRIP_DWARF)
 # final flags
-GO_LDFLAGS             ?= -ldflags '$(GO_LDFLAGS_BASE) $(GO_LDFLAGS_PROD)'
+GO_LDFLAGS             ?= -ldflags '$(GO_LDFLAGS_BASE) $(GO_LDFLAGS_PROD) $(GO_LDFLAGS_SVG)'
 
 # build command
-BUILD      := CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GO_LDFLAGS) -trimpath
-BUILD_TEST := CGO_ENABLED=$(CGO_ENABLED) $(GO) test $(GO_LDFLAGS) -c
+BUILD       := CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GO_LDFLAGS) -trimpath
+BUILD_DEBUG := CGO_ENABLED=$(CGO_ENABLED) $(GO) build -ldflags '$(GO_LDFLAGS_STRIP_DWARF)' -trimpath
+BUILD_TEST  := CGO_ENABLED=$(CGO_ENABLED) $(GO) test $(GO_LDFLAGS) -c
 
 # name of the final binary
 BIN        := situation
@@ -88,17 +94,21 @@ goarm = $(strip \
 	@echo -e '\033[31mUnknown command "$@"\033[0m'
 	@echo 'Usage: make [command] [variable=]...'
 	@echo ''
+	@echo 'By default it builds $(.DEFAULT_GOAL)'
+	@echo ''
 	@echo 'Commands:'
-	@echo '             all    build for linux and windows'
+	@echo '             all    build for linux (amd64, arm64, armv5l, armv6l, armv7l) and windows (amd64)'
 	@echo '            test    run tests locally (+coverage)'
 	@echo '            docs    update modules documentation'
 	@echo '           clear    remove the build artifacts'
 	@echo '        security    run gosec and govulncheck'
-	@echo '        analysis    run goweight'
+	@echo '        analysis    run gsa'
+	@echo '          weight    run gsa with web interface'
+	@echo '        generate    run code generation'
 	@echo '         version    print the current version'
 	@echo ''
 
-.PHONY: version all security analysis test clean clear container
+.PHONY: version all security analysis test clean clear container agent/cmd/mcp_const.go
 
 version:
 	@echo "$(VERSION)"
@@ -117,23 +127,29 @@ all: $(BIN_PREFIX)-amd64-linux \
 	 $(BIN_PREFIX)-amd64-windows.exe
 
 # final binary files
-$(BIN_PREFIX)-%: $(SRC_FILES) $(MIGRATION_FILES)
+$(BIN_PREFIX)-%: go.sum $(SRC_FILES) $(MIGRATION_FILES)
 	@mkdir -p $(@D)
-	GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) GOARM=$(call goarm,$*) $(BUILD) -o $@ agent/main.go
+	@GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) GOARM=$(call goarm,$*) $(BUILD) -o $@ agent/main.go
+
+$(BIN_PREFIX)-%-debug: go.sum $(SRC_FILES) $(MIGRATION_FILES)
+	@mkdir -p $(@D)
+	@GOARCH=$(call goarch,$*) GOOS=$(call goos,$*) GOARM=$(call goarm,$*) $(BUILD_DEBUG) -o $@ agent/main.go
+
 
 security: gosec.json govulncheck.json
 	@cat $<
 
 gosec.json:
-	@gosec -fmt json -exclude-dir dev -quiet ./... | jq > $@
+	@$(GO) tool gosec -fmt json -exclude-dir dev -quiet ./... | jq > $@
 
 govulncheck.json:
-	@govulncheck --json ./... | jq > $@
+	@$(GO) tool govulncheck --json ./... | jq > $@
 
-analysis: goweight.json
+weight: $(BIN_PREFIX)-$(GOARCH)-$(GOOS)-debug
+	@$(GO) tool gsa --no-dwarf --web --open $<
 
-goweight.json: $(BIN_PREFIX)-$(GOARCH)-$(GOOS)
-	@gsa --format=json $< | jq > $@
+goweight.json: $(BIN_PREFIX)-$(GOARCH)-$(GOOS)-debug
+	@$(GO) tool gsa --format=json $< | jq > $@
 
 docs: modules-doc
 
@@ -181,3 +197,6 @@ sdk/sqlmodel/dist/situation_sdk-$(VERSION)-py3-none-any.whl: $(MIGRATION_FILES)
 	uv run sqlacodegen --generator sqlmodels --outfile sdk/sqlmodel/situation.py "$(PG_DSN)" 
 	cd sdk/sqlmodel && uv build -o dist
 
+# mcp inspection (PG_DSN required)
+mcp: $(.DEFAULT_GOAL)
+	bun run mcp-inspector $^ mcp --db=\""$(PG_DSN)"\"

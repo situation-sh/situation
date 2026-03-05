@@ -134,7 +134,7 @@ func JA4(data []byte) (string, error) {
 				return "", fmt.Errorf("error parsing signature algorithms: %w", err)
 			}
 		case EXT_ALPN: // application_layer_protocol_negotiation
-			protoName, err = parseALPN(data[k:])
+			protoName, _ = parseALPN(data[k:])
 
 		}
 		// jump to next extension
