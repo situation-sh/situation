@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/pcidb/types"
@@ -93,6 +94,25 @@ func (m *HostGPUModule) Run(ctx context.Context) error {
 		}
 		gpus = append(gpus, g)
 		l.Info("Found GPU on host")
+	}
+
+	// detect chassis
+	for _, gpu := range gpus {
+		product := strings.ToLower(gpu.Product)
+		if strings.Contains(product, "hyper-v") {
+			if _, err := storage.DB().
+				NewUpdate().
+				Model((*models.Machine)(nil)).
+				Where("id = ?", hostID).
+				Set("chassis = ?", "vm").
+				Exec(ctx); err != nil {
+				logger.
+					WithError(err).
+					WithField("product", gpu.Product).
+					Warn("Failed to update chassis information")
+			}
+			break
+		}
 	}
 
 	// update DB
