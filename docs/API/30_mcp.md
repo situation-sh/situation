@@ -12,6 +12,8 @@ Ready to **prompt your infra**? An MCP server has been integrated into the agent
 !!! info "Security"
     The database is open in read-only mode (read-only transactions for postgres), preventing it from destructive operations.
 
+## Command
+
 You can start the server as follows, but generally this command is wrapped by the tool that will use it.
 
 /// tab | Linux
@@ -35,6 +37,8 @@ situation.exe mcp --db="file:db.sqlite"
     well escaped by the tools using this MCP. We advise passing the DSN
     through the `SITUATION_DB` environment variable.
 
+## Integration
+
 Several LLM (and tools above) support the `mcp.json` format (filename and locations may change, read their... manual). 
 You can then easily provide the situation MCP.
 
@@ -52,3 +56,23 @@ You can then easily provide the situation MCP.
     }
 }
 ```
+
+## Inspection
+
+You can test the MCP server through the [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector). Note the quote escape to ensure that the `db` parameter is protected.
+
+/// tab | `npx`
+
+```bash
+npx @modelcontextprotocol/inspector /path/to/situation mcp --db="\"file:db.sqlite\""
+```
+
+///
+
+/// tab | `bunx`
+
+```bash
+bunx @modelcontextprotocol/inspector /path/to/situation mcp --db="\"file:db.sqlite\""
+```
+
+///
