@@ -9,12 +9,14 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
+	"github.com/asiffer/puzzle"
 	"github.com/situation-sh/situation/pkg/models"
 )
 
 func init() {
-	registerModule(&ReverseLookupModule{})
+	registerModule(&ReverseLookupModule{Timeout: 500 * time.Millisecond})
 }
 
 // ReverseLookupModule tries to get a hostname attached to a local IP address
@@ -25,6 +27,15 @@ func init() {
 // [net.LookupAddr]: https://pkg.go.dev/net#LookupAddr
 type ReverseLookupModule struct {
 	BaseModule
+
+	Timeout time.Duration
+}
+
+func (m *ReverseLookupModule) Bind(config *puzzle.Config) error {
+	if err := setDefault(config, m, "timeout", &m.Timeout, "Reverse lookup attempt duration"); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *ReverseLookupModule) Name() string {
@@ -56,16 +67,19 @@ func (m *ReverseLookupModule) Run(ctx context.Context) error {
 		return nil
 	}
 
+	resolver := net.Resolver{PreferGo: true} // no cgo
+
 	newMachines := make([]*models.Machine, 0)
 	for _, nic := range nics {
 		for _, ip := range nic.IPs() {
 			if ip == nil || ip.IsLoopback() {
 				continue
 			}
-			// if ip != nil && ip.IsPrivate() {
-			// run first lookup
-			// net.LookupAddr(ip.String()) // #nosec G104 -- we don't care about the errors here
-			names, err := net.LookupAddr(ip.String())
+
+			// net.Resolver{}.LookupAddr(ctx, ip.String()) // #nosec G104 -- we don't care about the errors here
+			ctxWT, cancel := context.WithTimeout(ctx, m.Timeout)
+			names, err := resolver.LookupAddr(ctxWT, ip.String())
+			cancel()
 			if err != nil {
 				logger.
 					WithField("ip", ip).
