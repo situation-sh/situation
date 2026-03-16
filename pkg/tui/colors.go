@@ -1,42 +1,68 @@
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"os"
 
-var PrimaryColor = lipgloss.CompleteAdaptiveColor{
-	Light: lipgloss.CompleteColor{TrueColor: "#1c1c1c", ANSI256: "234", ANSI: "0"},
-	Dark:  lipgloss.CompleteColor{TrueColor: "#eeeeee ", ANSI256: "255", ANSI: "15"},
-}
+	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/exp/charmtone"
+)
 
-var InvPrimaryColor = lipgloss.CompleteAdaptiveColor{
-	Light: PrimaryColor.Dark,
-	Dark:  PrimaryColor.Light,
-}
+var darkMode = lipgloss.HasDarkBackground(os.Stdin, os.Stdout)
+var lightDark = lipgloss.LightDark(darkMode)
+
+// func lightDark(light, dark color.Color) color.Color {
+// 	// darkMode := lipgloss.HasDarkBackground(os.Stdin, os.Stdout)
+// 	// return lipgloss.LightDark(darkMode)(light, dark)
+// 	return
+// }
+
+var PrimaryColor = lightDark(charmtone.Pepper, charmtone.Salt)
+
+var InvPrimaryColor = lightDark(charmtone.Salt, charmtone.Pepper)
+
+var AccentColor = lightDark(charmtone.Julep, charmtone.Julep)
+
+var AccentMutedColor = lightDark(charmtone.Guac, charmtone.Guac)
+
+// var PrimaryColor = lipgloss.CompleteAdaptiveColor{
+// 	Light: lipgloss.CompleteColor{TrueColor: "#1c1c1c", ANSI256: "234", ANSI: "0"},
+// 	Dark:  lipgloss.CompleteColor{TrueColor: "#eeeeee ", ANSI256: "255", ANSI: "15"},
+// }
+
+// var PrimaryColor = charmtone.Julep
+
+// var InvPrimaryColor = lipgloss.CompleteAdaptiveColor{
+// 	Light: PrimaryColor.Dark,
+// 	Dark:  PrimaryColor.Light,
+// }
 
 // var BgPrimaryColor = lipgloss.CompleteAdaptiveColor{
 // 	Light: PrimaryColor.Dark,
 // 	Dark:  PrimaryColor.Light,
 // }
 
-var PrimaryMutedColor = lipgloss.CompleteAdaptiveColor{
-	Light: lipgloss.CompleteColor{TrueColor: "#d0d0d0", ANSI256: "252", ANSI: "8"},
-	Dark:  lipgloss.CompleteColor{TrueColor: "#121212", ANSI256: "233", ANSI: "7"},
-}
+// var PrimaryMutedColor = lipgloss.CompleteAdaptiveColor{
+// 	Light: lipgloss.CompleteColor{TrueColor: "#d0d0d0", ANSI256: "252", ANSI: "8"},
+// 	Dark:  lipgloss.CompleteColor{TrueColor: "#121212", ANSI256: "233", ANSI: "7"},
+// }
 
-var AccentColor = lipgloss.CompleteColor{
-	TrueColor: "#00c573",
-	ANSI256:   "42",
-	ANSI:      "10",
-}
+// var AccentColor = lipgloss.CompleteColor{
+// 	TrueColor: "#00c573",
+// 	ANSI256:   "42",
+// 	ANSI:      "10",
+// }
 
-var AccentMutedColor = lipgloss.CompleteAdaptiveColor{
-	Light: lipgloss.CompleteColor{TrueColor: "#00530d", ANSI256: "22", ANSI: "2"},
-	Dark:  lipgloss.CompleteColor{TrueColor: "#00530d", ANSI256: "22", ANSI: "2"},
-}
+// var AccentMutedColor = lipgloss.CompleteAdaptiveColor{
+// 	Light: lipgloss.CompleteColor{TrueColor: "#00530d", ANSI256: "22", ANSI: "2"},
+// 	Dark:  lipgloss.CompleteColor{TrueColor: "#00530d", ANSI256: "22", ANSI: "2"},
+// }
 
-var ErrorBgColor = lipgloss.CompleteColor{
-	TrueColor: "#f45",
-	ANSI256:   "160",
-	ANSI:      "9",
-}
+// var ErrorBgColor = lipgloss.CompleteColor{
+// 	TrueColor: "#f45",
+// 	ANSI256:   "160",
+// 	ANSI:      "9",
+// }
 
-var ErrorFgColor = lipgloss.CompleteColor{TrueColor: "#fff", ANSI256: "255", ANSI: "15"}
+// var ErrorFgColor = lipgloss.CompleteColor{TrueColor: "#fff", ANSI256: "255", ANSI: "15"}
+var ErrorBgColor = lightDark(charmtone.Sriracha, charmtone.Sriracha)
+var ErrorFgColor = lightDark(charmtone.Salt, charmtone.Salt)

@@ -1,10 +1,10 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 // keyMap defines a set of keybindings. To work for help it must satisfy
@@ -86,7 +86,8 @@ func NewFooterModel() FooterModel {
 }
 
 func (m FooterModel) SetSize(width, height int) {
-	m.help.Width = width
+	m.help.SetWidth(width)
+	// m.help.Width = width
 }
 
 func (m FooterModel) Init() tea.Cmd {

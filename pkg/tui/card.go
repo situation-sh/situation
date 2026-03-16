@@ -5,9 +5,9 @@ import (
 	"path"
 	"slices"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"charm.land/lipgloss/v2/table"
 	"github.com/situation-sh/situation/pkg/models"
 )
 
@@ -140,11 +140,11 @@ func (m *CardModel) SetSource(nic *models.NetworkInterface, addr string) {
 	}
 }
 
-func (m *CardModel) SetSize(width, height int) {
-	// remove border
-	m.width = width - 2
-	m.height = height - 2
-}
+// func (m *CardModel) SetSize(width, height int) {
+// 	// remove border
+// 	m.width = width - 0
+// 	m.height = height - 0
+// }
 
 func (m *CardModel) Init() tea.Cmd {
 	return nil

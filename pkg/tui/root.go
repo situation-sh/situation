@@ -8,9 +8,8 @@ import (
 	"path"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	overlay "github.com/rmhubbert/bubbletea-overlay"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/situation-sh/situation/pkg/models"
 	"github.com/situation-sh/situation/pkg/store"
 )
@@ -111,7 +110,7 @@ func (m RootModel) Screenshot() tea.Msg {
 	if err != nil {
 		return err
 	}
-	svg, err := ansi2svg(m.View())
+	svg, err := ansi2svg(m.View().Content)
 	if err != nil {
 		return err
 	}
@@ -129,7 +128,8 @@ func (m RootModel) Screenshot() tea.Msg {
 }
 
 func (m RootModel) Init() tea.Cmd {
-	return tea.Batch(m.Fetch(), tea.WindowSize())
+	// return tea.Batch(m.Fetch(), tea.WindowSize())
+	return tea.Batch(m.Fetch())
 }
 
 func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -202,43 +202,59 @@ func (v Viewable) View() string {
 	return string(v)
 }
 
-func (m RootModel) View() string {
-	bg := lipgloss.JoinVertical(lipgloss.Left,
-		m.header.View(),
-		lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			m.sidebar.View(),
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				m.table.View(),
-				m.card.View(),
+func (m RootModel) View() tea.View {
+	compositor := lipgloss.NewCompositor()
+	// background layer
+	bg := lipgloss.NewLayer(
+		lipgloss.JoinVertical(lipgloss.Left,
+			m.header.View(),
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				m.sidebar.View(),
+				lipgloss.JoinVertical(
+					lipgloss.Left,
+					m.table.View(),
+					m.card.View(),
+				),
 			),
+			m.footer.View(),
 		),
-		m.footer.View(),
 	)
 
-	fg := Viewable("")
+	compositor.AddLayers(bg)
+
 	if m.err != nil {
-		fg = m.ErrModal()
+		compositor.AddLayers(lipgloss.NewLayer(m.ErrModal()))
 	} else if m.success != "" {
-		fg = m.SuccessModal()
-	} else {
-		// no modal, just show the background
-		return bg
+		compositor.AddLayers(lipgloss.NewLayer(m.SuccessModal()))
 	}
 
-	ov := overlay.New(
-		fg,
-		Viewable(bg),
-		overlay.Center,
-		overlay.Center,
-		0,
-		0,
-	)
-	return ov.View()
+	view := tea.NewView(compositor.Render())
+	view.AltScreen = true
+	return view
+
+	// fg := Viewable("")
+	// if m.err != nil {
+	// 	fg = m.ErrModal()
+	// } else if m.success != "" {
+	// 	fg = m.SuccessModal()
+	// } else {
+	// 	// no modal, just show the background
+	// 	return bg
+	// }
+
+	// ov := overlay.New(
+	// 	fg,
+	// 	Viewable(bg),
+	// 	overlay.Center,
+	// 	overlay.Center,
+	// 	0,
+	// 	0,
+	// )
+	// return ov.View()
 }
 
-func (m RootModel) ErrModal() Viewable {
+func (m RootModel) ErrModal() string {
 	if m.err == nil {
 		return ""
 	}
@@ -250,7 +266,7 @@ func (m RootModel) ErrModal() Viewable {
 	)
 }
 
-func (m RootModel) SuccessModal() Viewable {
+func (m RootModel) SuccessModal() string {
 	if m.success == "" {
 		return ""
 	}
@@ -262,7 +278,7 @@ func (m RootModel) SuccessModal() Viewable {
 	)
 }
 
-func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Style) Viewable {
+func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Style) string {
 	style := lipgloss.NewStyle().
 		Align(lipgloss.Center, lipgloss.Center).
 		Width(2 * m.width / 5).
@@ -270,12 +286,10 @@ func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Sty
 	for _, opt := range opts {
 		style = opt(style)
 	}
-	return Viewable(
-		style.Render(msg),
-	)
+	return style.Render(msg)
 }
 
 func (m RootModel) Run() error {
-	_, err := tea.NewProgram(m, tea.WithAltScreen()).Run()
+	_, err := tea.NewProgram(m).Run()
 	return err
 }
