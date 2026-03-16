@@ -39,7 +39,7 @@ func ansi2svg(raw string) (string, error) {
 	fontSize := SVG_FONT_SIZE
 	lineHeight := fontSize * SVG_LINE_HEIGHT_RATIO
 
-	objs, err := ansi.Parse(raw)
+	objs, err := ansi.Parse(raw, ansi.WithIgnoreInvalidCodes())
 	if err != nil {
 		return "", err
 	}

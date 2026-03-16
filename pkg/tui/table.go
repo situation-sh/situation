@@ -44,8 +44,9 @@ type newNodeMsg struct {
 }
 
 type TableModel struct {
-	table table.Model
-	nics  []*models.NetworkInterface
+	table        table.Model
+	nics         []*models.NetworkInterface
+	lastCursor   int
 }
 
 func NewTableModel() *TableModel {
@@ -134,14 +135,18 @@ func (m *TableModel) Init() tea.Cmd {
 }
 
 func (m *TableModel) Update(msg tea.Msg) (*TableModel, tea.Cmd) {
-	var cmd tea.Cmd
-	// cmd is always nil here
 	m.table, _ = m.table.Update(msg)
-	row := m.table.SelectedRow()
 	index := m.table.Cursor()
-	// WARNING: hardcoded column index
 
-	cmd = func() tea.Msg {
+	// Only emit newNodeMsg when the selection actually changes
+	if index == m.lastCursor {
+		return m, nil
+	}
+	m.lastCursor = index
+
+	row := m.table.SelectedRow()
+	// WARNING: hardcoded column index
+	cmd := func() tea.Msg {
 		if len(row) < 2 {
 			return nil
 		}

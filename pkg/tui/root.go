@@ -133,8 +133,7 @@ func (m RootModel) Init() tea.Cmd {
 }
 
 func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	cmds := make([]tea.Cmd, 0)
-	var cmd1, cmd2, cmd3 tea.Cmd
+	var cmd1 tea.Cmd
 
 	if m.err != nil || m.success != "" {
 		switch msg := msg.(type) {
@@ -193,7 +192,7 @@ func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// pass message to sub-models (only table can handle them for now)
 	m.table, cmd1 = m.table.Update(msg)
-	return m, tea.Batch(append(cmds, cmd1, cmd2, cmd3)...)
+	return m, cmd1
 }
 
 type Viewable string
@@ -224,39 +223,21 @@ func (m RootModel) View() tea.View {
 	compositor.AddLayers(bg)
 
 	if m.err != nil {
-		compositor.AddLayers(lipgloss.NewLayer(m.ErrModal()))
+		compositor.AddLayers(m.ErrModal())
 	} else if m.success != "" {
-		compositor.AddLayers(lipgloss.NewLayer(m.SuccessModal()))
+		compositor.AddLayers(m.SuccessModal())
 	}
 
 	view := tea.NewView(compositor.Render())
 	view.AltScreen = true
+	view.Cursor = nil
+	view.MouseMode = tea.MouseModeNone
 	return view
-
-	// fg := Viewable("")
-	// if m.err != nil {
-	// 	fg = m.ErrModal()
-	// } else if m.success != "" {
-	// 	fg = m.SuccessModal()
-	// } else {
-	// 	// no modal, just show the background
-	// 	return bg
-	// }
-
-	// ov := overlay.New(
-	// 	fg,
-	// 	Viewable(bg),
-	// 	overlay.Center,
-	// 	overlay.Center,
-	// 	0,
-	// 	0,
-	// )
-	// return ov.View()
 }
 
-func (m RootModel) ErrModal() string {
+func (m RootModel) ErrModal() *lipgloss.Layer {
 	if m.err == nil {
-		return ""
+		return nil
 	}
 	msg := lipgloss.JoinVertical(lipgloss.Center, m.err.Error(), "\n", pressEnter)
 	return m.Modal(msg,
@@ -266,9 +247,9 @@ func (m RootModel) ErrModal() string {
 	)
 }
 
-func (m RootModel) SuccessModal() string {
+func (m RootModel) SuccessModal() *lipgloss.Layer {
 	if m.success == "" {
-		return ""
+		return nil
 	}
 	msg := lipgloss.JoinVertical(lipgloss.Center, m.success, "\n", pressEnter)
 	return m.Modal(msg,
@@ -278,7 +259,7 @@ func (m RootModel) SuccessModal() string {
 	)
 }
 
-func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Style) string {
+func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Style) *lipgloss.Layer {
 	style := lipgloss.NewStyle().
 		Align(lipgloss.Center, lipgloss.Center).
 		Width(2 * m.width / 5).
@@ -286,7 +267,8 @@ func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Sty
 	for _, opt := range opts {
 		style = opt(style)
 	}
-	return style.Render(msg)
+	return lipgloss.NewLayer(style.Render(msg)).X(3 * m.width / 10).Y(m.height / 3)
+	// return style.Render(msg)
 }
 
 func (m RootModel) Run() error {
