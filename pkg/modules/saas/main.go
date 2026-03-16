@@ -27,9 +27,9 @@ func Detect(endpoint *models.ApplicationEndpoint) (bool, string, error) {
 			continue
 		}
 		if match {
-			// First match wins
-			endpoint.SaaS = name
-			return true, name, nil
+			// First match wins. We recall Name in case of dynamic detector name (ex: google)
+			endpoint.SaaS = detector.Name()
+			return true, detector.Name(), nil
 		}
 	}
 

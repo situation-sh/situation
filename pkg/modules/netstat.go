@@ -480,7 +480,7 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 	// create or update endpoints
 	if len(endpoints) > 0 {
 		err = storage.DB().NewInsert().Model(&endpoints).
-			On("CONFLICT (port, protocol, addr, network_interface_id) DO UPDATE").
+			On("CONFLICT (port, protocol, addr, COALESCE(network_interface_id, 0)) DO UPDATE").
 			Set("updated_at = CURRENT_TIMESTAMP").
 			Scan(ctx)
 		if err != nil {

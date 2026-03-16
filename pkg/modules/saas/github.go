@@ -19,6 +19,7 @@ func (d *GithubDetector) Detect(endpoint *models.ApplicationEndpoint) (bool, err
 		".github.com",
 		".github.io",
 		".githubusercontent.com",
+		".githubassets.com",
 	}) {
 		return true, nil
 	}
