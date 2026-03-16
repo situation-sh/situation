@@ -70,6 +70,7 @@ func (m *ReverseLookupModule) Run(ctx context.Context) error {
 	resolver := net.Resolver{PreferGo: true} // no cgo
 
 	newMachines := make([]*models.Machine, 0)
+	hostnameToMachine := make(map[string]*models.Machine)
 	for _, nic := range nics {
 		for _, ip := range nic.IPs() {
 			if ip == nil || ip.IsLoopback() {
@@ -88,13 +89,18 @@ func (m *ReverseLookupModule) Run(ctx context.Context) error {
 				continue
 			}
 			if len(names) > 0 {
-				m := &models.Machine{
-					Hostname: strings.TrimSuffix(names[0], "."),
+				hostname := strings.TrimSuffix(names[0], ".")
+				machine, exists := hostnameToMachine[hostname]
+				if !exists {
+					machine = &models.Machine{
+						Hostname: hostname,
+					}
+					hostnameToMachine[hostname] = machine
+					newMachines = append(newMachines, machine)
 				}
-				newMachines = append(newMachines, m)
-				nic.Machine = m
+				nic.Machine = machine
 				logger.
-					WithField("hostname", m.Hostname).
+					WithField("hostname", machine.Hostname).
 					WithField("ip", ip).
 					Info("Hostname resolved")
 			} else {
@@ -109,6 +115,7 @@ func (m *ReverseLookupModule) Run(ctx context.Context) error {
 		_, err = storage.DB().
 			NewInsert().
 			Model(&newMachines).
+			Returning("id").
 			Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to insert new machines: %v", err)
@@ -117,7 +124,7 @@ func (m *ReverseLookupModule) Run(ctx context.Context) error {
 			WithField("machines", len(newMachines)).
 			Info("Inserted new machines with hostnames")
 
-		// upate nics with machine_id
+		// update nics with machine_id
 		nicsToUpdate := make([]*models.NetworkInterface, 0)
 		for _, nic := range nics {
 			if nic.Machine != nil {
