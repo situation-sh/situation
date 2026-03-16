@@ -27,11 +27,13 @@ func (s *BunStorage) InsertPackages(ctx context.Context, pkgs []*models.Package)
 	}
 
 	// fallback to basic bulk insert
+	// Returning("id") populates the ID field on each package after upsert
 	_, err := s.db.
 		NewInsert().
 		Model(&uniquePkgs).
 		On("CONFLICT (name, version, machine_id) DO UPDATE").
 		Set("updated_at = CURRENT_TIMESTAMP").
+		Returning("id").
 		Exec(ctx)
 	return err
 }
@@ -70,10 +72,15 @@ func (s *BunStorage) postgresInsertPackages(ctx context.Context, pkgs []*models.
 			return err
 		}
 
-		// Upsert from staging to real table
+		// Upsert from staging to real table, returning IDs to populate the package structs.
 		// Note: Bun doesn't support INSERT...SELECT with ON CONFLICT via fluent API
 		// Using SELECT * avoids hardcoding column names in the INSERT part
-		_, err = tx.NewRaw(`
+		var returned []struct {
+			ID      int64  `bun:"id"`
+			Name    string `bun:"name"`
+			Version string `bun:"version"`
+		}
+		err = tx.NewRaw(`
 			INSERT INTO packages
 			SELECT * FROM _packages_staging
 			ON CONFLICT (name, version, machine_id) DO UPDATE SET
@@ -82,8 +89,23 @@ func (s *BunStorage) postgresInsertPackages(ctx context.Context, pkgs []*models.
 				manager = EXCLUDED.manager,
 				install_time_unix = EXCLUDED.install_time_unix,
 				files = EXCLUDED.files
-		`).Exec(ctx)
-		return err
+			RETURNING id, name, version
+		`).Scan(ctx, &returned)
+		if err != nil {
+			return err
+		}
+
+		// Map returned IDs back to the package structs so callers can use them
+		idMap := make(map[[2]string]int64, len(returned))
+		for _, r := range returned {
+			idMap[[2]string{r.Name, r.Version}] = r.ID
+		}
+		for _, pkg := range uniquePkgs {
+			if id, ok := idMap[[2]string{pkg.Name, pkg.Version}]; ok {
+				pkg.ID = id
+			}
+		}
+		return nil
 	})
 }
 

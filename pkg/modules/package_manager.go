@@ -91,22 +91,29 @@ func (a *AbstractPackageManager) Run(generator <-chan *models.Package) error {
 	}
 
 	if len(appsToUpdate) > 0 {
-		// update apps ID
+		// update apps with the package ID now that packages are persisted
+		linkedApps := make([]*models.Application, 0, len(appsToUpdate))
 		for _, app := range appsToUpdate {
 			if app.Package != nil && app.Package.ID != 0 {
 				app.PackageID = app.Package.ID
+				linkedApps = append(linkedApps, app)
 			}
+		}
+
+		if len(linkedApps) == 0 {
+			logger.Warn("no applications could be linked to packages (package IDs not resolved)")
+			return nil
 		}
 
 		_, err = storage.DB().
 			NewUpdate().
-			Model(&appsToUpdate).
+			Model(&linkedApps).
 			Column("package_id").
 			Bulk().
 			Exec(ctx)
 
 		logger.
-			WithField("apps", len(appsToUpdate)).
+			WithField("apps", len(linkedApps)).
 			Info("Applications linked to packages")
 
 		return err
