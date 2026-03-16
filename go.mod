@@ -1,6 +1,6 @@
 module github.com/situation-sh/situation
 
-go 1.26.0
+go 1.26.1
 
 tool (
 	github.com/Zxilly/go-size-analyzer/cmd/gsa
