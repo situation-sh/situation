@@ -20,7 +20,7 @@ import (
 
 func init() {
 	registerModule(&PingModule{
-		timeout: 300 * time.Millisecond,
+		Timeout: 300 * time.Millisecond,
 	})
 }
 
@@ -37,11 +37,11 @@ func init() {
 type PingModule struct {
 	BaseModule
 
-	timeout time.Duration
+	Timeout time.Duration
 }
 
 func (m *PingModule) Bind(config *puzzle.Config) error {
-	return setDefault(config, m, "timeout", &m.timeout, "Ping timeout")
+	return setDefault(config, m, "timeout", &m.Timeout, "Ping timeout")
 }
 
 func (m *PingModule) Name() string {

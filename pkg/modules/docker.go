@@ -15,10 +15,8 @@ import (
 	"github.com/situation-sh/situation/pkg/store"
 )
 
-const defaultDockerPort = 2376
-
 func init() {
-	registerModule(&DockerModule{host: defaultDockerHost()})
+	registerModule(&DockerModule{Host: defaultDockerHost()})
 }
 
 func defaultDockerHost() string {
@@ -40,11 +38,11 @@ func defaultDockerHost() string {
 type DockerModule struct {
 	BaseModule
 
-	host string
+	Host string
 }
 
 func (m *DockerModule) Bind(config *puzzle.Config) error {
-	if err := setDefault(config, m, "host", &m.host, "Local docker host to scan after reading from env"); err != nil {
+	if err := setDefault(config, m, "host", &m.Host, "Local docker host to scan after reading from env"); err != nil {
 		return err
 	}
 	return nil
@@ -92,7 +90,7 @@ func (m *DockerModule) findDockerInstances(ctx context.Context, logger logrus.Fi
 		logger.
 			WithError(err).
 			Debug("instance not found from environment")
-		cli, err = client.NewClientWithOpts(client.WithHost(m.host))
+		cli, err = client.NewClientWithOpts(client.WithHost(m.Host))
 		if err != nil {
 			logger.
 				WithError(err).
