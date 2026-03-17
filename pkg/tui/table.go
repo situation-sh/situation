@@ -3,10 +3,11 @@ package tui
 import (
 	"fmt"
 	"net"
+	"os"
 
-	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/table"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/situation-sh/situation/pkg/models"
 )
 
@@ -15,7 +16,7 @@ var colRatios = []float64{
 	2.0 / 9.0,
 	2.0 / 9.0,
 	1.0 / 3.0,
-	9.,
+	9.0,
 }
 
 func fixedWidth() int {
@@ -43,8 +44,9 @@ type newNodeMsg struct {
 }
 
 type TableModel struct {
-	table table.Model
-	nics  []*models.NetworkInterface
+	table        table.Model
+	nics         []*models.NetworkInterface
+	lastCursor   int
 }
 
 func NewTableModel() *TableModel {
@@ -57,7 +59,12 @@ func NewTableModel() *TableModel {
 	s := table.DefaultStyles()
 	s.Header = s.Header.BorderStyle(lipgloss.NormalBorder()).BorderBottom(true).Padding(0, 1, 0, 1)
 	s.Cell = s.Cell.Padding(0, 1, 0, 1) // right-left padding only
-	s.Selected = s.Selected.Foreground(AccentColor)
+	if lipgloss.HasDarkBackground(os.Stdin, os.Stdout) {
+		s.Selected = s.Selected.Foreground(AccentColor)
+	} else {
+		s.Selected = s.Selected.Foreground(PrimaryColor).Background(InvPrimaryColor).Bold(true)
+	}
+
 	t.SetStyles(s)
 
 	return &TableModel{
@@ -128,14 +135,18 @@ func (m *TableModel) Init() tea.Cmd {
 }
 
 func (m *TableModel) Update(msg tea.Msg) (*TableModel, tea.Cmd) {
-	var cmd tea.Cmd
-	// cmd is always nil here
 	m.table, _ = m.table.Update(msg)
-	row := m.table.SelectedRow()
 	index := m.table.Cursor()
-	// WARNING: hardcoded column index
 
-	cmd = func() tea.Msg {
+	// Only emit newNodeMsg when the selection actually changes
+	if index == m.lastCursor {
+		return m, nil
+	}
+	m.lastCursor = index
+
+	row := m.table.SelectedRow()
+	// WARNING: hardcoded column index
+	cmd := func() tea.Msg {
 		if len(row) < 2 {
 			return nil
 		}

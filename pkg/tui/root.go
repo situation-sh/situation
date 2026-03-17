@@ -8,9 +8,8 @@ import (
 	"path"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	overlay "github.com/rmhubbert/bubbletea-overlay"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/situation-sh/situation/pkg/models"
 	"github.com/situation-sh/situation/pkg/store"
 )
@@ -111,7 +110,7 @@ func (m RootModel) Screenshot() tea.Msg {
 	if err != nil {
 		return err
 	}
-	svg, err := ansi2svg(m.View())
+	svg, err := ansi2svg(m.View().Content)
 	if err != nil {
 		return err
 	}
@@ -129,12 +128,12 @@ func (m RootModel) Screenshot() tea.Msg {
 }
 
 func (m RootModel) Init() tea.Cmd {
-	return tea.Batch(m.Fetch(), tea.WindowSize())
+	// return tea.Batch(m.Fetch(), tea.WindowSize())
+	return tea.Batch(m.Fetch())
 }
 
 func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	cmds := make([]tea.Cmd, 0)
-	var cmd1, cmd2, cmd3 tea.Cmd
+	var cmd1 tea.Cmd
 
 	if m.err != nil || m.success != "" {
 		switch msg := msg.(type) {
@@ -193,7 +192,7 @@ func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// pass message to sub-models (only table can handle them for now)
 	m.table, cmd1 = m.table.Update(msg)
-	return m, tea.Batch(append(cmds, cmd1, cmd2, cmd3)...)
+	return m, cmd1
 }
 
 type Viewable string
@@ -202,45 +201,43 @@ func (v Viewable) View() string {
 	return string(v)
 }
 
-func (m RootModel) View() string {
-	bg := lipgloss.JoinVertical(lipgloss.Left,
-		m.header.View(),
-		lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			m.sidebar.View(),
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				m.table.View(),
-				m.card.View(),
+func (m RootModel) View() tea.View {
+	compositor := lipgloss.NewCompositor()
+	// background layer
+	bg := lipgloss.NewLayer(
+		lipgloss.JoinVertical(lipgloss.Left,
+			m.header.View(),
+			lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				m.sidebar.View(),
+				lipgloss.JoinVertical(
+					lipgloss.Left,
+					m.table.View(),
+					m.card.View(),
+				),
 			),
+			m.footer.View(),
 		),
-		m.footer.View(),
 	)
 
-	fg := Viewable("")
+	compositor.AddLayers(bg)
+
 	if m.err != nil {
-		fg = m.ErrModal()
+		compositor.AddLayers(m.ErrModal())
 	} else if m.success != "" {
-		fg = m.SuccessModal()
-	} else {
-		// no modal, just show the background
-		return bg
+		compositor.AddLayers(m.SuccessModal())
 	}
 
-	ov := overlay.New(
-		fg,
-		Viewable(bg),
-		overlay.Center,
-		overlay.Center,
-		0,
-		0,
-	)
-	return ov.View()
+	view := tea.NewView(compositor.Render())
+	view.AltScreen = true
+	view.Cursor = nil
+	view.MouseMode = tea.MouseModeNone
+	return view
 }
 
-func (m RootModel) ErrModal() Viewable {
+func (m RootModel) ErrModal() *lipgloss.Layer {
 	if m.err == nil {
-		return ""
+		return nil
 	}
 	msg := lipgloss.JoinVertical(lipgloss.Center, m.err.Error(), "\n", pressEnter)
 	return m.Modal(msg,
@@ -250,9 +247,9 @@ func (m RootModel) ErrModal() Viewable {
 	)
 }
 
-func (m RootModel) SuccessModal() Viewable {
+func (m RootModel) SuccessModal() *lipgloss.Layer {
 	if m.success == "" {
-		return ""
+		return nil
 	}
 	msg := lipgloss.JoinVertical(lipgloss.Center, m.success, "\n", pressEnter)
 	return m.Modal(msg,
@@ -262,7 +259,7 @@ func (m RootModel) SuccessModal() Viewable {
 	)
 }
 
-func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Style) Viewable {
+func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Style) *lipgloss.Layer {
 	style := lipgloss.NewStyle().
 		Align(lipgloss.Center, lipgloss.Center).
 		Width(2 * m.width / 5).
@@ -270,12 +267,11 @@ func (m RootModel) Modal(msg string, opts ...func(s lipgloss.Style) lipgloss.Sty
 	for _, opt := range opts {
 		style = opt(style)
 	}
-	return Viewable(
-		style.Render(msg),
-	)
+	return lipgloss.NewLayer(style.Render(msg)).X(3 * m.width / 10).Y(m.height / 3)
+	// return style.Render(msg)
 }
 
 func (m RootModel) Run() error {
-	_, err := tea.NewProgram(m, tea.WithAltScreen()).Run()
+	_, err := tea.NewProgram(m).Run()
 	return err
 }

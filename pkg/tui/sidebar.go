@@ -1,8 +1,8 @@
 package tui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/situation-sh/situation/pkg/models"
 )
 
@@ -34,12 +34,6 @@ func NewSidebarModel() *SidebarModel {
 	return &SidebarModel{}
 }
 
-func (m *SidebarModel) SetSize(width, height int) {
-	// remove border
-	m.width = width - 2
-	m.height = height - 2
-}
-
 func (m *SidebarModel) SetSubnets(subnets []*models.Subnetwork) *models.Subnetwork {
 	m.subnets = subnets
 	if len(subnets) > 0 {
@@ -69,9 +63,11 @@ func (m *SidebarModel) View() string {
 	subnets := make([]string, len(m.subnets))
 	for i, s := range m.subnets {
 		if i == m.selected {
-			subnets[i] = selectedItemStyle.Width(m.width).Render(s.NetworkCIDR)
+			// subnets[i] = lipgloss.PlaceHorizontal(m.width-2, lipgloss.Center, "", lipgloss.WithWhitespaceStyle(selectedItemWhitespaceStyle.AlignHorizontal(lipgloss.Center)))
+			subnets[i] = selectedItemStyle.Width(m.width - 2).Render(s.NetworkCIDR)
 		} else {
-			subnets[i] = itemStyle.Width(m.width).Render(s.NetworkCIDR)
+			// subnets[i] = lipgloss.PlaceHorizontal(m.width-2	, lipgloss.Center, s.NetworkCIDR, lipgloss.WithWhitespaceStyle(itemWhitespaceStyle))
+			subnets[i] = itemStyle.Width(m.width - 2).Render(s.NetworkCIDR)
 		}
 	}
 	// subnets = append(subnets, m.help.View(m.keys))

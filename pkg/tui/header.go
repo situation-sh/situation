@@ -1,8 +1,8 @@
 package tui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 var headerStyle = lipgloss.NewStyle().
@@ -14,7 +14,8 @@ type HeaderModel struct {
 }
 
 func (m HeaderModel) Init() tea.Cmd {
-	return tea.WindowSize()
+	// return tea.RequestWindowSize
+	return nil
 }
 
 func (m HeaderModel) Update(msg tea.Msg) (HeaderModel, tea.Cmd) {
