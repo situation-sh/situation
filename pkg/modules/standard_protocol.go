@@ -20,6 +20,8 @@ func init() {
 }
 
 // StandardProtocolModule fills standard protocol information for endpoints.
+//
+// As examples, it fills "http" for TCP port 80, "dns" for UDP port 53, etc.
 type StandardProtocolModule struct {
 	BaseModule
 }
