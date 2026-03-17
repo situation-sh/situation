@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
+	"time"
 
 	"github.com/gosnmp/gosnmp"
 	"github.com/situation-sh/situation/pkg/models"
@@ -18,7 +20,8 @@ func (n *snmpNetwork) String() string {
 	return fmt.Sprintf("%s(%d)", n.IPNet.String(), n.PrefixOrigin)
 }
 
-type snmpInterface struct {
+// SNMPInterface represents a network interface discovered via SNMP.
+type SNMPInterface struct {
 	Index  int
 	Name   string
 	MAC    net.HardwareAddr
@@ -27,8 +30,8 @@ type snmpInterface struct {
 	Routes []*snmpRoute
 }
 
-// gateway outputs the more generic IPv4 nexthop
-func (s *snmpInterface) gateway() string {
+// Gateway outputs the more generic IPv4 nexthop of this interface.
+func (s *SNMPInterface) Gateway() string {
 
 	for _, route := range s.Routes {
 		// only IPv4 for this function
@@ -44,12 +47,13 @@ func (s *snmpInterface) gateway() string {
 	return ""
 }
 
-func (s *snmpInterface) toNetworkInterface() *models.NetworkInterface {
+// ToNetworkInterface converts an SNMPInterface to a models.NetworkInterface.
+func (s *SNMPInterface) ToNetworkInterface() *models.NetworkInterface {
 	nic := models.NetworkInterface{
 		Name:    s.Name,
 		MAC:     s.MAC.String(),
 		IP:      make([]string, 0),
-		Gateway: s.gateway(),
+		Gateway: s.Gateway(),
 	}
 
 	// we take the first IPv4 and first IPv6
@@ -71,7 +75,7 @@ func interfaceCount(g *gosnmp.GoSNMP) (int, error) {
 	return parseInteger(pdu)
 }
 
-func getInterface(g *gosnmp.GoSNMP, index int) (*snmpInterface, error) {
+func getInterface(g *gosnmp.GoSNMP, index int) (*SNMPInterface, error) {
 	pkt, err := g.Get([]string{
 		fmt.Sprintf("%s.%d", OID_INTERFACES_IF_INDEX, index),        // index
 		fmt.Sprintf("%s.%d", OID_INTERFACES_IF_NAME, index),         // name
@@ -85,7 +89,7 @@ func getInterface(g *gosnmp.GoSNMP, index int) (*snmpInterface, error) {
 		return nil, fmt.Errorf("bad number of pdu: %v", pkt.Variables)
 	}
 
-	iface := snmpInterface{}
+	iface := SNMPInterface{}
 	if i, err := parseInteger(pkt.Variables[0]); err == nil {
 		iface.Index = i
 	}
@@ -102,8 +106,9 @@ func getInterface(g *gosnmp.GoSNMP, index int) (*snmpInterface, error) {
 	return &iface, nil
 }
 
-func getAllInterfaces(g *gosnmp.GoSNMP) ([]*snmpInterface, error) {
-	ifaces := make([]*snmpInterface, 0)
+// GetAllInterfaces retrieves all network interfaces from the SNMP target.
+func GetAllInterfaces(g *gosnmp.GoSNMP) ([]*SNMPInterface, error) {
+	ifaces := make([]*SNMPInterface, 0)
 	errs := make([]error, 0)
 
 	n, err := interfaceCount(g)
@@ -145,4 +150,137 @@ func getAllInterfaces(g *gosnmp.GoSNMP) ([]*snmpInterface, error) {
 	}
 
 	return ifaces, errors.Join(errs...)
+}
+
+func GetSystemName(g *gosnmp.GoSNMP) (string, error) {
+	pkt, err := g.Get([]string{OID_SYSTEM_NAME})
+	if err != nil {
+		return "", err
+	}
+	if len(pkt.Variables) == 0 {
+		return "", fmt.Errorf("no system name found")
+	}
+	name, err := parseOctetString(pkt.Variables[0])
+	if err != nil {
+		return "", err
+	}
+	return string(name), nil
+}
+
+func GetSystemUptime(g *gosnmp.GoSNMP) (time.Duration, error) {
+	pkt, err := g.Get([]string{OID_SYSTEM_UPTIME})
+	if err != nil {
+		return 0, err
+	}
+	if len(pkt.Variables) == 0 {
+		return 0, fmt.Errorf("no system uptime found")
+	}
+	ticks, err := parseUint32(pkt.Variables[0])
+	if err != nil {
+		return 0, err
+	}
+	// each "tick" = 1/100th of a second (10 milliseconds).
+	return time.Duration(ticks) * 10 * time.Millisecond, nil
+}
+
+func GetDescription(g *gosnmp.GoSNMP) (string, error) {
+	pkt, err := g.Get([]string{OID_SYSTEM_DESCRIPTION})
+	if err != nil {
+		return "", err
+	}
+	if len(pkt.Variables) == 0 {
+		return "", fmt.Errorf("no system description found")
+	}
+	description, err := parseOctetString(pkt.Variables[0])
+	if err != nil {
+		return "", err
+	}
+	return string(description), nil
+
+	// ld := strings.ToLower(string(description))
+	// if strings.Contains(ld, "linux") {
+	// 	platform = "linux"
+	// }
+	// if strings.Contains(ld, "windows") {
+	// 	platform = "windows"
+	// }
+	// if strings.Contains(ld, "debian") {
+	// 	distribution = "debian"
+	// }
+	// if strings.Contains(ld, "ubuntu") {
+	// 	distribution = "ubuntu"
+	// }
+	// return platform, distribution, nil
+}
+
+func populateMachineFromDescription(machine *models.Machine, description string) bool {
+	toUpdate := false
+	ld := strings.ToLower(description)
+	// platform
+	if strings.Contains(ld, "linux") {
+		machine.Platform = "linux"
+		toUpdate = true
+	}
+	if strings.Contains(ld, "windows") {
+		machine.Platform = "windows"
+		toUpdate = true
+	}
+	// distribution
+	if strings.Contains(ld, "debian") {
+		machine.Distribution = "debian"
+		machine.DistributionFamily = "debian"
+		toUpdate = true
+	}
+	if strings.Contains(ld, "ubuntu") {
+		machine.Distribution = "ubuntu"
+		machine.DistributionFamily = "debian"
+		toUpdate = true
+	}
+	// arch
+	if strings.Contains(ld, "x86_64") {
+		machine.Arch = "x86_64"
+		toUpdate = true
+	}
+	if strings.Contains(ld, "aarch64") {
+		machine.Arch = "aarch64"
+		toUpdate = true
+	}
+	if strings.Contains(ld, "arm64") {
+		machine.Arch = "arm64"
+		toUpdate = true
+	}
+	if strings.Contains(ld, "i386") {
+		machine.Arch = "i386"
+		toUpdate = true
+	}
+	return toUpdate
+}
+
+func PopulateSystem(g *gosnmp.GoSNMP, machine *models.Machine) (bool, error) {
+	updated := false
+	errs := make([]error, 0)
+
+	if name, err := GetSystemName(g); err == nil {
+		machine.Hostname = name
+		updated = true
+	} else {
+		errs = append(errs, err)
+	}
+
+	if uptime, err := GetSystemUptime(g); err == nil {
+		machine.Uptime = uptime
+		updated = true
+	} else {
+		errs = append(errs, err)
+	}
+
+	if description, err := GetDescription(g); err == nil {
+		if populateMachineFromDescription(machine, description) {
+			updated = true
+		}
+	} else {
+		errs = append(errs, err)
+	}
+
+	return updated, errors.Join(errs...)
 }
