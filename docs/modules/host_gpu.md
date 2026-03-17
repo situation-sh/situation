@@ -5,13 +5,17 @@ macos: unknown
 root: false
 title: HostGPU
 summary: "Retrieves basic information about GPU: index, vendor and product name."
-date: 2026-02-25
+date: 2026-03-17
 filename: host_gpu.go
 std_imports:
   - context
+  - errors
   - fmt
+  - strings
 imports:
   - github.com/jaypipes/ghw
+  - github.com/jaypipes/pcidb/types
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -30,6 +34,15 @@ It heavily relies on [ghw](https://github.com/jaypipes/ghw). On Linux it reads `
  ```
 
 On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

@@ -72,6 +72,11 @@ def define_env(env: MacrosPlugin):
     - filter: a function with one of more arguments,
         used to perform a transformation
     """
+
+    @env.filter
+    def backticked(raw: str) -> str:
+        return f"`{raw}`"
+
     img_dir = "../img"
 
     env.variables["github_repo"] = "https://github.com/situation-sh/situation"

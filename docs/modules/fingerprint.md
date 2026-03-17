@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Fingerprint
 summary: "Attempts to match the local host against machines already discovered in the shared database."
-date: 2026-02-25
+date: 2026-03-17
 filename: fingerprint.go
 std_imports:
   - context
@@ -14,6 +14,7 @@ std_imports:
   - strings
 imports:
   - github.com/shirou/gopsutil/v4/host
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -34,6 +35,15 @@ Matching strategy:
  3. Fuzzy matching on MAC/IP/hostname with weighted scores
 
 The module runs before any other module (no dependencies) to ensure the host machine is correctly identified before other modules populate it.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

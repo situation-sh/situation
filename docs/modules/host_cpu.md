@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: HostCPU
 summary: "Retrieves host CPU info: model, vendor and the number of cores."
-date: 2026-02-25
+date: 2026-03-17
 filename: host_cpu.go
 std_imports:
   - context
@@ -13,6 +13,7 @@ std_imports:
   - strconv
 imports:
   - github.com/shirou/gopsutil/v4/cpu
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -29,6 +30,15 @@ It heavily relies on the [gopsutil](https://github.com/shirou/gopsutil/) library
 On Linux, it reads `/proc/cpuinfo`. On Windows it performs the `win32_Processor` WMI request
 
 On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Ping
 summary: "Pings local networks to discover new hosts."
-date: 2026-02-25
+date: 2026-03-17
 filename: ping.go
 std_imports:
   - context
@@ -23,6 +23,11 @@ imports:
   - golang.org/x/net/icmp
   - golang.org/x/net/ipv4
   - golang.org/x/sys/windows
+options:
+  - name: timeout
+    type: time.Duration
+    default: 300 * time.Millisecond
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -37,6 +42,15 @@ PingModule pings local networks to discover new hosts.
 The module relies on [pro-bing](https://github.com/prometheus-community/pro-bing) library.
 
 A single ping attempt is made on every host of the local networks (the host may belong to several networks). Only IPv4 networks with prefix length >=20 are treated. The ping timeout is hardset to 300ms.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

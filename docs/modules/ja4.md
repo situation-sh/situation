@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: JA4
 summary: "Attempts JA4, JA4S and JA4X fingerprinting"
-date: 2026-02-25
+date: 2026-03-17
 filename: ja4.go
 std_imports:
   - context
@@ -23,6 +23,7 @@ std_imports:
   - time
 imports:
   - github.com/sirupsen/logrus
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -35,6 +36,15 @@ JA4Module attempts JA4, JA4S and JA4X fingerprinting
 
 
 For technical details you look at [https://github.com/FoxIO-LLC/ja4/blob/main/technical_details/README.md](https://github.com/FoxIO-LLC/ja4/blob/main/technical_details/README.md) It first look at TLS endpoints (given by the [TLS module](./tls.md)) and then tries to connect to them, collecting then JA4, JA4S and JA4X fingerprints.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

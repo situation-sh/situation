@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: Netstat
 summary: "Retrieves active connections."
-date: 2026-02-25
+date: 2026-03-17
 filename: netstat.go
 std_imports:
   - context
@@ -17,6 +17,7 @@ std_imports:
   - strings
 imports:
   - github.com/cakturk/go-netstat/netstat
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -33,6 +34,15 @@ It enumerates TCP, UDP, TCP6 and UDP6 sockets to discover listening endpoints, r
 This module is then able to create flows between applications according to the tuple (src, srcport, dst, dstport).
 
 On Windows, the privileges are not checked. So the module is always run.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: ARP
 summary: "Reads internal ARP table to find network neighbors."
-date: 2026-02-25
+date: 2026-03-17
 filename: arp.go
 std_imports:
   - context
@@ -18,6 +18,7 @@ std_imports:
 imports:
   - github.com/vishvananda/netlink
   - golang.org/x/sys/windows
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -32,6 +33,15 @@ ARPModule reads internal ARP table to find network neighbors.
 On Linux, it uses the Netlink API with the [netlink](https://github.com/vishvananda/netlink1) library. On Windows, it calls `GetIpNetTable2`.
 
 [Ping]: ping.md
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

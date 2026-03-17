@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: HostBasic
 summary: "Retrieves basic information about the host: hostid, architecture, platform, distribution, version and uptime"
-date: 2026-02-25
+date: 2026-03-17
 filename: host_basic.go
 std_imports:
   - context
@@ -13,6 +13,7 @@ std_imports:
   - os
 imports:
   - github.com/shirou/gopsutil/v4/host
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -35,6 +36,15 @@ It heavily relies on the [gopsutil](https://github.com/shirou/gopsutil/) library
  | distribution version | scanning `/etc/*-release` files | `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion*` register keys |
  | hostid               | reading `/sys/class/dmi/id/product_uuid`, `/etc/machine-id` or `/proc/sys/kernel/random/boot_id` | `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography\MachineGuid` register key |
  | uptime               | `sysinfo` syscall               | `GetTickCount64` call      |
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

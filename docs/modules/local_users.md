@@ -5,7 +5,7 @@ macos: false
 root: false
 title: LocalUsers
 summary: "Lists all local user accounts on the system."
-date: 2026-02-25
+date: 2026-03-17
 filename: local_users.go
 std_imports:
   - bufio
@@ -18,6 +18,7 @@ std_imports:
   - unsafe
 imports:
   - golang.org/x/sys/windows
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -34,6 +35,15 @@ On **Linux**, the module reads `/etc/passwd` to enumerate user entries. Each UID
 On **Windows**, the module calls the Win32 `NetUserEnum` API (from `netapi32.dll`) to enumerate local accounts filtered to normal user accounts. Each username is then resolved with `os/user.Lookup`, and the user's domain is determined by converting the SID via `LookupAccountSid`.
 
 The collected users are stored in the database with an upsert strategy based on `(machine_id, uid)`.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

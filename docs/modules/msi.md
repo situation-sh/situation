@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: MSI
 summary: "Creates models.Packages instance from the windows registry"
-date: 2026-02-25
+date: 2026-03-17
 filename: msi.go
 std_imports:
   - context
@@ -18,6 +18,7 @@ std_imports:
 imports:
   - github.com/sirupsen/logrus
   - golang.org/x/sys/windows/registry
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -30,6 +31,15 @@ MSIModule creates models.Packages instance from the windows registry
 
 
 For system-wide apps, it looks at `HKLM/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/*` and `HKLM/WOW6432Node/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/*` for 32bits apps. For user-specific apps: `HKCU/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/*`.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

@@ -10,7 +10,8 @@ The agent currently supports Linux (`armv5`, `armv6`, `armv7`, `arm64` and `amd6
 You can also compile it from sources (once you have have a [go compiler `>=1.18`](https://go.dev/dl/)):
 
 ```shell
-go install {{ variables.go_module }}/agent
+go install {{ variables.go_module }}/agent@latest
+mv "$(go env GOPATH)/bin/agent" "$(go env GOPATH)/bin/situation"
 ```
 
 ## Quick run
