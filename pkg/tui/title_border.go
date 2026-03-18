@@ -8,7 +8,7 @@ import (
 )
 
 func TitleBorder(border lipgloss.Border, title string) lipgloss.Border {
-	// put a high number to ensure the title is writtent only once
+	// put a high number to ensure the title is written only once
 	border.Top = fmt.Sprintf("%s %s %s", border.Top, title, strings.Repeat(border.Top, 1024))
 	return border
 }

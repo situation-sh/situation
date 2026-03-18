@@ -3,7 +3,7 @@ Basic example of a Mkdocs-macros module
 """
 
 from functools import cache
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, Optional
 
 import requests
 from mkdocs_macros.plugin import MacrosPlugin
@@ -34,7 +34,7 @@ def latest_release() -> Dict[str, Any]:
 
 
 @cache
-def latest_successful_workflow(name: str) -> Dict[str, Any]|None:
+def latest_successful_workflow(name: str) -> Optional[Dict[str, Any]]:
     try:
         response = requests.get(
             f"https://api.github.com/repos/situation-sh/situation/actions/workflows/{name}/runs?status=success&per_page=1",
