@@ -22,12 +22,26 @@ func (n *snmpNetwork) String() string {
 
 // SNMPInterface represents a network interface discovered via SNMP.
 type SNMPInterface struct {
-	Index  int
-	Name   string
-	MAC    net.HardwareAddr
-	Type   int // see https://www.iana.org/assignments/ianaiftype-mib/ianaiftype-mib for details. Basically we have 6: ethernet, 24: loopback
-	IP     []*snmpNetwork
-	Routes []*snmpRoute
+	Index       int
+	Name        string
+	MAC         net.HardwareAddr
+	Type        int // see https://www.iana.org/assignments/ianaiftype-mib/ianaiftype-mib for details. Basically we have 6: ethernet, 24: loopback
+	AdminStatus int // 1=up, 2=down, 3=testing
+	OperStatus  int // 1=up, 2=down, 3=testing, 5=dormant, 6=notPresent, 7=lowerLayerDown
+	IP          []*snmpNetwork
+	Routes      []*snmpRoute
+}
+
+// toFlags derives NetworkInterfaceFlags from SNMP admin/oper status and interface type.
+func (s *SNMPInterface) toFlags() models.NetworkInterfaceFlags {
+	return models.NetworkInterfaceFlags{
+		Up:           s.AdminStatus == 1,
+		Running:      s.OperStatus == 1,
+		Loopback:     s.Type == 24,
+		Broadcast:    s.Type != 24 && s.Type != 131, // not loopback, not tunnel
+		Multicast:    s.Type != 24,
+		PointToPoint: s.Type == 131, // tunnel
+	}
 }
 
 // Gateway outputs the more generic IPv4 nexthop of this interface.
@@ -54,6 +68,7 @@ func (s *SNMPInterface) ToNetworkInterface() *models.NetworkInterface {
 		MAC:     s.MAC.String(),
 		IP:      make([]string, 0),
 		Gateway: s.Gateway(),
+		Flags:   s.toFlags(),
 	}
 
 	// we take the first IPv4 and first IPv6
@@ -61,6 +76,20 @@ func (s *SNMPInterface) ToNetworkInterface() *models.NetworkInterface {
 		nic.IP = append(nic.IP, n.IP.String())
 	}
 	return &nic
+}
+
+func (s *SNMPInterface) Subnetworks() []*models.Subnetwork {
+	subnets := make([]*models.Subnetwork, 0, len(s.IP))
+	for _, n := range s.IP {
+		subnet := models.FromIPNet(&n.IPNet)
+		gw := s.Gateway()
+		if n.Contains(net.ParseIP(gw)) {
+			subnet.Gateway = gw
+		}
+		subnets = append(subnets, subnet)
+	}
+
+	return subnets
 }
 
 func interfaceCount(g *gosnmp.GoSNMP) (int, error) {
@@ -81,11 +110,13 @@ func getInterface(g *gosnmp.GoSNMP, index int) (*SNMPInterface, error) {
 		fmt.Sprintf("%s.%d", OID_INTERFACES_IF_NAME, index),         // name
 		fmt.Sprintf("%s.%d", OID_INTERFACES_IF_PHYS_ADDRESS, index), // mac
 		fmt.Sprintf("%s.%d", OID_INTERFACES_IF_TYPE, index),         // type
+		fmt.Sprintf("%s.%d", OID_INTERFACES_IF_ADMIN_STATUS, index), // admin status
+		fmt.Sprintf("%s.%d", OID_INTERFACES_IF_OPER_STATUS, index),  // oper status
 	})
 	if err != nil {
 		return nil, err
 	}
-	if len(pkt.Variables) < 4 {
+	if len(pkt.Variables) < 6 {
 		return nil, fmt.Errorf("bad number of pdu: %v", pkt.Variables)
 	}
 
@@ -101,6 +132,12 @@ func getInterface(g *gosnmp.GoSNMP, index int) (*SNMPInterface, error) {
 	}
 	if t, err := parseInteger(pkt.Variables[3]); err == nil {
 		iface.Type = t
+	}
+	if s, err := parseInteger(pkt.Variables[4]); err == nil {
+		iface.AdminStatus = s
+	}
+	if s, err := parseInteger(pkt.Variables[5]); err == nil {
+		iface.OperStatus = s
 	}
 
 	return &iface, nil
@@ -196,21 +233,6 @@ func GetDescription(g *gosnmp.GoSNMP) (string, error) {
 		return "", err
 	}
 	return string(description), nil
-
-	// ld := strings.ToLower(string(description))
-	// if strings.Contains(ld, "linux") {
-	// 	platform = "linux"
-	// }
-	// if strings.Contains(ld, "windows") {
-	// 	platform = "windows"
-	// }
-	// if strings.Contains(ld, "debian") {
-	// 	distribution = "debian"
-	// }
-	// if strings.Contains(ld, "ubuntu") {
-	// 	distribution = "ubuntu"
-	// }
-	// return platform, distribution, nil
 }
 
 func populateMachineFromDescription(machine *models.Machine, description string) bool {
@@ -236,6 +258,10 @@ func populateMachineFromDescription(machine *models.Machine, description string)
 		machine.DistributionFamily = "debian"
 		toUpdate = true
 	}
+	if strings.Contains(ld, "raspberry") {
+		machine.Chassis = "raspberry"
+		toUpdate = true
+	}
 	// arch
 	if strings.Contains(ld, "x86_64") {
 		machine.Arch = "x86_64"
@@ -254,6 +280,44 @@ func populateMachineFromDescription(machine *models.Machine, description string)
 		toUpdate = true
 	}
 	return toUpdate
+}
+
+func GetSystemServices(g *gosnmp.GoSNMP) (int, error) {
+	pkt, err := g.Get([]string{OID_SYSTEM_SERVICES})
+	if err != nil {
+		return 0, err
+	}
+	if len(pkt.Variables) == 0 {
+		return 0, fmt.Errorf("no system services found")
+	}
+	return parseInteger(pkt.Variables[0])
+}
+
+// sysServices OSI layer bitmask values (RFC 1213)
+const (
+	sysServicesLayerDatalink    = 1 << 1 // bit 1 → value 2: bridge/switch
+	sysServicesLayerNetwork     = 1 << 2 // bit 2 → value 4: router
+	sysServicesLayerApplication = 1 << 6 // bit 6 → value 64: host
+)
+
+// populateMachineFromServices uses sysServices bitmask to infer chassis type.
+// If the application bit is not set, the device is a network appliance.
+func populateMachineFromServices(machine *models.Machine, services int) bool {
+	if machine.Chassis != "" {
+		return false
+	}
+	if services&sysServicesLayerApplication != 0 {
+		return false
+	}
+	if services&sysServicesLayerNetwork != 0 {
+		machine.Chassis = "router"
+		return true
+	}
+	if services&sysServicesLayerDatalink != 0 {
+		machine.Chassis = "switch"
+		return true
+	}
+	return false
 }
 
 func PopulateSystem(g *gosnmp.GoSNMP, machine *models.Machine) (bool, error) {
@@ -276,6 +340,14 @@ func PopulateSystem(g *gosnmp.GoSNMP, machine *models.Machine) (bool, error) {
 
 	if description, err := GetDescription(g); err == nil {
 		if populateMachineFromDescription(machine, description) {
+			updated = true
+		}
+	} else {
+		errs = append(errs, err)
+	}
+
+	if services, err := GetSystemServices(g); err == nil {
+		if populateMachineFromServices(machine, services) {
 			updated = true
 		}
 	} else {

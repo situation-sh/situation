@@ -101,6 +101,9 @@ func (m *SNMPModule) Run(ctx context.Context) error {
 		updateNICs     []*models.NetworkInterface
 		snmpEndpoints  []*models.ApplicationEndpoint
 		updateMachines []*models.Machine
+		newSubnets     []*models.Subnetwork
+		updateSubnets  []*models.Subnetwork
+		allLinks       []nicSubnetLink
 	)
 
 	for _, nic := range nics {
@@ -119,7 +122,7 @@ func (m *SNMPModule) Run(ctx context.Context) error {
 					Target:    targetIP.String(),
 					Version:   gosnmp.SnmpVersion(m.Version),
 					Context:   ctx,
-					Retries:   2,
+					Retries:   3,
 					Transport: m.Transport,
 					Port:      m.Port,
 					Timeout:   m.Timeout,
@@ -140,20 +143,23 @@ func (m *SNMPModule) Run(ctx context.Context) error {
 				if len(result.updateMachine) > 0 {
 					updateMachines = append(updateMachines, result.updateMachine...)
 				}
+				newSubnets = append(newSubnets, result.newSubnets...)
+				updateSubnets = append(updateSubnets, result.updateSubnets...)
+				allLinks = append(allLinks, result.nicSubnetLinks...)
 			}(nic, ip)
 		}
 	}
 
 	wg.Wait()
 
-	// insert new NICs discovered via SNMP
+	// insert new NICs discovered via SNMP (Scan populates IDs needed for links)
 	if len(newNICs) > 0 {
 		logger.WithField("nics", len(newNICs)).Info("Inserting new NICs found via SNMP")
-		if _, err := storage.DB().
+		if err := storage.DB().
 			NewInsert().
 			Model(&newNICs).
 			On("CONFLICT DO NOTHING").
-			Exec(ctx); err != nil {
+			Scan(ctx); err != nil {
 			logger.WithError(err).Error("Cannot insert new NICs from SNMP")
 			errs = append(errs, err)
 		}
@@ -165,7 +171,7 @@ func (m *SNMPModule) Run(ctx context.Context) error {
 		if _, err := storage.DB().
 			NewUpdate().
 			Model(&updateNICs).
-			Column("name", "gateway", "ip").
+			Column("name", "gateway", "ip", "flags").
 			Bulk().
 			Exec(ctx); err != nil {
 			logger.WithError(err).Error("Cannot update NICs from SNMP")
@@ -200,15 +206,81 @@ func (m *SNMPModule) Run(ctx context.Context) error {
 		}
 	}
 
+	// upsert new subnetworks discovered via SNMP (Scan populates IDs needed for links)
+	if len(newSubnets) > 0 {
+		logger.WithField("subnets", len(newSubnets)).Info("Inserting new subnetworks found via SNMP")
+		if err := storage.DB().
+			NewInsert().
+			Model(&newSubnets).
+			On("CONFLICT (network_cidr, tag) DO UPDATE").
+			Set("updated_at = CURRENT_TIMESTAMP").
+			Scan(ctx); err != nil {
+			logger.WithError(err).Error("Cannot insert new subnetworks from SNMP")
+			errs = append(errs, err)
+		}
+	}
+
+	// update existing subnetworks enriched via SNMP (gateway)
+	if len(updateSubnets) > 0 {
+		logger.WithField("subnets", len(updateSubnets)).Info("Updating subnetworks with SNMP gateway data")
+		if _, err := storage.DB().
+			NewUpdate().
+			Model(&updateSubnets).
+			Column("gateway").
+			Bulk().
+			Exec(ctx); err != nil {
+			logger.WithError(err).Error("Cannot update subnetworks from SNMP")
+			errs = append(errs, err)
+		}
+	}
+
+	// create NIC <-> subnetwork links
+	if len(allLinks) > 0 {
+		links := make([]*models.NetworkInterfaceSubnet, 0, len(allLinks))
+		for _, l := range allLinks {
+			if l.nic.ID == 0 || l.subnet.ID == 0 {
+				continue
+			}
+			links = append(links, &models.NetworkInterfaceSubnet{
+				NetworkInterfaceID: l.nic.ID,
+				SubnetworkID:       l.subnet.ID,
+				IP:                 l.ip,
+				MACSubnet:          fmt.Sprintf("%s/%d", l.nic.MAC, l.subnet.ID),
+			})
+		}
+		if len(links) > 0 {
+			logger.WithField("links", len(links)).Info("Creating NIC <-> subnetwork links from SNMP")
+			if _, err := storage.DB().
+				NewInsert().
+				Model(&links).
+				On("CONFLICT DO NOTHING").
+				Exec(ctx); err != nil {
+				logger.WithError(err).Error("Cannot insert NIC <-> subnetwork links from SNMP")
+				errs = append(errs, err)
+			}
+		}
+	}
+
 	return errors.Join(errs...)
+}
+
+// nicSubnetLink pairs a NIC and a subnet for creating the join table record.
+// Pointers are used so that IDs populated after DB insertion are visible.
+type nicSubnetLink struct {
+	nic    *models.NetworkInterface
+	subnet *models.Subnetwork
+	ip     string
 }
 
 // snmpResult holds network interfaces discovered from a single SNMP target.
 type snmpResult struct {
-	newNICs       []*models.NetworkInterface
-	updateNICs    []*models.NetworkInterface
-	snmpEndpoint  *models.ApplicationEndpoint // nil if SNMP was unreachable
-	updateMachine []*models.Machine
+	newNICs        []*models.NetworkInterface
+	updateNICs     []*models.NetworkInterface
+	snmpEndpoint   *models.ApplicationEndpoint // nil if SNMP was unreachable
+	updateMachine  []*models.Machine
+	newSubnets     []*models.Subnetwork
+	updateSubnets  []*models.Subnetwork
+	nicSubnetLinks []nicSubnetLink
 }
 
 func checkSNMP(g *gosnmp.GoSNMP) bool {
@@ -226,6 +298,8 @@ func runSingle(ctx context.Context, g *gosnmp.GoSNMP, targetNIC *models.NetworkI
 		newNICs:       make([]*models.NetworkInterface, 0),
 		updateNICs:    make([]*models.NetworkInterface, 0),
 		updateMachine: make([]*models.Machine, 0),
+		newSubnets:    make([]*models.Subnetwork, 0),
+		updateSubnets: make([]*models.Subnetwork, 0),
 	}
 
 	if err := g.Connect(); err != nil {
@@ -256,7 +330,10 @@ func runSingle(ctx context.Context, g *gosnmp.GoSNMP, targetNIC *models.NetworkI
 			Addr:               g.Target,
 			NetworkInterfaceID: targetNIC.ID,
 		},
-		updateMachine: make([]*models.Machine, 0),
+		updateMachine:  make([]*models.Machine, 0),
+		newSubnets:     make([]*models.Subnetwork, 0),
+		updateSubnets:  make([]*models.Subnetwork, 0),
+		nicSubnetLinks: make([]nicSubnetLink, 0),
 	}
 
 	for _, iface := range ifaces {
@@ -271,6 +348,7 @@ func runSingle(ctx context.Context, g *gosnmp.GoSNMP, targetNIC *models.NetworkI
 		}
 
 		nic0 := iface.ToNetworkInterface()
+		subnets := iface.Subnetworks()
 
 		// find a matching existing NIC by MAC or name
 		var match *models.NetworkInterface
@@ -289,6 +367,7 @@ func runSingle(ctx context.Context, g *gosnmp.GoSNMP, targetNIC *models.NetworkI
 			if match.Gateway == "" {
 				match.Gateway = nic0.Gateway
 			}
+			match.Flags = nic0.Flags
 			for _, ip := range nic0.IP {
 				found := false
 				for _, existing := range match.IP {
@@ -302,6 +381,28 @@ func runSingle(ctx context.Context, g *gosnmp.GoSNMP, targetNIC *models.NetworkI
 				}
 			}
 			result.updateNICs = append(result.updateNICs, match)
+
+			// compare discovered subnets against those already linked to this NIC
+			existingSubnetByCIDR := make(map[string]*models.Subnetwork, len(match.Subnetworks))
+			for _, sub := range match.Subnetworks {
+				existingSubnetByCIDR[sub.NetworkCIDR] = sub
+			}
+			for i, sub := range subnets {
+				ip := ""
+				if i < len(nic0.IP) {
+					ip = nic0.IP[i]
+				}
+				if existing, found := existingSubnetByCIDR[sub.NetworkCIDR]; found {
+					if existing.Gateway == "" && sub.Gateway != "" {
+						existing.Gateway = sub.Gateway
+						result.updateSubnets = append(result.updateSubnets, existing)
+					}
+					// link already exists in DB; skip
+				} else {
+					result.newSubnets = append(result.newSubnets, sub)
+					result.nicSubnetLinks = append(result.nicSubnetLinks, nicSubnetLink{match, sub, ip})
+				}
+			}
 		} else {
 			nic0.MachineID = targetNIC.MachineID
 			result.newNICs = append(result.newNICs, nic0)
@@ -309,6 +410,15 @@ func runSingle(ctx context.Context, g *gosnmp.GoSNMP, targetNIC *models.NetworkI
 				WithField("mac", nic0.MAC).
 				WithField("ip", nic0.IP).
 				Info("Network interface found via SNMP")
+			// all subnets of a new NIC are new
+			for i, sub := range subnets {
+				ip := ""
+				if i < len(nic0.IP) {
+					ip = nic0.IP[i]
+				}
+				result.newSubnets = append(result.newSubnets, sub)
+				result.nicSubnetLinks = append(result.nicSubnetLinks, nicSubnetLink{nic0, sub, ip})
+			}
 		}
 	}
 
