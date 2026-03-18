@@ -87,7 +87,7 @@ func ipAddressPrefix(g *gosnmp.GoSNMP) (map[int][]*snmpNetwork, error) {
 			}
 
 			key := removePrefix(r.Name, oid)
-			ip, key := parseIPAddressInOid(key)
+			ip, _ := parseIPAddressInOid(key)
 			// if the ip is neither ipv4 nor ipv6 it returns nil
 			// Example: ipv6z (see https://www.circitor.fr/Mibs/Html/I/INET-ADDRESS-MIB.php#InetAddressIPv6z)
 			if ip == nil {
