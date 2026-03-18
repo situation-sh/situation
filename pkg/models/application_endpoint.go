@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 
-	"github.com/invopop/jsonschema"
 	"github.com/uptrace/bun"
 )
 
@@ -57,15 +56,6 @@ type ApplicationEndpoint struct {
 
 	// Has-many relationship
 	IncomingFlows []*Flow `bun:"rel:has-many,join:id=dst_endpoint_id"`
-}
-
-func (ApplicationEndpoint) JSONSchemaExtend(schema *jsonschema.Schema) {
-	if addrSchema, ok := schema.Properties.Get("addr"); ok {
-		addrSchema.AnyOf = []*jsonschema.Schema{
-			{Type: "string", Format: "ipv4"},
-			{Type: "string", Format: "ipv6"},
-		}
-	}
 }
 
 // EndpointPolicy defines policies applied to an ApplicationEndpoint
