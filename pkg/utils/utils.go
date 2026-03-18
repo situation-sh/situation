@@ -1,9 +1,10 @@
 // Package utils stores common utilities
 package utils
 
-import "slices"
-
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 func GetKeys(m map[string]any) []string {
 	out := make([]string, len(m))
@@ -41,4 +42,17 @@ func MergeChannels[T any](channels ...<-chan T) <-chan T {
 	}()
 
 	return out
+}
+
+func Deduplicate[T any](slice []T, hash func(T) string) []T {
+	seen := make(map[string]bool)
+	result := make([]T, 0, len(slice))
+	for _, item := range slice {
+		h := hash(item)
+		if !seen[h] {
+			seen[h] = true
+			result = append(result, item)
+		}
+	}
+	return result
 }

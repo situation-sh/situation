@@ -74,8 +74,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 
 	nics := make([]*models.NetworkInterface, 0)
 	subnets := make([]*models.Subnetwork, 0)
-	// subnetNICMapper := make(map[string]bool)
-	uniqueLinks := make(map[string]*models.NetworkInterfaceSubnet)
+	allLinks := make([]*models.NetworkInterfaceSubnet, 0)
 
 	ifaces, err := getInterfaces()
 	if err != nil {
@@ -173,11 +172,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 				Subnetwork:       s,
 				IP:               ip.String(),
 			}
-			key := hashNICSubnet(link)
-			// fmt.Println(key)
-			if _, exists := uniqueLinks[key]; !exists {
-				uniqueLinks[key] = link
-			}
+			allLinks = append(allLinks, link)
 			// links[hashNICSubnet(link)] = link
 			// key := hashNICSubnet()
 			// key := fmt.Sprintf("%v,%v", s.NetworkCIDR, nic.MAC)
@@ -259,7 +254,7 @@ func (m *HostNetworkModule) Run(ctx context.Context) error {
 
 	// update nics with subnetID
 	links := make([]*models.NetworkInterfaceSubnet, 0)
-	for _, link := range uniqueLinks {
+	for _, link := range utils.Deduplicate(allLinks, hashNICSubnet) {
 		link.SubnetworkID = link.Subnetwork.ID
 		link.NetworkInterfaceID = link.NetworkInterface.ID
 		link.MACSubnet = fmt.Sprintf("%s/%d", link.NetworkInterface.MAC, link.Subnetwork.ID)

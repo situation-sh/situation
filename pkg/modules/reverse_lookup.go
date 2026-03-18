@@ -13,6 +13,8 @@ import (
 
 	"github.com/asiffer/puzzle"
 	"github.com/situation-sh/situation/pkg/models"
+	"github.com/situation-sh/situation/pkg/utils"
+	"github.com/uptrace/bun"
 )
 
 func init() {
@@ -134,16 +136,45 @@ func (m *ReverseLookupModule) Run(ctx context.Context) error {
 		}
 
 		if len(nicsToUpdate) > 0 {
+			// Deduplicate by (mac, tag, machine_id): SQLite allows multiple
+			// (mac, tag, NULL) rows but not duplicate non-NULL machine_id combos.
+			dedupedNics := utils.Deduplicate(nicsToUpdate, func(nic *models.NetworkInterface) string {
+				return fmt.Sprintf("%s|%s|%d", nic.MAC, nic.Tag, nic.MachineID)
+			})
+			dedupedSet := make(map[int64]bool, len(dedupedNics))
+			for _, nic := range dedupedNics {
+				dedupedSet[nic.ID] = true
+			}
+			duplicateIDs := make([]int64, 0)
+			for _, nic := range nicsToUpdate {
+				if !dedupedSet[nic.ID] {
+					duplicateIDs = append(duplicateIDs, nic.ID)
+				}
+			}
+
+			if len(duplicateIDs) > 0 {
+				_, err = storage.DB().
+					NewDelete().
+					Model((*models.NetworkInterface)(nil)).
+					Where("id IN (?)", bun.In(duplicateIDs)).
+					Exec(ctx)
+				if err != nil {
+					return fmt.Errorf("failed to delete duplicate nics: %v", err)
+				}
+				logger.WithField("nics", len(duplicateIDs)).
+					Info("Deleted duplicate orphan nics")
+			}
+
 			_, err = storage.DB().
 				NewUpdate().
-				Model(&nicsToUpdate).
+				Model(&dedupedNics).
 				Column("machine_id").
 				Bulk().
 				Exec(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to update nics: %v", err)
 			}
-			logger.WithField("nics", len(nicsToUpdate)).
+			logger.WithField("nics", len(dedupedNics)).
 				Info("Updated nics with machine_id")
 		}
 	}
