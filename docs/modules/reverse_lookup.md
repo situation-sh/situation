@@ -5,14 +5,21 @@ macos: unknown
 root: unknown
 title: ReverseLookup
 summary: "Tries to get a hostname attached to a local IP address"
-date: 2026-02-25
+date: 2026-03-17
 filename: reverse_lookup.go
 std_imports:
   - context
   - fmt
   - net
   - strings
-imports: []
+  - time
+imports:
+  - github.com/asiffer/puzzle
+options:
+  - name: timeout
+    type: time.Duration
+    default: 500 * time.Millisecond
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -25,6 +32,15 @@ ReverseLookupModule tries to get a hostname attached to a local IP address
 
 
 It basically calls [net.LookupAddr](https://pkg.go.dev/net#LookupAddr) that uses the host resolver to perform a reverse lookup for the given addresses.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/situation-sh/situation/pkg/utils"
 	"github.com/uptrace/bun"
 )
 
@@ -58,4 +59,19 @@ func (s *Subnetwork) IPNet() (*net.IPNet, error) {
 		return nil, err
 	}
 	return ipnet, nil
+}
+
+func FromIPNet(ipnet *net.IPNet) *Subnetwork {
+	maskSize, _ := ipnet.Mask.Size()
+	strict := net.IPNet{
+		IP:   ipnet.IP.Mask(ipnet.Mask),
+		Mask: ipnet.Mask,
+	}
+
+	return &Subnetwork{
+		NetworkCIDR: strict.String(),
+		NetworkAddr: strict.IP.String(),
+		MaskSize:    maskSize,
+		IPVersion:   utils.IPVersion(strict.IP),
+	}
 }

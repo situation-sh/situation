@@ -3,21 +3,39 @@ linux: true
 windows: true
 macos: unknown
 root: false
-title: ARP
-summary: "Reads internal ARP table to find network neighbors."
+title: SNMP
+summary: "Collects network interface data from neighbors via SNMP."
 date: 2026-03-17
-filename: arp.go
+filename: snmp.go
 std_imports:
   - context
-  - encoding/binary
+  - errors
   - fmt
   - net
-  - syscall
+  - strconv
+  - strings
+  - sync
   - time
-  - unsafe
 imports:
-  - github.com/vishvananda/netlink
-  - golang.org/x/sys/windows
+  - github.com/asiffer/puzzle
+  - github.com/gosnmp/gosnmp
+  - github.com/sirupsen/logrus
+options:
+  - name: version
+    type: uint8
+    default: uint8(gosnmp.Version2c)
+  - name: community
+    type: string
+    default: "public"
+  - name: timeout
+    type: time.Duration
+    default: 3 * time.Second
+  - name: transport
+    type: string
+    default: "udp"
+  - name: port
+    type: uint16
+    default: 161
 
 ---
 
@@ -25,14 +43,14 @@ imports:
 {% if linux == true %}{{ linux_ok }}{% endif %}
 {% if root == true %}{{ root_required }}{% endif %}
 
-ARPModule reads internal ARP table to find network neighbors.
+SNMPModule collects network interface data from neighbors via SNMP.
 
 ### Details
- It **does not send ARP requests** but leverage the [Ping] module that is likely to update the local table.
 
-On Linux, it uses the Netlink API with the [netlink](https://github.com/vishvananda/netlink1) library. On Windows, it calls `GetIpNetTable2`.
 
-[Ping]: ping.md
+This module requires access to the OID tree `.1.3.6.1.2.1`. In case of snmpd, the configuration (snmpd.conf) should include:
+
+``` view systemonly included .1.3.6.1.2.1 ```
 
 {% if options %}
 ### Options

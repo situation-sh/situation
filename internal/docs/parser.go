@@ -1,10 +1,12 @@
 package docs
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/doc"
 	"go/parser"
+	"go/printer"
 	"go/token"
 	"os"
 	"path"
@@ -33,7 +35,7 @@ func (p *Parser) Parse() error {
 	if err != nil {
 		return err
 	}
-	if err := p.parseModules(pkg, fset); err != nil {
+	if err := p.parseModules(pkg, fset, files); err != nil {
 		return err
 	}
 	p.getModuleImports(fset, files)
@@ -98,7 +100,7 @@ func getModuleTypeName(t *doc.Type) (string, error) {
 				expr := returnSmt.Results[0]
 				if basic, ok := expr.(*ast.BasicLit); ok {
 					// remove wrapping quotes
-					s := strings.Replace(basic.Value, "\"", "", -1)
+					s := strings.ReplaceAll(basic.Value, "\"", "")
 					return s, nil
 				}
 			}
@@ -127,7 +129,7 @@ func getModuleTypeDependencies(t *doc.Type) ([]string, error) {
 						for _, element := range composite.Elts {
 							if basic, ok := element.(*ast.BasicLit); ok {
 								// remove wrapping quotes
-								out = append(out, strings.Replace(basic.Value, "\"", "", -1))
+								out = append(out, strings.ReplaceAll(basic.Value, "\"", ""))
 							}
 						}
 					}
@@ -144,7 +146,7 @@ func getModuleTypeDependencies(t *doc.Type) ([]string, error) {
 	return nil, fmt.Errorf("cannot get module dependencies of %s object", t.Name)
 }
 
-func (parser *Parser) parseModules(p *doc.Package, fset *token.FileSet) error {
+func (parser *Parser) parseModules(p *doc.Package, fset *token.FileSet, _ []*ast.File) error {
 	internal := make(map[string]*ModuleDoc)
 	// loop over the modules
 	for _, t := range getModuleTypes(p) {
@@ -178,6 +180,7 @@ func (parser *Parser) parseModules(p *doc.Package, fset *token.FileSet) error {
 			// continue
 		}
 		m.Dependencies = deps
+		m.Options = getModuleTypeOptions(t, fset, parser.ModulesDir)
 
 		internal[t.Name] = m
 	}
@@ -215,6 +218,219 @@ func (parser *Parser) getModuleImports(fset *token.FileSet, files []*ast.File) {
 			WithField("module-name", m.Name).
 			Info("Get module imports")
 	}
+}
+
+// exprString renders an AST expression back to its source representation.
+func exprString(fset *token.FileSet, expr ast.Expr) string {
+	var buf bytes.Buffer
+	if err := printer.Fprint(&buf, fset, expr); err != nil {
+		return ""
+	}
+	return buf.String()
+}
+
+// extractSetDefaultCall returns the *ast.CallExpr for setDefault(...) within a
+// statement, handling the three forms used in practice:
+//
+//	if err := setDefault(...); err != nil { ... }
+//	return setDefault(...)
+//	setDefault(...)
+func extractSetDefaultCall(stmt ast.Stmt) *ast.CallExpr {
+	var ce *ast.CallExpr
+	switch s := stmt.(type) {
+	case *ast.IfStmt:
+		if assign, ok := s.Init.(*ast.AssignStmt); ok && len(assign.Rhs) == 1 {
+			ce, _ = assign.Rhs[0].(*ast.CallExpr)
+		}
+	case *ast.ReturnStmt:
+		if len(s.Results) == 1 {
+			ce, _ = s.Results[0].(*ast.CallExpr)
+		}
+	case *ast.ExprStmt:
+		ce, _ = s.X.(*ast.CallExpr)
+	}
+	if ce == nil {
+		return nil
+	}
+	ident, ok := ce.Fun.(*ast.Ident)
+	if !ok || ident.Name != "setDefault" {
+		return nil
+	}
+	return ce
+}
+
+// findCompositeLit returns the *ast.CompositeLit for the given struct type name
+// within an expression, unwrapping & if present.
+func findCompositeLit(expr ast.Expr, typeName string) *ast.CompositeLit {
+	switch e := expr.(type) {
+	case *ast.UnaryExpr:
+		if e.Op == token.AND {
+			return findCompositeLit(e.X, typeName)
+		}
+	case *ast.CompositeLit:
+		if ident, ok := e.Type.(*ast.Ident); ok && ident.Name == typeName {
+			return e
+		}
+	}
+	return nil
+}
+
+// extractInitDefaults re-parses all .go files in modulesDir independently
+// (avoiding any doc.NewFromFiles side-effects) and returns a map of struct
+// field name → default value string for the given structName.
+func extractInitDefaults(modulesDir, structName string) map[string]string {
+	defaults := make(map[string]string)
+
+	entries, err := os.ReadDir(modulesDir)
+	if err != nil {
+		return defaults
+	}
+
+	fset := token.NewFileSet()
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") {
+			continue
+		}
+		src, err := os.ReadFile(path.Join(modulesDir, entry.Name())) //#nosec G304 -- path is limited to modulesDir
+		if err != nil {
+			continue
+		}
+		f, err := parser.ParseFile(fset, entry.Name(), string(src), 0)
+		if err != nil {
+			continue
+		}
+
+		for _, decl := range f.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok || fn.Recv != nil || fn.Name.Name != "init" || fn.Body == nil {
+				continue
+			}
+
+			// First pass: collect variable assignments  m := &TypeName{...}
+			varLits := make(map[string]*ast.CompositeLit)
+			for _, stmt := range fn.Body.List {
+				assign, ok := stmt.(*ast.AssignStmt)
+				if !ok || len(assign.Rhs) != 1 {
+					continue
+				}
+				lit := findCompositeLit(assign.Rhs[0], structName)
+				if lit == nil {
+					continue
+				}
+				for _, lhs := range assign.Lhs {
+					if ident, ok := lhs.(*ast.Ident); ok {
+						varLits[ident.Name] = lit
+					}
+				}
+			}
+
+			// Second pass: find registerModule calls
+			for _, stmt := range fn.Body.List {
+				exprStmt, ok := stmt.(*ast.ExprStmt)
+				if !ok {
+					continue
+				}
+				ce, ok := exprStmt.X.(*ast.CallExpr)
+				if !ok {
+					continue
+				}
+				ident, ok := ce.Fun.(*ast.Ident)
+				if !ok || ident.Name != "registerModule" || len(ce.Args) == 0 {
+					continue
+				}
+
+				// Direct composite literal: registerModule(&TypeName{...})
+				lit := findCompositeLit(ce.Args[0], structName)
+				// Variable reference: registerModule(m)
+				if lit == nil {
+					if argIdent, ok := ce.Args[0].(*ast.Ident); ok {
+						lit = varLits[argIdent.Name]
+					}
+				}
+				if lit == nil {
+					continue
+				}
+
+				for _, elt := range lit.Elts {
+					kv, ok := elt.(*ast.KeyValueExpr)
+					if !ok {
+						continue
+					}
+					key, ok := kv.Key.(*ast.Ident)
+					if !ok {
+						continue
+					}
+					defaults[key.Name] = exprString(fset, kv.Value)
+				}
+				return defaults // found the registerModule call for this type
+			}
+		}
+	}
+	return defaults
+}
+
+// getModuleTypeOptions extracts the options declared in the Bind() method of a
+// module type, returning the option name, its Go type, and its default value.
+func getModuleTypeOptions(t *doc.Type, fset *token.FileSet, modulesDir string) []ModuleOption {
+	typeSpec, ok := t.Decl.Specs[0].(*ast.TypeSpec)
+	if !ok {
+		return nil
+	}
+
+	// Build field name → Go type string from the struct declaration
+	fieldTypes := make(map[string]string)
+	if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+		for _, field := range structType.Fields.List {
+			typeName := exprString(fset, field.Type)
+			for _, name := range field.Names {
+				fieldTypes[name.Name] = typeName
+			}
+		}
+	}
+
+	// Extract option key → field name pairs from Bind()
+	type pair struct{ key, field string }
+	var pairs []pair
+	for _, method := range t.Methods {
+		if method.Name != "Bind" {
+			continue
+		}
+		for _, stmt := range method.Decl.Body.List {
+			ce := extractSetDefaultCall(stmt)
+			if ce == nil || len(ce.Args) < 5 {
+				continue
+			}
+			keyLit, ok := ce.Args[2].(*ast.BasicLit)
+			if !ok || keyLit.Kind != token.STRING {
+				continue
+			}
+			key := strings.Trim(keyLit.Value, `"`)
+
+			fieldName := ""
+			if unary, ok := ce.Args[3].(*ast.UnaryExpr); ok && unary.Op == token.AND {
+				if sel, ok := unary.X.(*ast.SelectorExpr); ok {
+					fieldName = sel.Sel.Name
+				}
+			}
+			pairs = append(pairs, pair{key, fieldName})
+		}
+	}
+
+	if len(pairs) == 0 {
+		return nil
+	}
+
+	defaults := extractInitDefaults(modulesDir, typeSpec.Name.Name)
+
+	options := make([]ModuleOption, 0, len(pairs))
+	for _, p := range pairs {
+		options = append(options, ModuleOption{
+			Name:    p.key,
+			Type:    fieldTypes[p.field],
+			Default: defaults[p.field],
+		})
+	}
+	return options
 }
 
 // parseSourceDirectory return the package doc along with the source files through a

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/invopop/jsonschema"
 	"github.com/uptrace/bun"
 )
 
@@ -119,84 +118,8 @@ func (nic *NetworkInterface) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Match check if the network interface matches both the IP and MAC address
-// (the match is ignored for IP if ip is nil, same for MAC)
-// func (nic *NetworkInterface) Match(ip net.IP, mac net.HardwareAddr) bool {
-// 	if ip == nil && mac == nil {
-// 		return false
-// 	}
-
-// 	if ip != nil && !(ip.String() == nic.IP || ip.String() == nic.IP6) {
-// 		return false
-// 	}
-
-// 	if mac != nil && mac.String() != nic.MAC {
-// 		return false
-// 	}
-
-// 	return true
-// }
-
-// Network returns the IPv4 network attached to this nic
-// func (nic *NetworkInterface) Network() *net.IPNet {
-// 	if nic.IP == "" {
-// 		return nil
-// 	}
-// 	return &net.IPNet{
-// 		IP:   net.ParseIP(nic.IP),
-// 		Mask: net.CIDRMask(nic.MaskSize, 32),
-// 	}
-// }
-
-// Network6 returns the IPv6 network attached to this nic
-// func (nic *NetworkInterface) Network6() *net.IPNet {
-// 	if nic.IP6 == "" {
-// 		return nil
-// 	}
-// 	return &net.IPNet{
-// 		IP:   net.ParseIP(nic.IP6),
-// 		Mask: net.CIDRMask(nic.MaskSize, 128),
-// 	}
-// }
-
-// Merge update the base network interface with information from
-// the second given in parameters
-// func (nic *NetworkInterface) Merge(nic0 *NetworkInterface) {
-// 	if nic.Name == "" {
-// 		nic.Name = nic0.Name
-// 	}
-// 	if nic.MAC == "" {
-// 		nic.MAC = nic0.MAC
-// 	}
-// 	if nic.IP == "" {
-// 		nic.IP = nic0.IP
-// 	}
-// 	if nic.IP6 == "" {
-// 		nic.IP6 = nic0.IP6
-// 	}
-// 	if nic.MaskSize <= 0 {
-// 		nic.MaskSize = nic0.MaskSize
-// 	}
-// 	if nic.Mask6Size <= 0 {
-// 		nic.Mask6Size = nic0.Mask6Size
-// 	}
-// 	if nic.Gateway == "" {
-// 		nic.Gateway = nic0.Gateway
-// 	}
-// 	// if nic.Flags == nil {
-// 	// copy flags
-// 	nic.Flags = nic0.Flags
-// 	// }
-// }
-
 func (nic *NetworkInterface) SetFlags(flags net.Flags) {
 	nic.Flags = NewNetworkInterfaceFlags(flags)
-}
-
-func (NetworkInterface) JSONSchemaExtend(schema *jsonschema.Schema) {
-	if macSchema, ok := schema.Properties.Get("mac"); ok {
-		macSchema.Pattern = `^([a-fA-F0-9]{2}:){5,7}[a-fA-F0-9]{2}$`
-	}
 }
 
 func (nic *NetworkInterface) IPs() []net.IP {

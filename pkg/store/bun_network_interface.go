@@ -222,8 +222,9 @@ func (s *BunStorage) GetNeighorNICS(ctx context.Context) ([]*models.NetworkInter
 	err := s.db.
 		NewSelect().
 		Model(&nics).
-		Where("id IN (?)", nicIDs).
-		Where("machine_id IS NULL OR machine_id <> ?", hostID).
+		Where("network_interface.id IN (?)", nicIDs).
+		Where("network_interface.machine_id IS NULL OR network_interface.machine_id <> ?", hostID).
+		Relation("Machine").
 		Scan(ctx)
 	return nics, err
 }

@@ -5,13 +5,14 @@ macos: unknown
 root: false
 title: HostDisk
 summary: "Retrieves basic information about disk: name, model, size, type, controller and partitions."
-date: 2026-02-25
+date: 2026-03-17
 filename: host_disk.go
 std_imports:
   - context
   - fmt
 imports:
   - github.com/jaypipes/ghw
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -44,6 +45,15 @@ On Windows, it uses WMI requests:
   ```
 
 On Linux, it reads `/sys/block/$DEVICE/**` files. On windows 11, the local user account must have administrator permissions (it does not mean it must be run as root).
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

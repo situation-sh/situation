@@ -5,7 +5,7 @@ macos: false
 root: false
 title: DPKG
 summary: "Reads package information from the dpkg package manager."
-date: 2026-02-25
+date: 2026-03-17
 filename: dpkg.go
 std_imports:
   - bufio
@@ -17,6 +17,7 @@ std_imports:
   - strings
   - time
 imports: []
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -31,6 +32,15 @@ DPKGModule reads package information from the dpkg package manager.
 This module is relevant for distros that use dpkg, like debian, ubuntu and their derivatives. It only uses the standard library.
 
 It reads `/var/log/dpkg.log` and also files from `/var/lib/dpkg/info/`.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

@@ -25,6 +25,7 @@ func (s *BunStorage) GetOrCreateSubnetwork(ctx context.Context, cidr string) *mo
 	return subnet
 }
 
+
 // GetAllIPv4Networks returns all IPv4 subnetworks.
 func (s *BunStorage) GetAllIPv4Networks(ctx context.Context) []models.Subnetwork {
 	subs := make([]models.Subnetwork, 0)

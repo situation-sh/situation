@@ -51,6 +51,17 @@ const headerTemplate = `
 ### Details
 `
 
+const optionsTemplate = `
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
+`
+
 const metadataTemplate = `---
 linux: %s
 windows: %s
@@ -74,10 +85,18 @@ type ModuleStatus struct {
 	ROOT    Status
 }
 
+// ModuleOption represents a configurable option exposed by a module via its Bind() method.
+type ModuleOption struct {
+	Name    string
+	Type    string
+	Default string // empty if no explicit default is set
+}
+
 type ModuleDoc struct {
 	modulesDir   string
 	Name         string
 	Dependencies []string
+	Options      []ModuleOption
 	Status       ModuleStatus
 	Synopsis     string
 	RawMarkdown  []byte
@@ -90,6 +109,7 @@ func NewModuleDoc(modulesDir string) *ModuleDoc {
 	return &ModuleDoc{
 		modulesDir:   modulesDir,
 		Dependencies: make([]string, 0),
+		Options:      make([]ModuleOption, 0),
 		RawMarkdown:  make([]byte, 0),
 		Imports:      make([]string, 0),
 	}
@@ -204,6 +224,21 @@ func (m *ModuleDoc) ImportHeader() string {
 	return h
 }
 
+func (m *ModuleDoc) ModuleOptionsHeader() string {
+	if len(m.Options) == 0 {
+		return ""
+	}
+	out := "options:\n"
+	for _, opt := range m.Options {
+		out += fmt.Sprintf("  - name: %s\n    type: %s\n    default: %s\n", opt.Name, opt.Type, opt.Default)
+	}
+	return out
+}
+
+func (m *ModuleDoc) ModuleOptions() []byte {
+	return []byte(optionsTemplate)
+}
+
 func (m *ModuleDoc) Libraries() []byte {
 	return []byte(librariesTemplate)
 }
@@ -233,9 +268,10 @@ func (m *ModuleDoc) MkDocs() []byte {
 	h := fmt.Appendf(nil, metadataTemplate,
 		m.Status.LINUX, m.Status.WINDOWS, m.Status.MACOS, m.Status.ROOT,
 		m.Title(), m.Summary(), time.Now().Format("2006-01-02"), m.SrcFile,
-		m.ImportHeader())
+		m.ImportHeader()+"\n"+m.ModuleOptionsHeader())
 
 	h = append(h, m.Markdown()...)
+	h = append(h, m.ModuleOptions()...)
 	h = append(h, m.Libraries()...)
 	return h
 }

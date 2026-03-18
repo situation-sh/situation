@@ -17,12 +17,14 @@ const (
 	OID_IP         = OID_MIB2 + ".4"
 	OID_TCP        = OID_MIB2 + ".6"
 
-	OID_INTERFACES_NUMBER          = OID_INTERFACES + ".1.0"
-	OID_INTERFACES_IF_TABLE        = OID_INTERFACES + ".2.1"
-	OID_INTERFACES_IF_INDEX        = OID_INTERFACES_IF_TABLE + ".1"
-	OID_INTERFACES_IF_TYPE         = OID_INTERFACES_IF_TABLE + ".3"
-	OID_INTERFACES_IF_PHYS_ADDRESS = OID_INTERFACES_IF_TABLE + ".6"
-	OID_INTERFACES_IF_NAME         = OID_MIB2 + ".31.1.1.1.1"
+	OID_INTERFACES_NUMBER            = OID_INTERFACES + ".1.0"
+	OID_INTERFACES_IF_TABLE          = OID_INTERFACES + ".2.1"
+	OID_INTERFACES_IF_INDEX          = OID_INTERFACES_IF_TABLE + ".1"
+	OID_INTERFACES_IF_TYPE           = OID_INTERFACES_IF_TABLE + ".3"
+	OID_INTERFACES_IF_PHYS_ADDRESS   = OID_INTERFACES_IF_TABLE + ".6"
+	OID_INTERFACES_IF_ADMIN_STATUS   = OID_INTERFACES_IF_TABLE + ".7"
+	OID_INTERFACES_IF_OPER_STATUS    = OID_INTERFACES_IF_TABLE + ".8"
+	OID_INTERFACES_IF_NAME           = OID_MIB2 + ".31.1.1.1.1"
 
 	OID_IP_ADDR_ENTRY          = OID_IP + ".20.1"
 	OID_IP_ADDR_ENTRY_ADDR     = OID_IP_ADDR_ENTRY + ".1"
@@ -46,6 +48,11 @@ const (
 	OID_INET_CIDR_ROUTE_ENTRY    = OID_IP + ".24.7.1"
 	OID_INET_CIDR_ROUTE_IF_INDEX = OID_INET_CIDR_ROUTE_ENTRY + ".7"
 	OID_INET_CIDR_ROUTE_TYPE     = OID_INET_CIDR_ROUTE_ENTRY + ".8"
+
+	OID_SYSTEM_NAME        = OID_SYSTEM + ".5.0"
+	OID_SYSTEM_UPTIME      = OID_SYSTEM + ".3.0"
+	OID_SYSTEM_DESCRIPTION = OID_SYSTEM + ".1.0"
+	OID_SYSTEM_SERVICES    = OID_SYSTEM + ".7.0"
 )
 
 func removePrefix(fullOid string, prefixOid string) string {
@@ -62,6 +69,16 @@ func parseInteger(r gosnmp.SnmpPDU) (int, error) {
 	v, ok := r.Value.(int)
 	if !ok {
 		return 0, fmt.Errorf("cannot cast %v into int (Go type: %T, Object type: %v)",
+			r.Value, r.Value, r.Type)
+	}
+	return v, nil
+}
+
+// for TimeTikcs Counter, Gauge
+func parseUint32(r gosnmp.SnmpPDU) (uint32, error) {
+	v, ok := r.Value.(uint32)
+	if !ok {
+		return 0, fmt.Errorf("cannot cast %v into uint32 (Go type: %T, Object type: %v)",
 			r.Value, r.Value, r.Type)
 	}
 	return v, nil
@@ -107,10 +124,11 @@ func splitPoint(oid string, count int) (string, string) {
 
 func parseIPAddressInOid(oid string) (net.IP, string) {
 	t, key := splitPoint(oid, 2)
-	if t == "1.4" { // ipv4
+	switch t {
+	case "1.4": // ipv4
 		ipRaw, remain := splitPoint(key, 4)
 		return net.ParseIP(ipRaw), remain
-	} else if t == "2.16" || t == "4.16" { // ipv6 / ipv6z
+	case "2.16", "4.16": // ipv6 / ipv6z
 		ipRaw, remain := splitPoint(key, 16)
 
 		r := ipRaw // 254.128.0.0.0.0.0.0.147.108.137.216.161.31.176.130
@@ -127,7 +145,7 @@ func parseIPAddressInOid(oid string) (net.IP, string) {
 			}
 		}
 		return net.IP(buffer), remain
-	} else {
+	default:
 		// ignore fmt.Println("BAD Type:", t)
 		return nil, oid
 	}

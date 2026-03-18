@@ -3,7 +3,7 @@ Basic example of a Mkdocs-macros module
 """
 
 from functools import cache
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, Optional
 
 import requests
 from mkdocs_macros.plugin import MacrosPlugin
@@ -34,7 +34,7 @@ def latest_release() -> Dict[str, Any]:
 
 
 @cache
-def latest_successful_workflow(name: str) -> Dict[str, Any]|None:
+def latest_successful_workflow(name: str) -> Optional[Dict[str, Any]]:
     try:
         response = requests.get(
             f"https://api.github.com/repos/situation-sh/situation/actions/workflows/{name}/runs?status=success&per_page=1",
@@ -72,6 +72,11 @@ def define_env(env: MacrosPlugin):
     - filter: a function with one of more arguments,
         used to perform a transformation
     """
+
+    @env.filter
+    def backticked(raw: str) -> str:
+        return f"`{raw}`"
+
     img_dir = "../img"
 
     env.variables["github_repo"] = "https://github.com/situation-sh/situation"

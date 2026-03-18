@@ -59,7 +59,7 @@ hostnossl   all     all         ::/0        reject
 
 On the client side, at minimum `sslmode=require` must be passed to ensure that nothing will be sent unencrypted. Using `sslmode=verify-full` is recommended to also verify the server identity (see [Client verification](#client-verification) below).
 
-### Client verification
+### Server verification
 
 > By default, PostgreSQL will not perform any verification of the server certificate. This means that it is possible to spoof the server identity without the client knowing. [^postgres-ssl-support]
 

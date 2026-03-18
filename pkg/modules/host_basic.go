@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/situation-sh/situation/pkg/models"
@@ -83,11 +84,9 @@ func (m *HostBasicModule) Run(ctx context.Context) error {
 			Set("host_id = ?", info.HostID).
 			Set("arch = ?", info.KernelArch).
 			Set("platform = ?", info.OS)
-		// here the returned uptime is in seconds
+		// info.Uptime is in seconds; convert to nanoseconds (time.Duration)
 		if info.Uptime <= 0x7fffffffffffffff {
-			// machine.Uptime = time.Duration(info.Uptime) * time.Second
-			// query = query.Set("uptime = ?", time.Duration(info.Uptime)*time.Second)
-			query = query.Set("uptime = ?", info.Uptime) // put directly into seconds
+			query = query.Set("uptime = ?", time.Duration(info.Uptime)*time.Second)
 		}
 
 	} else {

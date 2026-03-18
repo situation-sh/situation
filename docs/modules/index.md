@@ -40,6 +40,7 @@ sidebar_title: Reference
 | [reverse-lookup](reverse_lookup.md)   | ReverseLookupModule tries to get a hostname attached to a local IP address      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [rpm](rpm.md)   | RPMModule reads package information from the rpm package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |
 | [saas](saas.md)   | SaaSModule identifies SaaS applications from discovered endpoints.      | [tls](tls.md), [ja4](ja4.md)           |      |
+| [snmp](snmp.md)   | SNMPModule collects network interface data from neighbors via SNMP.      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [standard-protocol](standard_protocol.md)   | StandardProtocolModule fills standard protocol information for endpoints.      | [netstat](netstat.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [tcp-scan](tcp_scan.md)   | TCPScanModule tries to connect to neighbor TCP ports.      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [tls](tls.md)   | TLSModule enriches TCP endpoints with TLS certificate information.      | [tcp-scan](tcp_scan.md), [netstat](netstat.md)           | {{ linux_ok }} {{ windows_ok }}     |

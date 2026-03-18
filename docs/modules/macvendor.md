@@ -5,12 +5,13 @@ macos:
 root: 
 title: MAC Vendor
 summary: "Resolves manufacturer from MAC addresses."
-date: 2026-02-25
+date: 2026-03-17
 filename: macvendor.go
 std_imports:
   - context
   - fmt
 imports: []
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -25,6 +26,15 @@ MACVendorModule resolves manufacturer from MAC addresses.
 It uses a built-in lookup table of IEEE OUI assignments (generated from the official IEEE OUI registry) to match the first 3 octets of each MAC address to a vendor name.
 
 The module queries all network interfaces that have a MAC address but no vendor yet, and updates them in bulk.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

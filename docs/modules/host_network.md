@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: HostNetwork
 summary: "Retrieves basic network information about the host."
-date: 2026-02-25
+date: 2026-03-17
 filename: host_network.go
 std_imports:
   - context
@@ -14,6 +14,7 @@ std_imports:
   - strings
 imports:
   - github.com/libp2p/go-netroute
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -30,6 +31,15 @@ It uses the [net](https://pkg.go.dev/net) standard library to grab interfaces al
 On Linux, it uses the Netlink API. On Windows, it calls `GetAdaptersAddresses`.
 
 Virtual interfaces (veth, qemu) are filtered out. The module also creates subnetwork records and links each network interface to its subnets.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

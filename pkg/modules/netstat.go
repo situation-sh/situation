@@ -220,7 +220,6 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 	endpoints := make([]*models.ApplicationEndpoint, 0)
 	uniqueEnpoints := make(map[string]*models.ApplicationEndpoint)
 	flows := make([]*models.Flow, 0)
-	uniqueFlows := make(map[string]*models.Flow)
 	userApps := make([]*models.UserApplication, 0)
 	uniqueUserApps := make(map[string]*models.UserApplication)
 
@@ -488,7 +487,7 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 		}
 	}
 
-	// set endpoint IDs in flows and deduplicate
+	// set endpoint IDs in flows
 	for _, flow := range flows {
 		if flow.DstEndpoint != nil {
 			flow.DstEndpointID = flow.DstEndpoint.ID
@@ -496,18 +495,8 @@ func (m *NetstatModule) Run(ctx context.Context) error {
 		if flow.SrcApplication != nil {
 			flow.SrcApplicationID = flow.SrcApplication.ID
 		}
-		// deduplicate flows based on unique constraint
-		h := hashFlow(flow)
-		if _, exists := uniqueFlows[h]; !exists {
-			uniqueFlows[h] = flow
-		}
 	}
-
-	// collect unique flows into slice
-	flows = make([]*models.Flow, 0, len(uniqueFlows))
-	for _, flow := range uniqueFlows {
-		flows = append(flows, flow)
-	}
+	flows = utils.Deduplicate(flows, hashFlow)
 	// create flows
 	if len(flows) > 0 {
 		err = storage.DB().NewInsert().Model(&flows).

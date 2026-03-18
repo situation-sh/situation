@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: Docker
 summary: "Retrieves information about docker containers."
-date: 2026-02-25
+date: 2026-03-17
 filename: docker.go
 std_imports:
   - context
@@ -21,6 +21,11 @@ imports:
   - github.com/docker/docker/api/types/network
   - github.com/docker/docker/client
   - github.com/sirupsen/logrus
+options:
+  - name: host
+    type: string
+    default: defaultDockerHost()
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -35,6 +40,15 @@ DockerModule retrieves information about docker containers.
 It uses the official go client that performs HTTP queries either on port `:2376` (on windows generally) or on UNIX sockets.
 
 We generally need some privileges to reads UNIX sockets, so it may require root privileges (the alternative is to belong to the `docker` group)
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 

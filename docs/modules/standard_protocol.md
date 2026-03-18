@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: StandardProtocol
 summary: "Fills standard protocol information for endpoints."
-date: 2026-02-25
+date: 2026-03-17
 filename: standard_protocol.go
 std_imports:
   - context
@@ -14,6 +14,7 @@ std_imports:
 imports:
   - github.com/uptrace/bun
   - github.com/uptrace/bun/dialect
+
 ---
 
 {% if windows == true %}{{ windows_ok }}{% endif %}
@@ -24,6 +25,17 @@ StandardProtocolModule fills standard protocol information for endpoints.
 
 ### Details
 
+
+As examples, it fills "http" for TCP port 80, "dns" for UDP port 53, etc.
+
+{% if options %}
+### Options
+
+| Name | Type | Default | Flag |
+| ---- | ---- | ------- | ---- |{% for opt in options %}
+| {{ opt.name }} | {{ opt.type|backticked }} | {{ opt.default }} | {{ ('--' ~ (title|lower) ~ '-' ~ opt.name)|backticked  }} |{% endfor %}
+
+{% endif %}
 
 ### Dependencies
 
