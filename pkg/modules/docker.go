@@ -9,7 +9,7 @@ import (
 	"runtime"
 
 	"github.com/asiffer/puzzle"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/sirupsen/logrus"
 	docker "github.com/situation-sh/situation/pkg/modules/docker"
 	"github.com/situation-sh/situation/pkg/store"
