@@ -22,6 +22,7 @@ require (
 	github.com/getsentry/sentry-go/logrus v0.43.0
 	github.com/go-ole/go-ole v1.3.0
 	github.com/godbus/dbus/v5 v5.2.2
+	github.com/google/nftables v0.3.0
 	github.com/google/uuid v1.6.0
 	github.com/gosnmp/gosnmp v1.43.2
 	github.com/hashicorp/go-version v1.8.0
@@ -112,6 +113,8 @@ require (
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
 	github.com/mattn/go-sqlite3 v1.14.37 // indirect
+	github.com/mdlayher/netlink v1.7.3-0.20250113171957-fbb4dce95f42 // indirect
+	github.com/mdlayher/socket v0.5.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/sys/atomicwriter v0.1.0 // indirect
 	github.com/moby/term v0.5.2 // indirect
