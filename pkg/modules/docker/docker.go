@@ -4,18 +4,21 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/netip"
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/api/types/container"
+
+	"github.com/moby/moby/client"
 	"github.com/sirupsen/logrus"
 	"github.com/situation-sh/situation/pkg/models"
 	"github.com/situation-sh/situation/pkg/store"
 	"github.com/situation-sh/situation/pkg/utils"
 )
+
+var Zero4 = netip.AddrFrom4([4]byte{0, 0, 0, 0})
+var Zero6 = netip.AddrFrom16([16]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 
 // Platform is a struct that aims to
 // communicate with a docker instance. The
@@ -27,12 +30,12 @@ type Platform struct {
 }
 
 func NewPlatform(m *models.Machine, c *client.Client) *Platform {
-	c.NegotiateAPIVersion(context.Background())
+	// c.NegotiateAPIVersion(context.Background())
 	return &Platform{machine: m, client: c}
 }
 
 func (p *Platform) Ping(ctx context.Context) error {
-	_, err := p.client.Ping(ctx)
+	_, err := p.client.Ping(ctx, client.PingOptions{NegotiateAPIVersion: true})
 	return err
 }
 
@@ -180,14 +183,15 @@ func splitImageName(image string) (string, string) {
 // }
 
 func getContainerByID(ctx context.Context, cli *client.Client, id string) (container.Summary, error) {
-	filters := filters.NewArgs()
+	filters := client.Filters{}
 	filters.Add("id", id)
-	options := container.ListOptions{
-		Filters: filters,
-	}
+	// options := container.ListOptions{
+	// 	Filters: filters,
+	// }
+	options := client.ContainerListOptions{Filters: filters}
 	containers, err := cli.ContainerList(ctx, options)
-	if len(containers) == 1 {
-		return containers[0], nil
+	if len(containers.Items) == 1 {
+		return containers.Items[0], nil
 	}
 	return container.Summary{}, err
 }
@@ -197,7 +201,10 @@ func tagSubnets(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *
 	if hostID <= 0 {
 		return fmt.Errorf("host not found in storage")
 	}
-	options := network.ListOptions{Filters: filters.NewArgs(filters.Arg("driver", "bridge"))}
+	filters := client.Filters{}
+	filters.Add("driver", "bridge")
+	options := client.NetworkListOptions{Filters: filters}
+	// options := network.ListOptions{Filters: filters.NewArgs(filters.Arg("driver", "bridge"))}
 	networks, err := p.client.NetworkList(ctx, options)
 	if err != nil {
 		return err
@@ -206,13 +213,13 @@ func tagSubnets(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *
 	subnets := make([]*models.Subnetwork, 0)
 
 	// loop over the networks
-	for _, n := range networks {
-		network, err := p.client.NetworkInspect(ctx, n.ID, network.InspectOptions{})
+	for _, n := range networks.Items {
+		network, err := p.client.NetworkInspect(ctx, n.ID, client.NetworkInspectOptions{})
 		if err != nil {
 			logger.WithError(err).WithField("network_id", n.ID).Warn("fail to inspect network")
 			continue
 		}
-		iface, ok := network.Options["com.docker.network.bridge.name"]
+		iface, ok := network.Network.Options["com.docker.network.bridge.name"]
 		if ok {
 			var link models.NetworkInterfaceSubnet
 			err = s.DB().
@@ -238,11 +245,11 @@ func tagSubnets(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *
 				continue
 			}
 			if link.Subnetwork != nil {
-				link.Subnetwork.Tag = network.ID
+				link.Subnetwork.Tag = network.Network.ID
 				// set the gateway if there is only one config
 				// (most of the time it is the case for bridge networks)
-				if len(network.IPAM.Config) == 1 {
-					link.Subnetwork.Gateway = network.IPAM.Config[0].Gateway
+				if len(network.Network.IPAM.Config) == 1 {
+					link.Subnetwork.Gateway = network.Network.IPAM.Config[0].Gateway.String()
 				}
 				subnets = append(subnets, link.Subnetwork)
 			}
@@ -273,18 +280,18 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 		return fmt.Errorf("failed to tag subnets: %v", err)
 	}
 	// find all the networks
-	networks, err := p.client.NetworkList(ctx, network.ListOptions{})
+	networks, err := p.client.NetworkList(ctx, client.NetworkListOptions{})
 	if err != nil {
 		return err
 	}
 
 	// loop over the networks
-	for _, n := range networks {
+	for _, n := range networks.Items {
 
-		network, err := p.client.NetworkInspect(ctx, n.ID, network.InspectOptions{})
+		network, err := p.client.NetworkInspect(ctx, n.ID, client.NetworkInspectOptions{})
 		// fmt.Println(network.Name, network.Containers)
 		// keep only the used networks
-		if err != nil || len(network.Containers) == 0 || len(network.IPAM.Config) == 0 {
+		if err != nil || len(network.Network.Containers) == 0 || len(network.Network.IPAM.Config) == 0 {
 			// go next
 			continue
 		}
@@ -292,12 +299,12 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 		// create subnets
 		subnetMap := make(map[string]*models.Subnetwork)
 		subnets := make([]*models.Subnetwork, 0)
-		for _, cfg := range network.IPAM.Config {
+		for _, cfg := range network.Network.IPAM.Config {
 
-			addr, cidr, err := net.ParseCIDR(cfg.Subnet)
+			addr, cidr, err := net.ParseCIDR(cfg.Subnet.String())
 			if err != nil {
 				logger.
-					WithField("network_id", network.ID).
+					WithField("network_id", network.Network.ID).
 					WithField("subnet", cfg.Subnet).
 					WithError(err).
 					Warn("fail to parse network")
@@ -316,14 +323,14 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 			subnet := models.Subnetwork{
 				NetworkAddr: addr.String(),
 				NetworkCIDR: cidr.String(),
-				Gateway:     cfg.Gateway,
+				Gateway:     cfg.Gateway.String(),
 				MaskSize:    utils.MaskSize(cidr),
 				IPVersion:   utils.IPVersion(addr),
-				Tag:         network.ID, // we use the docker network id as extra tag
+				Tag:         network.Network.ID, // we use the docker network id as extra tag
 			}
 
 			subnets = append(subnets, &subnet)
-			subnetMap[network.ID] = &subnet
+			subnetMap[network.Network.ID] = &subnet
 		}
 
 		// upserts subnetworks
@@ -336,13 +343,13 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 			logger.
 				WithError(err).
 				WithField("subnetworks", len(subnets)).
-				WithField("network_id", network.ID).
+				WithField("network_id", network.Network.ID).
 				Warn("failed to insert subnetworks")
 			continue
 		}
 
 		// loop over the containers
-		for containerID, endpoint := range network.Containers {
+		for containerID, endpoint := range network.Network.Containers {
 			container, err := getContainerByID(ctx, p.client, containerID)
 
 			if err != nil || container.ID == "" {
@@ -362,7 +369,7 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 
 			// we prefer inspect because of the startedAt property (=uptime)
 			// that is easier to get
-			containerJSON, err := p.client.ContainerInspect(ctx, container.ID)
+			containerJSON, err := p.client.ContainerInspect(ctx, container.ID, client.ContainerInspectOptions{})
 			if err != nil {
 				// TODO -> LOG
 
@@ -372,15 +379,15 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 			}
 
 			// get or create the corresponding machine
-			image, version := splitImageName(containerJSON.Config.Image)
+			image, version := splitImageName(containerJSON.Container.Config.Image)
 			uptime := time.Duration(0)
-			createdAt, err := time.Parse(time.RFC3339, containerJSON.Created)
+			createdAt, err := time.Parse(time.RFC3339, containerJSON.Container.Created)
 			if err == nil {
 				// here we have the right uptime (int64 -> ns)
 				uptime = time.Since(createdAt)
 			}
 			machine := models.Machine{
-				Hostname:            strings.TrimPrefix(containerJSON.Name, "/"),
+				Hostname:            strings.TrimPrefix(containerJSON.Container.Name, "/"),
 				Platform:            "docker",
 				Distribution:        image,
 				DistributionVersion: version,
@@ -404,28 +411,28 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				Scan(ctx)
 			if err != nil {
 				logger.WithError(err).
-					WithField("container_name", containerJSON.Name).
-					WithField("container_id", containerJSON.ID).
+					WithField("container_name", containerJSON.Container.Name).
+					WithField("container_id", containerJSON.Container.ID).
 					WithField("image", machine.Hostname).
 					WithField("distribution", machine.Distribution).
 					WithField("distribution_version", machine.DistributionVersion).
 					Warn("fail to create machine")
 			}
 			logger.
-				WithField("container_name", containerJSON.Name).
-				WithField("container_id", containerJSON.ID).
+				WithField("container_name", containerJSON.Container.Name).
+				WithField("container_id", containerJSON.Container.ID).
 				WithField("image", machine.Hostname).
 				WithField("distribution", machine.Distribution).
 				WithField("distribution_version", machine.DistributionVersion).
 				Info("created or updated machine")
 
 			// machine nic
-			settings, exists := containerJSON.NetworkSettings.Networks[network.Name]
+			settings, exists := containerJSON.Container.NetworkSettings.Networks[network.Network.Name]
 			if !exists {
 				logger.
-					WithField("network", network.Name).
-					WithField("container_name", containerJSON.Name).
-					WithField("container_id", containerJSON.ID).
+					WithField("network", network.Network.Name).
+					WithField("container_name", containerJSON.Container.Name).
+					WithField("container_id", containerJSON.Container.ID).
 					WithField("endpoint_id", endpoint.EndpointID).
 					WithField("mac", endpoint.MacAddress).
 					WithField("ipv4", endpoint.IPv4Address).
@@ -434,20 +441,21 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 			}
 
 			nic := models.NetworkInterface{
-				MAC:       settings.MacAddress,
+				MAC:       settings.MacAddress.String(),
 				IP:        make([]string, 0),
-				Gateway:   settings.Gateway,
+				Gateway:   settings.Gateway.String(),
 				Machine:   &machine,
 				MachineID: machine.ID,
 				Flags:     models.NetworkInterfaceFlags{Up: true},
 				Tag:       endpoint.EndpointID,
 			}
 
-			if settings.IPAddress != "" {
-				nic.IP = append(nic.IP, settings.IPAddress)
+			empty := netip.Addr{}
+			if settings.IPAddress != empty {
+				nic.IP = append(nic.IP, settings.IPAddress.String())
 			}
-			if settings.GlobalIPv6Address != "" {
-				nic.IP = append(nic.IP, settings.GlobalIPv6Address)
+			if settings.GlobalIPv6Address != empty {
+				nic.IP = append(nic.IP, settings.GlobalIPv6Address.String())
 			}
 
 			err = s.DB().
@@ -461,7 +469,7 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 			if err != nil {
 				logger.
 					WithError(err).
-					WithField("container_name", containerJSON.Name).
+					WithField("container_name", containerJSON.Container.Name).
 					WithField("mac", nic.MAC).
 					WithField("ip", nic.IP).
 					WithField("gateway", nic.Gateway).
@@ -469,14 +477,14 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				continue
 			}
 			logger.
-				WithField("container_name", containerJSON.Name).
+				WithField("container_name", containerJSON.Container.Name).
 				WithField("mac", nic.MAC).
 				WithField("ip", nic.IP).
 				WithField("gateway", nic.Gateway).
 				Info("created or updated network interface")
 
 			// link nic to subnetwork
-			subnet, exists := subnetMap[network.ID]
+			subnet, exists := subnetMap[network.Network.ID]
 			if exists {
 				link := models.NetworkInterfaceSubnet{
 					NetworkInterface:   &nic,
@@ -487,7 +495,7 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				if err := link.SetMACSubnet(); err != nil {
 					logger.
 						WithError(err).
-						WithField("container_name", containerJSON.Name).
+						WithField("container_name", containerJSON.Container.Name).
 						WithField("mac", nic.MAC).
 						WithField("subnetwork_id", subnet.ID).
 						Warn("fail to set MACSubnet for network interface subnet link")
@@ -501,13 +509,13 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				if err != nil {
 					logger.
 						WithError(err).
-						WithField("container_name", containerJSON.Name).
+						WithField("container_name", containerJSON.Container.Name).
 						WithField("mac", nic.MAC).
 						WithField("subnetwork_id", subnet.ID).
 						Warn("fail to link network interface to subnetwork")
 				} else {
 					logger.
-						WithField("container_name", containerJSON.Name).
+						WithField("container_name", containerJSON.Container.Name).
 						WithField("mac", nic.MAC).
 						WithField("subnetwork_id", subnet.ID).
 						Info("linked network interface to subnetwork")
@@ -531,9 +539,9 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				// WRN docker fail to create application endpoints container_name="/nostalgic_galois" endpoints="9" error="ERROR: ON CONFLICT DO UPDATE command cannot affect row a second time (SQLSTATE=21000)" ip="[172.17.0.2]"
 				for _, hostNIC := range p.machine.NICS {
 					for _, addr := range hostNIC.IP {
-						if (port.IP == "0.0.0.0" && utils.IPVersionString(addr) == 4) ||
-							(port.IP == "::" && utils.IPVersionString(addr) == 6) ||
-							(port.IP == addr) {
+						if (port.IP == Zero4 && utils.IPVersionString(addr) == 4) ||
+							(port.IP == Zero6 && utils.IPVersionString(addr) == 6) ||
+							(port.IP.String() == addr) {
 							// host endpoint
 							hostEndpoint := models.ApplicationEndpoint{
 								Addr:               addr,
@@ -595,14 +603,14 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 				if err != nil {
 					logger.
 						WithError(err).
-						WithField("container_name", containerJSON.Name).
+						WithField("container_name", containerJSON.Container.Name).
 						WithField("ip", nic.IP).
 						WithField("endpoints", len(endpoints)).
 						Warn("fail to create application endpoints")
 					continue
 				}
 				logger.
-					WithField("container_name", containerJSON.Name).
+					WithField("container_name", containerJSON.Container.Name).
 					WithField("ip", nic.IP).
 					WithField("endpoints", len(endpoints)).
 					Info("created or updated application endpoints")
@@ -621,26 +629,26 @@ func RunBasic(ctx context.Context, p *Platform, logger logrus.FieldLogger, s *st
 					if err != nil {
 						logger.
 							WithError(err).
-							WithField("container_name", containerJSON.Name).
+							WithField("container_name", containerJSON.Container.Name).
 							WithField("ip", nic.IP).
 							WithField("policies", len(policies)).
 							Warn("fail to create endpoint policies")
 						continue
 					}
 					logger.
-						WithField("container_name", containerJSON.Name).
+						WithField("container_name", containerJSON.Container.Name).
 						WithField("ip", nic.IP).
 						WithField("policies", len(policies)).
 						Info("created or updated endpoint policies")
 				} else {
 					logger.
-						WithField("container_name", containerJSON.Name).
+						WithField("container_name", containerJSON.Container.Name).
 						Warn("no endpoint policies to insert")
 				}
 
 			} else {
 				logger.
-					WithField("container_name", containerJSON.Name).
+					WithField("container_name", containerJSON.Container.Name).
 					WithField("ip", nic.IP).
 					Warn("no application endpoint to insert")
 			}
