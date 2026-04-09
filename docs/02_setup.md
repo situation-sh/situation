@@ -69,6 +69,8 @@ You can check the new id by calling the `id` subcommand.
 
 ### Execution
 
+As previously shown, you can run the agent in one-shot way,
+
 /// tab | Linux
 
 ```bash
@@ -81,6 +83,24 @@ situation run --db="postgres://user:password@[ENDPOINT]/situation?sslmode=disabl
 
 ```ps1
 situation.exe run --db="postgres://user:password@[ENDPOINT]/situation?sslmode=disable"
+```
+
+///
+
+but for a sustainable setup you rather should install a scheduled task
+
+/// tab | Linux
+
+```bash
+situation task --task-start="08:00:00" --db="postgres://user:password@[ENDPOINT]/situation?sslmode=disable"
+```
+
+///
+
+/// tab | Windows
+
+```ps1
+situation.exe task --task-start="08:00:00" --db="postgres://user:password@[ENDPOINT]/situation?sslmode=disable"
 ```
 
 ///
