@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: HostDisk
 summary: "Retrieves basic information about disk: name, model, size, type, controller and partitions."
-date: 2026-03-17
+date: 2026-04-09
 filename: host_disk.go
 std_imports:
   - context

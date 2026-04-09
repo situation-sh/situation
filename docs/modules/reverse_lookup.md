@@ -5,7 +5,7 @@ macos: unknown
 root: unknown
 title: ReverseLookup
 summary: "Tries to get a hostname attached to a local IP address"
-date: 2026-03-17
+date: 2026-04-09
 filename: reverse_lookup.go
 std_imports:
   - context
@@ -15,6 +15,7 @@ std_imports:
   - time
 imports:
   - github.com/asiffer/puzzle
+  - github.com/uptrace/bun
 options:
   - name: timeout
     type: time.Duration

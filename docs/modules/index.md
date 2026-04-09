@@ -36,6 +36,7 @@ sidebar_title: Reference
 | [macvendor](macvendor.md)   | MACVendorModule resolves manufacturer from MAC addresses.      | [arp](arp.md)           |      |
 | [msi](msi.md)   | MSIModule creates models.Packages instance from the windows registry      | [host-basic](host_basic.md)           | {{ windows_ok }} {{ root_required }}     |
 | [netstat](netstat.md)   | NetstatModule retrieves active connections.      | [local-users](local_users.md), [tcp-scan](tcp_scan.md)           | {{ linux_ok }} {{ windows_ok }} {{ root_required }}     |
+| [nftables](nftables.md)   |       | [netstat](netstat.md)           | {{ linux_ok }} {{ root_required }}     |
 | [ping](ping.md)   | PingModule pings local networks to discover new hosts.      | [host-network](host_network.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [reverse-lookup](reverse_lookup.md)   | ReverseLookupModule tries to get a hostname attached to a local IP address      | [arp](arp.md)           | {{ linux_ok }} {{ windows_ok }}     |
 | [rpm](rpm.md)   | RPMModule reads package information from the rpm package manager.      | [host-basic](host_basic.md), [netstat](netstat.md)           | {{ linux_ok }}     |

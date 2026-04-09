@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: HostNetwork
 summary: "Retrieves basic network information about the host."
-date: 2026-03-17
+date: 2026-04-09
 filename: host_network.go
 std_imports:
   - context

@@ -5,7 +5,7 @@ macos: unknown
 root: true
 title: Netstat
 summary: "Retrieves active connections."
-date: 2026-03-17
+date: 2026-04-09
 filename: netstat.go
 std_imports:
   - context

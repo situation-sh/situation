@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Ping
 summary: "Pings local networks to discover new hosts."
-date: 2026-03-17
+date: 2026-04-09
 filename: ping.go
 std_imports:
   - context

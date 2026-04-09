@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: TCP Scan
 summary: "Tries to connect to neighbor TCP ports."
-date: 2026-03-17
+date: 2026-04-09
 filename: tcp_scan.go
 std_imports:
   - context

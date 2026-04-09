@@ -5,21 +5,20 @@ macos: unknown
 root: true
 title: Docker
 summary: "Retrieves information about docker containers."
-date: 2026-03-17
+date: 2026-04-09
 filename: docker.go
 std_imports:
   - context
   - fmt
   - net
+  - net/netip
   - runtime
   - strings
   - time
 imports:
   - github.com/asiffer/puzzle
-  - github.com/docker/docker/api/types/container
-  - github.com/docker/docker/api/types/filters
-  - github.com/docker/docker/api/types/network
-  - github.com/docker/docker/client
+  - github.com/moby/moby/api/types/container
+  - github.com/moby/moby/client
   - github.com/sirupsen/logrus
 options:
   - name: host

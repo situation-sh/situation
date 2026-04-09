@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: Fingerprint
 summary: "Attempts to match the local host against machines already discovered in the shared database."
-date: 2026-03-17
+date: 2026-04-09
 filename: fingerprint.go
 std_imports:
   - context

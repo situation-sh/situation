@@ -5,7 +5,7 @@ macos: unknown
 root: false
 title: SNMP
 summary: "Collects network interface data from neighbors via SNMP."
-date: 2026-03-17
+date: 2026-04-09
 filename: snmp.go
 std_imports:
   - context

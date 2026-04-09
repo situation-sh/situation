@@ -5,7 +5,7 @@ macos: unknown
 root: unknown
 title: Chassis
 summary: "Fills host chassis information"
-date: 2026-03-17
+date: 2026-04-09
 filename: chassis.go
 std_imports:
   - context
